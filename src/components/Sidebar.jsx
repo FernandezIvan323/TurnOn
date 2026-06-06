@@ -35,10 +35,10 @@ export default function Sidebar() {
   if (!user) return null;
 
   return (
-    <aside className="w-60 shrink-0 bg-white border-r border-ink-200 dark:bg-ink-900 dark:border-ink-800 h-screen sticky top-0 flex flex-col">
-      <div className="px-5 py-5 border-b border-ink-200 dark:border-ink-800">
+    <aside className="w-60 shrink-0 bg-paper-50 border-r border-paper-300 dark:bg-ink-900 dark:border-ink-800 h-screen sticky top-0 flex flex-col">
+      <div className="px-5 py-5 border-b border-paper-300 dark:border-ink-800">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white dark:bg-ink-800 border border-ink-100 dark:border-ink-700 flex items-center justify-center p-1.5 shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-paper-50 dark:bg-ink-800 border border-paper-200 dark:border-ink-700 flex items-center justify-center p-1.5 shrink-0">
             <img src="/favicon.svg" alt="AppTurnos" className="w-full h-full" />
           </div>
           <div>
@@ -62,7 +62,7 @@ export default function Sidebar() {
                   `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${
                     isActive
                       ? "bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300"
-                      : "text-ink-600 hover:bg-surface-100 dark:text-ink-300 dark:hover:bg-ink-800"
+                      : "text-ink-600 hover:bg-paper-200 dark:text-ink-300 dark:hover:bg-ink-800"
                   }`
                 }
               >
@@ -73,7 +73,7 @@ export default function Sidebar() {
           })}
       </nav>
 
-      <div className="p-3 border-t border-ink-200 dark:border-ink-800">
+      <div className="p-3 border-t border-paper-300 dark:border-ink-800">
         <div className="px-3 py-2 text-xs text-ink-500 dark:text-ink-400">
           Sesión iniciada como
           <div className="text-sm font-semibold text-ink-800 dark:text-ink-100">{user.name}</div>

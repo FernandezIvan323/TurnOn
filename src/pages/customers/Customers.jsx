@@ -159,7 +159,7 @@ export default function Customers() {
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-surface-100 dark:bg-ink-800 text-ink-600 dark:text-ink-300 text-left">
+            <thead className="bg-paper-200 dark:bg-ink-800 text-ink-600 dark:text-ink-300 text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">Nombre</th>
                 <th className="px-4 py-2 font-medium">Teléfono</th>
@@ -169,7 +169,7 @@ export default function Customers() {
             </thead>
             <tbody>
               {list.map((c) => (
-                <tr key={c.id} className="border-t border-ink-100 dark:border-ink-800 hover:bg-surface-50 dark:hover:bg-ink-800/50">
+                <tr key={c.id} className="border-t border-paper-200 dark:border-ink-800 hover:bg-paper-100 dark:hover:bg-ink-800/50">
                   <td className="px-4 py-2 font-medium text-ink-800 dark:text-ink-100">{c.name}</td>
                   <td className="px-4 py-2 text-ink-600 dark:text-ink-300">{c.phone}</td>
                   <td className="px-4 py-2 text-ink-600 dark:text-ink-300">{c.address || "—"}</td>

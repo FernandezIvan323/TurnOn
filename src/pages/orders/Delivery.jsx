@@ -212,13 +212,13 @@ function NewOrderModal({ onClose, onCreated }) {
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="px-5 py-4 border-b border-ink-200 dark:border-ink-800 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-paper-300 dark:border-ink-800 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100">Nuevo pedido a domicilio</h2>
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 flex-1 overflow-hidden">
-          <div className="p-5 border-r border-ink-200 dark:border-ink-800 overflow-y-auto">
+          <div className="p-5 border-r border-paper-300 dark:border-ink-800 overflow-y-auto">
             <h3 className="text-sm font-semibold text-ink-700 dark:text-ink-200 mb-3">Datos del cliente</h3>
 
             {!customer && (
@@ -243,7 +243,7 @@ function NewOrderModal({ onClose, onCreated }) {
                         key={s.id}
                         type="button"
                         onMouseDown={() => fillFromCustomer(s)}
-                        className="w-full text-left px-3 py-2 hover:bg-surface-100 dark:hover:bg-ink-800 border-b border-ink-100 dark:border-ink-800 last:border-0"
+                        className="w-full text-left px-3 py-2 hover:bg-paper-200 dark:hover:bg-ink-800 border-b border-paper-200 dark:border-ink-800 last:border-0"
                       >
                         <div className="font-medium text-ink-800 dark:text-ink-100 text-sm">{s.name}</div>
                         <div className="text-xs text-ink-500 dark:text-ink-400 flex items-center gap-2">
@@ -324,16 +324,16 @@ function NewOrderModal({ onClose, onCreated }) {
                     <div className="text-xs text-ink-500 dark:text-ink-400">{money(c.unit_price)} c/u</div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => changeQty(c.product_id, c.quantity - 1)} className="w-7 h-7 rounded-lg bg-surface-100 dark:bg-ink-800 hover:bg-surface-200 dark:hover:bg-ink-700">-</button>
+                    <button onClick={() => changeQty(c.product_id, c.quantity - 1)} className="w-7 h-7 rounded-lg bg-paper-200 dark:bg-ink-800 hover:bg-paper-300 dark:hover:bg-ink-700">-</button>
                     <span className="w-7 text-center font-semibold">{c.quantity}</span>
-                    <button onClick={() => changeQty(c.product_id, c.quantity + 1)} className="w-7 h-7 rounded-lg bg-surface-100 dark:bg-ink-800 hover:bg-surface-200 dark:hover:bg-ink-700">+</button>
+                    <button onClick={() => changeQty(c.product_id, c.quantity + 1)} className="w-7 h-7 rounded-lg bg-paper-200 dark:bg-ink-800 hover:bg-paper-300 dark:hover:bg-ink-700">+</button>
                   </div>
                   <div className="w-20 text-right font-semibold">{money(c.unit_price * c.quantity)}</div>
                 </div>
               ))}
             </div>
             {cart.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-ink-100 dark:border-ink-800 flex items-center justify-between">
+              <div className="mt-3 pt-3 border-t border-paper-200 dark:border-ink-800 flex items-center justify-between">
                 <span className="text-sm text-ink-500 dark:text-ink-400">Total</span>
                 <span className="text-xl font-bold text-ink-800 dark:text-ink-100">{money(total)}</span>
               </div>
@@ -341,7 +341,7 @@ function NewOrderModal({ onClose, onCreated }) {
             {error && <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{error}</div>}
           </div>
 
-          <div className="p-5 overflow-y-auto bg-surface-50 dark:bg-ink-950">
+          <div className="p-5 overflow-y-auto bg-paper-100 dark:bg-ink-950">
             <h3 className="text-sm font-semibold text-ink-700 dark:text-ink-200 mb-3">Menú</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {products.map((p) => (
@@ -360,7 +360,7 @@ function NewOrderModal({ onClose, onCreated }) {
           </div>
         </div>
 
-        <div className="px-5 py-3 border-t border-ink-200 dark:border-ink-800 flex items-center justify-between">
+        <div className="px-5 py-3 border-t border-paper-300 dark:border-ink-800 flex items-center justify-between">
           <div className="text-sm text-ink-500 dark:text-ink-400">{cart.length} productos · {money(total)}</div>
           <div className="flex gap-2">
             <button onClick={onClose} className="btn-secondary">Cancelar</button>
@@ -455,7 +455,7 @@ function OrderDetailModal({ order, onClose, onChanged }) {
         {loading ? <div className="text-sm text-ink-500 dark:text-ink-400">Cargando…</div> : (
           <div className="space-y-1.5">
             {items.map((it) => (
-              <div key={it.id} className="flex items-center justify-between text-sm py-1.5 border-b border-ink-100 dark:border-ink-800">
+              <div key={it.id} className="flex items-center justify-between text-sm py-1.5 border-b border-paper-200 dark:border-ink-800">
                 <div>
                   <div className="font-medium text-ink-800 dark:text-ink-100">{it.name_snapshot} {it.notes && <span className="text-xs text-amber-700 dark:text-amber-400">· {it.notes}</span>}</div>
                   <div className="text-xs text-ink-500 dark:text-ink-400">{money(it.unit_price)} c/u</div>
@@ -465,7 +465,7 @@ function OrderDetailModal({ order, onClose, onChanged }) {
             ))}
           </div>
         )}
-        <div className="mt-4 pt-3 border-t border-ink-100 dark:border-ink-800 flex items-center justify-between">
+        <div className="mt-4 pt-3 border-t border-paper-200 dark:border-ink-800 flex items-center justify-between">
           <span className="text-ink-500 dark:text-ink-400">Total</span>
           <span className="text-2xl font-bold text-ink-800 dark:text-ink-100">{money(order.total)}</span>
         </div>
@@ -631,7 +631,7 @@ export default function Delivery() {
             <div key={col.key} className={`rounded-2xl border ${col.tone} p-3 min-h-[200px]`}>
               <div className="flex items-center justify-between mb-3 px-1">
                 <h3 className="font-semibold text-ink-700 dark:text-ink-200">{col.title}</h3>
-                <span className="text-xs text-ink-500 dark:text-ink-400 bg-white dark:bg-ink-900 px-2 py-0.5 rounded-full border border-ink-200 dark:border-ink-700">
+                <span className="text-xs text-ink-500 dark:text-ink-400 bg-paper-50 dark:bg-ink-900 px-2 py-0.5 rounded-full border border-paper-300 dark:border-ink-700">
                   {byStatus(col.key).length}
                 </span>
               </div>

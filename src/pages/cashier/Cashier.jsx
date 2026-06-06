@@ -44,7 +44,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
         <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100 mb-4 flex items-center gap-2">
           <Receipt size={20}/> {isPrepay ? "Pre-cobrar" : "Cobrar"} pedido #{order.id}
         </h2>
-        <div className="bg-surface-50 dark:bg-ink-950 rounded-xl p-4 mb-4 text-center">
+        <div className="bg-paper-100 dark:bg-ink-950 rounded-xl p-4 mb-4 text-center">
           <div className="text-sm text-ink-500 dark:text-ink-400">{isPrepay ? "Monto pre-cobrado" : "Total a cobrar"}</div>
           <div className="text-3xl font-bold text-ink-800 dark:text-ink-100">{money(order.total)}</div>
           <div className="text-xs text-ink-500 dark:text-ink-400 mt-1">
@@ -65,7 +65,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
               className={`px-3 py-2.5 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5 ${
                 method === m.v
                   ? "bg-brand-600 text-white border-brand-600"
-                  : "bg-white text-ink-700 border-ink-200 hover:bg-surface-100 dark:bg-ink-900 dark:text-ink-200 dark:border-ink-700 dark:hover:bg-ink-800"
+                  : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-ink-900 dark:text-ink-200 dark:border-ink-700 dark:hover:bg-ink-800"
               }`}
             >
               <m.icon size={14}/> {m.l}
@@ -171,7 +171,7 @@ export default function Cashier() {
         subtitle="Cierre y cobro de pedidos"
         right={
           <div className="flex gap-2 items-center">
-            <div className="flex gap-1 bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-700 rounded-xl p-1">
+            <div className="flex gap-1 bg-paper-50 dark:bg-ink-900 border border-paper-300 dark:border-ink-700 rounded-xl p-1">
               {[
                 { v: "pending",  l: "Por cobrar" },
                 { v: "paid",     l: "Cobrados" },
@@ -180,7 +180,7 @@ export default function Cashier() {
                   key={t.v}
                   onClick={() => setTab(t.v)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                    tab === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-ink-300 hover:bg-surface-100 dark:hover:bg-ink-800"
+                    tab === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-ink-300 hover:bg-paper-200 dark:hover:bg-ink-800"
                   }`}
                 >
                   {t.l}
@@ -235,7 +235,7 @@ export default function Cashier() {
             className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
               typeFilter === t.v
                 ? "bg-ink-800 text-white dark:bg-ink-100 dark:text-ink-900"
-                : "bg-white text-ink-600 border border-ink-200 hover:bg-surface-100 dark:bg-ink-900 dark:text-ink-300 dark:border-ink-700 dark:hover:bg-ink-800"
+                : "bg-paper-50 text-ink-600 border border-paper-300 hover:bg-paper-200 dark:bg-ink-900 dark:text-ink-300 dark:border-ink-700 dark:hover:bg-ink-800"
             }`}
           >
             {t.l}

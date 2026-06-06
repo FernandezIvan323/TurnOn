@@ -44,10 +44,10 @@ export default function Login() {
   const clear = () => setPin("");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 dark:from-ink-950 dark:to-ink-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-paper-100 to-paper-200 dark:from-ink-950 dark:to-ink-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md card p-8">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-24 h-24 rounded-3xl bg-white dark:bg-ink-800 border border-ink-100 dark:border-ink-700 flex items-center justify-center shadow-soft p-3">
+          <div className="w-24 h-24 rounded-3xl bg-paper-50 dark:bg-ink-800 border border-paper-200 dark:border-ink-700 flex items-center justify-center shadow-soft p-3">
             <img src="/favicon.svg" alt="AppTurnos" className="w-full h-full" />
           </div>
           <h1 className="mt-4 text-xl font-semibold text-ink-800 dark:text-ink-100">AppTurnos</h1>
@@ -76,7 +76,7 @@ export default function Login() {
                   className={`w-12 h-14 rounded-xl border-2 flex items-center justify-center text-2xl font-semibold transition ${
                     pin[i]
                       ? "border-brand-500 text-brand-700 bg-brand-50 dark:bg-brand-900/40 dark:text-brand-300"
-                      : "border-ink-200 bg-white text-ink-300 dark:bg-ink-900 dark:border-ink-700 dark:text-ink-600"
+                      : "border-paper-300 bg-paper-50 text-ink-300 dark:bg-ink-900 dark:border-ink-700 dark:text-ink-600"
                   }`}
                 >
                   {pin[i] ? "•" : ""}
@@ -91,7 +91,7 @@ export default function Login() {
                 type="button"
                 key={d}
                 onClick={() => addDigit(String(d))}
-                className="h-14 rounded-xl bg-white border border-ink-200 text-xl font-semibold text-ink-700 hover:bg-surface-100 active:scale-95 transition dark:bg-ink-900 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800"
+                className="h-14 rounded-xl bg-paper-50 border border-paper-300 text-xl font-semibold text-ink-700 hover:bg-paper-200 active:scale-95 transition dark:bg-ink-900 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800"
               >
                 {d}
               </button>
@@ -99,21 +99,21 @@ export default function Login() {
             <button
               type="button"
               onClick={clear}
-              className="h-14 rounded-xl bg-surface-100 text-ink-600 font-medium hover:bg-surface-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
+              className="h-14 rounded-xl bg-paper-200 text-ink-600 font-medium hover:bg-paper-300 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
             >
               C
             </button>
             <button
               type="button"
               onClick={() => addDigit("0")}
-              className="h-14 rounded-xl bg-white border border-ink-200 text-xl font-semibold text-ink-700 hover:bg-surface-100 active:scale-95 transition dark:bg-ink-900 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800"
+              className="h-14 rounded-xl bg-paper-50 border border-paper-300 text-xl font-semibold text-ink-700 hover:bg-paper-200 active:scale-95 transition dark:bg-ink-900 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800"
             >
               0
             </button>
             <button
               type="button"
               onClick={backspace}
-              className="h-14 rounded-xl bg-surface-100 text-ink-600 font-medium hover:bg-surface-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
+              className="h-14 rounded-xl bg-paper-200 text-ink-600 font-medium hover:bg-paper-300 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
             >
               <Delete size={20} className="mx-auto" />
             </button>
@@ -133,7 +133,7 @@ export default function Login() {
             {loading ? "Verificando…" : "Entrar"}
           </button>
 
-          <div className="text-xs text-ink-500 dark:text-ink-400 text-center pt-2 border-t border-ink-100 dark:border-ink-800">
+          <div className="text-xs text-ink-500 dark:text-ink-400 text-center pt-2 border-t border-paper-200 dark:border-ink-800">
             <div className="font-medium text-ink-600 dark:text-ink-300">Cuentas de prueba</div>
             <div>admin / 1234 · ivan / 0000 · maria / 0000</div>
           </div>

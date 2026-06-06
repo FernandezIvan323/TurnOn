@@ -79,7 +79,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier }) {
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="px-5 py-4 border-b border-ink-200 dark:border-ink-800 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-paper-300 dark:border-ink-800 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100">
               {table.label || `Mesa ${table.number}`}
@@ -117,7 +117,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier }) {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden">
-            <div className="p-5 border-r border-ink-200 dark:border-ink-800 overflow-y-auto">
+            <div className="p-5 border-r border-paper-300 dark:border-ink-800 overflow-y-auto">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-ink-700 dark:text-ink-200">Cuenta</h3>
                 <span className={`badge ${statusColors[order.status]}`}>{statusLabels[order.status]}</span>
@@ -125,7 +125,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier }) {
               {items.length === 0 && <div className="text-sm text-ink-400 dark:text-ink-500">Sin productos, agrega del menú →</div>}
               <div className="space-y-1.5">
                 {items.map((it) => (
-                  <div key={it.id} className="flex items-center gap-2 text-sm py-1.5 border-b border-ink-100 dark:border-ink-800">
+                  <div key={it.id} className="flex items-center gap-2 text-sm py-1.5 border-b border-paper-200 dark:border-ink-800">
                     <div className="flex-1">
                       <div className="font-medium text-ink-800 dark:text-ink-100">{it.name_snapshot}</div>
                       <div className="text-xs text-ink-500 dark:text-ink-400">{money(it.unit_price)} c/u</div>
@@ -135,12 +135,12 @@ function OrderModal({ table, onClose, onChanged, onGoCashier }) {
                   </div>
                 ))}
               </div>
-              <div className="mt-4 pt-3 border-t border-ink-100 dark:border-ink-800 flex items-center justify-between">
+              <div className="mt-4 pt-3 border-t border-paper-200 dark:border-ink-800 flex items-center justify-between">
                 <span className="text-ink-500 dark:text-ink-400">Total</span>
                 <span className="text-2xl font-bold text-ink-800 dark:text-ink-100">{money(total)}</span>
               </div>
             </div>
-            <div className="p-5 overflow-y-auto bg-surface-50 dark:bg-ink-950">
+            <div className="p-5 overflow-y-auto bg-paper-100 dark:bg-ink-950">
               <h3 className="font-semibold text-ink-700 dark:text-ink-200 mb-3">Agregar del menú</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {products.map((p) => (
@@ -156,7 +156,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier }) {
         )}
 
         {order && (
-          <div className="px-5 py-3 border-t border-ink-200 dark:border-ink-800 flex flex-wrap items-center justify-end gap-2">
+          <div className="px-5 py-3 border-t border-paper-300 dark:border-ink-800 flex flex-wrap items-center justify-end gap-2">
             {order.status === "pending" && (
               <>
                 <span className="text-xs text-ink-500 dark:text-ink-400 mr-auto">Pedido recién abierto. La cocina aún no lo empezó.</span>
@@ -263,7 +263,7 @@ export default function TablesPage() {
                 <div className="mt-2 text-xs text-ink-500 dark:text-ink-400">Capacidad: {t.capacity}</div>
 
                 {occ ? (
-                  <div className="mt-2 pt-2 border-t border-ink-200/50 dark:border-ink-700/50 space-y-1">
+                  <div className="mt-2 pt-2 border-t border-paper-300/50 dark:border-ink-700/50 space-y-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-ink-500 dark:text-ink-400">{t.current_order_items} productos</span>
                       <span className="font-bold text-ink-800 dark:text-ink-100">{money(t.current_order_total)}</span>

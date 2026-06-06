@@ -13,7 +13,7 @@ export default function BarChart({ data, valueKey = "value", labelKey = "label",
             <div className="w-32 shrink-0 truncate text-ink-600 dark:text-ink-300" title={d[labelKey]}>
               {d[labelKey]}
             </div>
-            <div className="flex-1 bg-surface-100 dark:bg-ink-800 rounded-lg overflow-hidden h-5 relative">
+            <div className="flex-1 bg-paper-200 dark:bg-ink-800 rounded-lg overflow-hidden h-5 relative">
               <div
                 className="h-full bg-brand-500 dark:bg-brand-400 transition-all"
                 style={{ width: `${pct}%` }}

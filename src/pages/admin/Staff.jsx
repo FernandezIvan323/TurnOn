@@ -11,13 +11,13 @@ function Tabs({ value, onChange }) {
     { v: "assignments",  l: "Asignaciones", icon: UserCog },
   ];
   return (
-    <div className="flex gap-1 bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-700 rounded-xl p-1">
+    <div className="flex gap-1 bg-paper-50 dark:bg-ink-900 border border-paper-300 dark:border-ink-700 rounded-xl p-1">
       {tabs.map((t) => (
         <button
           key={t.v}
           onClick={() => onChange(t.v)}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 ${
-            value === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-ink-300 hover:bg-surface-100 dark:hover:bg-ink-800"
+            value === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-ink-300 hover:bg-paper-200 dark:hover:bg-ink-800"
           }`}
         >
           <t.icon size={14}/> {t.l}
@@ -154,7 +154,7 @@ function AddTableModal({ waiter, availableTables, onClose, onAssigned }) {
                   className={`p-3 rounded-xl border-2 text-left transition ${
                     on
                       ? "border-brand-500 bg-brand-50 dark:bg-brand-900/30"
-                      : "border-ink-200 dark:border-ink-700 hover:border-brand-300"
+                      : "border-paper-300 dark:border-ink-700 hover:border-brand-300"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -316,7 +316,7 @@ export default function Staff() {
       {tab === "delivery" && (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-surface-100 dark:bg-ink-800 text-ink-600 dark:text-ink-300 text-left">
+            <thead className="bg-paper-200 dark:bg-ink-800 text-ink-600 dark:text-ink-300 text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">Nombre</th>
                 <th className="px-4 py-2 font-medium">Teléfono</th>
@@ -326,7 +326,7 @@ export default function Staff() {
             </thead>
             <tbody>
               {delivery.map((p) => (
-                <tr key={p.id} className="border-t border-ink-100 dark:border-ink-800">
+                <tr key={p.id} className="border-t border-paper-200 dark:border-ink-800">
                   <td className="px-4 py-2 font-medium text-ink-800 dark:text-ink-100">{p.name}</td>
                   <td className="px-4 py-2 text-ink-600 dark:text-ink-300">{p.phone || "—"}</td>
                   <td className="px-4 py-2">
@@ -353,7 +353,7 @@ export default function Staff() {
       {tab === "tables" && (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-surface-100 dark:bg-ink-800 text-ink-600 dark:text-ink-300 text-left">
+            <thead className="bg-paper-200 dark:bg-ink-800 text-ink-600 dark:text-ink-300 text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">N°</th>
                 <th className="px-4 py-2 font-medium">Etiqueta</th>
@@ -364,7 +364,7 @@ export default function Staff() {
             </thead>
             <tbody>
               {tables.map((t) => (
-                <tr key={t.id} className="border-t border-ink-100 dark:border-ink-800">
+                <tr key={t.id} className="border-t border-paper-200 dark:border-ink-800">
                   <td className="px-4 py-2 font-bold text-ink-800 dark:text-ink-100">{t.number}</td>
                   <td className="px-4 py-2 text-ink-600 dark:text-ink-300">{t.label || "—"}</td>
                   <td className="px-4 py-2 text-ink-600 dark:text-ink-300">{t.capacity}</td>

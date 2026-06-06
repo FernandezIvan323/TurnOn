@@ -10,7 +10,7 @@ import {
 
 function RangePicker({ value, onChange }) {
   return (
-    <div className="flex gap-1 bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-700 rounded-xl p-1">
+    <div className="flex gap-1 bg-paper-50 dark:bg-ink-900 border border-paper-300 dark:border-ink-700 rounded-xl p-1">
       {[
         { v: "today",     l: "Hoy" },
         { v: "week",      l: "Semana" },
@@ -22,7 +22,7 @@ function RangePicker({ value, onChange }) {
           key={t.v}
           onClick={() => onChange(t.v)}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-            value === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-ink-300 hover:bg-surface-100 dark:hover:bg-ink-800"
+            value === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-ink-300 hover:bg-paper-200 dark:hover:bg-ink-800"
           }`}
         >
           {t.l}
@@ -220,7 +220,7 @@ export default function Reports() {
                   key={t.v}
                   onClick={() => setTopBy(t.v)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                    topBy === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-ink-300 hover:bg-surface-100 dark:hover:bg-ink-800"
+                    topBy === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-ink-300 hover:bg-paper-200 dark:hover:bg-ink-800"
                   }`}
                 >
                   {t.l}
@@ -232,7 +232,7 @@ export default function Reports() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="text-left text-ink-500 dark:text-ink-400 border-b border-ink-200 dark:border-ink-800">
+                  <thead className="text-left text-ink-500 dark:text-ink-400 border-b border-paper-300 dark:border-ink-800">
                     <tr>
                       <th className="py-2 pr-3 font-medium">#</th>
                       <th className="py-2 pr-3 font-medium">Producto</th>
@@ -244,7 +244,7 @@ export default function Reports() {
                   </thead>
                   <tbody>
                     {topProducts.map((p, i) => (
-                      <tr key={i} className="border-b border-ink-100 dark:border-ink-800">
+                      <tr key={i} className="border-b border-paper-200 dark:border-ink-800">
                         <td className="py-2 pr-3 text-ink-400 dark:text-ink-500">{i + 1}</td>
                         <td className="py-2 pr-3 font-medium text-ink-800 dark:text-ink-100">{p.name}</td>
                         <td className="py-2 pr-3 text-ink-500 dark:text-ink-400">{p.category || "—"}</td>
@@ -302,7 +302,7 @@ export default function Reports() {
               ) : (
                 <div className="space-y-1.5">
                   {topCustomers.map((c, i) => (
-                    <div key={c.id} className="flex items-center justify-between text-sm py-1.5 border-b border-ink-100 dark:border-ink-800 last:border-0">
+                    <div key={c.id} className="flex items-center justify-between text-sm py-1.5 border-b border-paper-200 dark:border-ink-800 last:border-0">
                       <div className="flex items-center gap-2">
                         <span className="w-6 text-ink-400 dark:text-ink-500 text-xs">{i + 1}.</span>
                         <div>
@@ -332,7 +332,7 @@ export default function Reports() {
               ) : (
                 <div className="space-y-1.5">
                   {deliveryByPerson.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between text-sm py-1.5 border-b border-ink-100 dark:border-ink-800 last:border-0">
+                    <div key={p.id} className="flex items-center justify-between text-sm py-1.5 border-b border-paper-200 dark:border-ink-800 last:border-0">
                       <div>
                         <div className="font-medium text-ink-800 dark:text-ink-100">{p.name}</div>
                         <div className="text-xs text-ink-500 dark:text-ink-400">{p.phone || "—"}</div>
@@ -363,7 +363,7 @@ export default function Reports() {
                     <span className="text-sm text-ink-500 dark:text-ink-400">Ventas período anterior</span>
                     <span className="text-lg font-bold text-ink-500 dark:text-ink-400">{money(sales.previous?.sales || 0)}</span>
                   </div>
-                  <div className="pt-3 border-t border-ink-100 dark:border-ink-800">
+                  <div className="pt-3 border-t border-paper-200 dark:border-ink-800">
                     <TrendPill current={sales.current.sales} previous={sales.previous?.sales} format={(n) => money(n)} />
                   </div>
                   <div className="flex items-center justify-between text-sm">
@@ -389,7 +389,7 @@ export default function Reports() {
               ) : (
                 <div className="space-y-1.5 max-h-72 overflow-y-auto">
                   {neverSold.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between text-sm py-1.5 border-b border-ink-100 dark:border-ink-800 last:border-0">
+                    <div key={p.id} className="flex items-center justify-between text-sm py-1.5 border-b border-paper-200 dark:border-ink-800 last:border-0">
                       <div>
                         <div className="font-medium text-ink-800 dark:text-ink-100">{p.name}</div>
                         <div className="text-xs text-ink-500 dark:text-ink-400">{p.category || "Sin categoría"}</div>
