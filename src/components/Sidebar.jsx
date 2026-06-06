@@ -29,8 +29,15 @@ export default function Sidebar() {
   return (
     <aside className="w-60 shrink-0 bg-white border-r border-ink-200 dark:bg-ink-900 dark:border-ink-800 h-screen sticky top-0 flex flex-col">
       <div className="px-5 py-5 border-b border-ink-200 dark:border-ink-800">
-        <div className="text-lg font-semibold text-ink-800 dark:text-ink-100">AppTurnos</div>
-        <div className="text-xs text-ink-500 dark:text-ink-400">Gestión del restaurant</div>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white dark:bg-ink-800 border border-ink-100 dark:border-ink-700 flex items-center justify-center p-1.5 shrink-0">
+            <img src="/favicon.svg" alt="AppTurnos" className="w-full h-full" />
+          </div>
+          <div>
+            <div className="text-lg font-semibold text-ink-800 dark:text-ink-100 leading-tight">AppTurnos</div>
+            <div className="text-xs text-ink-500 dark:text-ink-400">Gestión del restaurant</div>
+          </div>
+        </div>
       </div>
 
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">

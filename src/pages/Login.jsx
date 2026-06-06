@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
-import { ChefHat, Delete } from "lucide-react";
+import { Delete } from "lucide-react";
 
 const PIN_LENGTH = 4;
 
@@ -47,8 +47,8 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 dark:from-ink-950 dark:to-ink-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md card p-8">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-brand-600 text-white flex items-center justify-center shadow-soft">
-            <ChefHat size={28} />
+          <div className="w-24 h-24 rounded-3xl bg-white dark:bg-ink-800 border border-ink-100 dark:border-ink-700 flex items-center justify-center shadow-soft p-3">
+            <img src="/favicon.svg" alt="AppTurnos" className="w-full h-full" />
           </div>
           <h1 className="mt-4 text-xl font-semibold text-ink-800 dark:text-ink-100">AppTurnos</h1>
           <p className="text-sm text-ink-500 dark:text-ink-400">Ingresa tu usuario y PIN</p>
