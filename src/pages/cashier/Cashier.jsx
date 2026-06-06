@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { money, formatTime, typeLabels, statusLabels, statusColors } from "../../lib/format";
-import { CheckCircle2, Receipt, X, Calculator, CreditCard, Wallet, Banknote, Building2 } from "lucide-react";
+import { CheckCircle2, Receipt, X, Calculator, CreditCard, Wallet, Banknote, Building2, Truck, Utensils } from "lucide-react";
 
 function CloseModal({ order, mode = "close", onClose, onClosed }) {
   // mode: 'close' = cobrar y cerrar (efectivo al entregar / mesa)
@@ -93,9 +93,12 @@ function OrderRow({ order, onClose, onPrepay }) {
           <span>#{order.id}</span>
           <span>·</span>
           <span>{formatTime(order.created_at)}</span>
-          <span className={`badge ${
+          <span className={`badge inline-flex items-center gap-1 ${
             isDelivery ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300" : "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300"
-          }`}>{typeLabels[order.type]}</span>
+          }`}>
+            {isDelivery ? <Truck size={10}/> : <Utensils size={10}/>}
+            {typeLabels[order.type]}
+          </span>
           <span className={`badge ${statusColors[order.status]}`}>{statusLabels[order.status]}</span>
         </div>
         <div className="font-semibold text-ink-800 dark:text-ink-100 mt-0.5">

@@ -4,7 +4,9 @@ import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
 import { money, formatTime, statusLabels, statusColors } from "../../lib/format";
-import { Plus, X, Minus, CheckCircle2, Receipt, Clock } from "lucide-react";
+import {
+  Plus, X, Minus, CheckCircle2, Receipt, Clock, ChefHat, ArrowLeft,
+} from "lucide-react";
 
 function timeAgo(iso) {
   if (!iso) return "—";
@@ -57,6 +59,13 @@ function OrderModal({ table, onClose, onChanged, onGoCashier }) {
   const removeItem = async (itemId) => {
     await api.delete(`/orders/${order.id}/items/${itemId}`);
     await load(); onChanged();
+  };
+
+  const setStatus = async (status) => {
+    try {
+      await api.post(`/orders/${order.id}/status`, { status });
+      await load(); onChanged();
+    } catch (e) { setError(e.response?.data?.error || e.message); }
   };
 
   const total = items.reduce((s, x) => s + Number(x.unit_price) * x.quantity, 0);
@@ -147,13 +156,33 @@ function OrderModal({ table, onClose, onChanged, onGoCashier }) {
         )}
 
         {order && (
-          <div className="px-5 py-3 border-t border-ink-200 dark:border-ink-800 flex items-center justify-end gap-2">
-            {order.status !== "ready_to_pay" && (
+          <div className="px-5 py-3 border-t border-ink-200 dark:border-ink-800 flex flex-wrap items-center justify-end gap-2">
+            {order.status === "pending" && (
+              <>
+                <span className="text-xs text-ink-500 dark:text-ink-400 mr-auto">Pedido recién abierto. La cocina aún no lo empezó.</span>
+                <button onClick={() => setStatus("preparing")} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition">
+                  <ChefHat size={14}/> En preparación
+                </button>
+              </>
+            )}
+            {order.status === "preparing" && (
+              <>
+                <span className="text-xs text-ink-500 dark:text-ink-400 mr-auto">La cocina está preparando el pedido.</span>
+                <button onClick={() => setStatus("pending")} className="btn-secondary text-xs" title="Volver a pendiente">
+                  <ArrowLeft size={12}/> Pendiente
+                </button>
+                <button onClick={() => setStatus("ready_to_pay")} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium transition">
+                  <Receipt size={14}/> Lista para cobrar
+                </button>
+              </>
+            )}
+            {order.status === "ready_to_pay" && (
               <span className="text-xs text-ink-500 dark:text-ink-400 mr-auto">La cuenta la cobra el cajero desde "Caja".</span>
             )}
             <button onClick={onClose} className="btn-secondary">Cerrar</button>
           </div>
         )}
+        {error && <div className="px-5 py-2 text-sm text-rose-700 bg-rose-50 border-t border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{error}</div>}
       </div>
     </div>
   );
@@ -187,18 +216,27 @@ export default function TablesPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {tables.map((t) => {
             const occ = !!t.current_order_id;
-            const readyToPay = t.current_order_status === "ready_to_pay";
+            const status = t.current_order_status;
+            const readyToPay = status === "ready_to_pay";
+            const preparing = status === "preparing";
+            const pending = status === "pending";
+            let cardClass = "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20";
+            let dotClass = "bg-emerald-500";
+            if (readyToPay) {
+              cardClass = "border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20";
+              dotClass = "bg-amber-500";
+            } else if (preparing) {
+              cardClass = "border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20";
+              dotClass = "bg-blue-500";
+            } else if (pending) {
+              cardClass = "border-rose-200 bg-rose-50 dark:border-rose-800 dark:bg-rose-900/20";
+              dotClass = "bg-rose-500";
+            }
             return (
               <button
                 key={t.id}
                 onClick={() => setSelected(t)}
-                className={`card p-4 text-left transition hover:shadow-pop border-2 ${
-                  readyToPay
-                    ? "border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20"
-                    : occ
-                    ? "border-rose-200 bg-rose-50 dark:border-rose-800 dark:bg-rose-900/20"
-                    : "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20"
-                }`}
+                className={`card p-4 text-left transition hover:shadow-pop border-2 ${cardClass}`}
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -206,9 +244,7 @@ export default function TablesPage() {
                     <div className="text-2xl font-bold text-ink-800 dark:text-ink-100">{t.number}</div>
                     {t.label && <div className="text-xs text-ink-500 dark:text-ink-400">{t.label}</div>}
                   </div>
-                  <div className={`w-3 h-3 rounded-full ${
-                    readyToPay ? "bg-amber-500" : occ ? "bg-rose-500" : "bg-emerald-500"
-                  }`} />
+                  <div className={`w-3 h-3 rounded-full ${dotClass}`} />
                 </div>
                 <div className="mt-2 text-xs text-ink-500 dark:text-ink-400">Capacidad: {t.capacity}</div>
 
@@ -225,9 +261,13 @@ export default function TablesPage() {
                       <div className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1">
                         <Receipt size={10}/> Lista para cobrar
                       </div>
+                    ) : preparing ? (
+                      <div className="text-[11px] font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1">
+                        <ChefHat size={10}/> En preparación
+                      </div>
                     ) : (
                       <div className="text-[11px] text-rose-700 dark:text-rose-300">
-                        Abierta
+                        Abierta · pendiente
                       </div>
                     )}
                   </div>

@@ -103,7 +103,7 @@ router.post("/", authRequired, async (req, res) => {
       }
     }
 
-    const initialStatus = type === "table" ? "ready_to_pay" : "pending";
+    const initialStatus = "pending";
 
     const { rows: order } = await client.query(
       `INSERT INTO orders (type, table_id, customer_id, user_id, status, notes)
@@ -204,6 +204,18 @@ router.post("/:id/assign-delivery", authRequired, requireRole("admin"), async (r
     if (dp.rows[0].status !== "available") {
       await client.query("ROLLBACK");
       return res.status(409).json({ error: "Repartidor no disponible" });
+    }
+    const { rows: o } = await client.query(
+      "SELECT status FROM orders WHERE id = $1 FOR UPDATE",
+      [req.params.id]
+    );
+    if (o.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Pedido no existe" });
+    }
+    if (!["pending", "preparing"].includes(o.rows[0].status)) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "El pedido no se puede asignar en su estado actual (" + o.rows[0].status + ")" });
     }
     await client.query(
       `UPDATE orders SET delivery_person_id = $2, status = 'on_the_way' WHERE id = $1`,
@@ -320,6 +332,57 @@ router.post("/:id/prepay", authRequired, requireRole("admin"), async (req, res) 
     [req.params.id, payment_method]
   );
   res.json({ ok: true });
+});
+
+// Reabrir pedido cerrado por error (admin)
+// Revierte el cierre: vuelve a on_the_way (si tenía repartidor) o preparing,
+// libera el cierre y resetea el pago a pendiente.
+router.post("/:id/reopen", authRequired, requireRole("admin"), async (req, res) => {
+  const client = await getClient();
+  try {
+    await client.query("BEGIN");
+    const { rows } = await client.query(
+      "SELECT type, status, delivery_person_id FROM orders WHERE id = $1 FOR UPDATE",
+      [req.params.id]
+    );
+    if (rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "No existe" });
+    }
+    const o = rows[0];
+    if (o.status !== "delivered") {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "Solo se pueden reabrir pedidos entregados" });
+    }
+    let newStatus;
+    if (o.type === "delivery" && o.delivery_person_id) {
+      newStatus = "on_the_way";
+      await client.query(
+        "UPDATE delivery_persons SET status = 'busy' WHERE id = $1",
+        [o.delivery_person_id]
+      );
+    } else if (o.type === "table") {
+      newStatus = "ready_to_pay";
+    } else {
+      newStatus = "preparing";
+    }
+    await client.query(
+      `UPDATE orders
+          SET status = $2,
+              payment_status = 'pending',
+              payment_method = NULL,
+              closed_at = NULL
+        WHERE id = $1`,
+      [req.params.id, newStatus]
+    );
+    await client.query("COMMIT");
+    res.json({ ok: true, status: newStatus });
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
+  }
 });
 
 export default router;

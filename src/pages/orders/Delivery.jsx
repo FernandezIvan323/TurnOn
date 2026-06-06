@@ -6,6 +6,7 @@ import { money, formatTime, statusLabels, statusColors, typeLabels } from "../..
 import {
   Phone, MapPin, Plus, ChevronRight, X, User as UserIcon,
   CheckCircle2, Truck, XCircle, StickyNote, Search,
+  ChefHat, ArrowLeft, RotateCcw, AlertTriangle, Package,
 } from "lucide-react";
 
 const COLUMNS = [
@@ -15,7 +16,8 @@ const COLUMNS = [
   { key: "delivered", title: "Entregados",     tone: "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/50" },
 ];
 
-function OrderCard({ order, onClick, onAssign, onCancel }) {
+function OrderCard({ order, onClick, onAssign, onCancel, onPreparing, onBackPending, onReopen }) {
+  const isPaid = order.payment_status === "paid";
   return (
     <div
       onClick={onClick}
@@ -31,6 +33,11 @@ function OrderCard({ order, onClick, onAssign, onCancel }) {
         </div>
         <div className="text-right">
           <div className="font-semibold text-ink-800 dark:text-ink-100">{money(order.total)}</div>
+          {isPaid && (
+            <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 mt-0.5">
+              ✓ Pagado {order.payment_method ? `(${order.payment_method})` : ""}
+            </div>
+          )}
           {order.delivery_name && (
             <div className="text-[10px] text-ink-500 dark:text-ink-400 mt-0.5">
               <Truck size={10} className="inline" /> {order.delivery_name}
@@ -49,12 +56,20 @@ function OrderCard({ order, onClick, onAssign, onCancel }) {
           <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400"><StickyNote size={12}/>nota</span>
         )}
       </div>
-      <div className="mt-3 flex gap-1.5">
+      <div className="mt-3 flex gap-1.5 flex-wrap">
         {order.status === "pending" && (
           <>
             <button
+              onClick={(e) => { e.stopPropagation(); onPreparing(order); }}
+              className="flex-1 h-8 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center justify-center gap-1 transition"
+              title="Marcar como en preparación"
+            >
+              <ChefHat size={14}/> En preparación
+            </button>
+            <button
               onClick={(e) => { e.stopPropagation(); onAssign(order); }}
               className="btn-primary text-xs flex-1 h-8"
+              title="Asignar repartidor directamente"
             >
               <Truck size={14}/> Asignar
             </button>
@@ -67,10 +82,36 @@ function OrderCard({ order, onClick, onAssign, onCancel }) {
             </button>
           </>
         )}
+        {order.status === "preparing" && (
+          <>
+            <button
+              onClick={(e) => { e.stopPropagation(); onAssign(order); }}
+              className="btn-primary text-xs flex-1 h-8"
+            >
+              <Truck size={14}/> Asignar repartidor
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onBackPending(order); }}
+              className="btn-secondary text-xs h-8 px-2"
+              title="Volver a pendiente"
+            >
+              <ArrowLeft size={14}/>
+            </button>
+          </>
+        )}
         {order.status === "on_the_way" && (
           <span className="badge bg-emerald-100 text-emerald-800 w-full justify-center py-1 dark:bg-emerald-900/40 dark:text-emerald-300">
-            <CheckCircle2 size={12} className="mr-1" /> Listo para cerrar al entregar
+            <CheckCircle2 size={12} className="mr-1" /> {isPaid ? "Pagado · listo para cerrar al entregar" : "Listo para cerrar al entregar"}
           </span>
+        )}
+        {order.status === "delivered" && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onReopen(order); }}
+            className="w-full h-8 px-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 dark:text-amber-300 text-xs font-medium flex items-center justify-center gap-1 transition"
+            title="Reabrir este pedido (corrige errores de cierre)"
+          >
+            <RotateCcw size={14}/> Reabrir
+          </button>
         )}
       </div>
     </div>
@@ -177,11 +218,9 @@ function NewOrderModal({ onClose, onCreated }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 flex-1 overflow-hidden">
-          {/* Cliente */}
           <div className="p-5 border-r border-ink-200 dark:border-ink-800 overflow-y-auto">
             <h3 className="text-sm font-semibold text-ink-700 dark:text-ink-200 mb-3">Datos del cliente</h3>
 
-            {/* Buscador predictivo */}
             {!customer && (
               <div className="relative mb-3" ref={searchRef}>
                 <label className="label">Buscar cliente existente (nombre o teléfono)</label>
@@ -302,7 +341,6 @@ function NewOrderModal({ onClose, onCreated }) {
             {error && <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{error}</div>}
           </div>
 
-          {/* Menú */}
           <div className="p-5 overflow-y-auto bg-surface-50 dark:bg-ink-950">
             <h3 className="text-sm font-semibold text-ink-700 dark:text-ink-200 mb-3">Menú</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -441,6 +479,61 @@ function OrderDetailModal({ order, onClose, onChanged }) {
   );
 }
 
+function ReopenModal({ order, onClose, onReopened }) {
+  const [confirmText, setConfirmText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+  const required = "REABRIR";
+
+  const submit = async () => {
+    if (confirmText.trim().toUpperCase() !== required) {
+      setErr("Escribe REABRIR para confirmar");
+      return;
+    }
+    setBusy(true); setErr(null);
+    try {
+      await api.post(`/orders/${order.id}/reopen`);
+      onReopened(); onClose();
+    } catch (e) {
+      setErr(e.response?.data?.error || e.message);
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+      <div className="card w-full max-w-md p-6">
+        <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100 mb-3 flex items-center gap-2">
+          <AlertTriangle size={20} className="text-amber-600"/>
+          Reabrir pedido #{order.id}
+        </h2>
+        <div className="card p-3 bg-amber-50 border-amber-200 mb-3 text-sm text-amber-900 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
+          <b>Esta acción es delicada.</b> Va a:
+          <ul className="list-disc pl-5 mt-1 space-y-0.5">
+            <li>Deshacer el cobro ({money(order.total)} · {order.payment_method || "?"})</li>
+            <li>Devolver el pedido a {order.delivery_person_id ? "En camino (repartidor vuelve a estar ocupado)" : "En preparación"}</li>
+            <li>Si ya se contabilizó en reportes de hoy, no se actualizará</li>
+          </ul>
+        </div>
+        <label className="label">Escribe <code className="px-1.5 py-0.5 rounded bg-ink-100 dark:bg-ink-800 text-amber-700 dark:text-amber-300 font-mono text-xs">{required}</code> para confirmar:</label>
+        <input
+          autoFocus
+          className="input"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder={required}
+        />
+        {err && <div className="mt-2 text-sm text-rose-700 dark:text-rose-300">{err}</div>}
+        <div className="mt-4 flex gap-2">
+          <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
+          <button onClick={submit} disabled={busy} className="btn-primary flex-1">
+            {busy ? "Reabriendo…" : "Reabrir pedido"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Delivery() {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
@@ -451,6 +544,7 @@ export default function Delivery() {
   const [toView, setToView] = useState(null);
   const [toCancel, setToCancel] = useState(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [toReopen, setToReopen] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -469,7 +563,22 @@ export default function Delivery() {
 
   const byStatus = (s) => filtered.filter((o) => o.status === s);
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const deliveredTodayCount = useMemo(
+    () => orders.filter((o) => o.status === "delivered" && new Date(o.created_at) >= today).length,
+    [orders]
+  );
+  const totalDeliveredCount = useMemo(
+    () => orders.filter((o) => o.status === "delivered").length,
+    [orders]
+  );
+
   const onCreated = async (payload) => { await api.post("/orders", payload); await load(); };
+  const setStatus = async (id, status) => {
+    await api.post(`/orders/${id}/status`, { status });
+    await load();
+  };
   const cancel = async () => {
     await api.post(`/orders/${toCancel.id}/status`, { status: "cancelled", cancel_reason: cancelReason || "No especificado" });
     setToCancel(null); setCancelReason(""); await load();
@@ -499,6 +608,21 @@ export default function Delivery() {
         }
       />
 
+      {deliveredTodayCount > 0 && filter === "active" && (
+        <div className="mb-4 card p-3 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-emerald-800 dark:text-emerald-200">
+            <Package size={16}/>
+            <span><b>{deliveredTodayCount}</b> {deliveredTodayCount === 1 ? "pedido entregado" : "pedidos entregados"} hoy</span>
+          </div>
+          <button
+            onClick={() => setFilter("delivered")}
+            className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:underline"
+          >
+            Ver todos ({totalDeliveredCount}) →
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="text-sm text-ink-500 dark:text-ink-400">Cargando…</div>
       ) : (
@@ -519,6 +643,9 @@ export default function Delivery() {
                     onClick={() => setToView(o)}
                     onAssign={(o) => setToAssign(o)}
                     onCancel={(o) => setToCancel(o)}
+                    onPreparing={(o) => setStatus(o.id, "preparing")}
+                    onBackPending={(o) => setStatus(o.id, "pending")}
+                    onReopen={(o) => setToReopen(o)}
                   />
                 ))}
                 {byStatus(col.key).length === 0 && (
@@ -533,6 +660,7 @@ export default function Delivery() {
       {openNew && <NewOrderModal onClose={() => setOpenNew(false)} onCreated={onCreated} />}
       {toAssign && <AssignModal order={toAssign} onClose={() => setToAssign(null)} onAssigned={load} />}
       {toView && <OrderDetailModal order={toView} onClose={() => setToView(null)} onChanged={load} />}
+      {toReopen && <ReopenModal order={toReopen} onClose={() => setToReopen(null)} onReopened={load} />}
       {toCancel && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
           <div className="card w-full max-w-md p-5">
