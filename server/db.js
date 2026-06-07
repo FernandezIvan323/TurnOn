@@ -55,6 +55,67 @@ pool.on("connect", async (client) => {
 export const query = (text, params) => pool.query(text, params);
 export const getClient = () => pool.connect();
 
+/**
+ * Error HTTP lanzable desde dentro de `withTransaction` para abortar la tx
+ * y responder con un código limpio (ej: throw new HttpError(404, "No existe")).
+ */
+export class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+    this.name = "HttpError";
+  }
+}
+
+/**
+ * Ejecuta `fn(client)` dentro de una transacción de PostgreSQL.
+ * - Si fn RETORNA un valor, el helper hace COMMIT y lo devuelve a la ruta.
+ * - Si fn LANZA HttpError, el helper hace ROLLBACK y la ruta lo convierte en respuesta.
+ * - Si fn LANZA cualquier otro error, el helper hace ROLLBACK, mapea errores de
+ *   PostgreSQL a HttpError (23503 → 409 FK, 23505 → 409 unique, 23514 → 400 check,
+ *   23502 → 400 not null) y re-lanza.
+ * - El client SIEMPRE se libera, incluso si BEGIN falla.
+ *
+ * Patrón de uso:
+ *   try {
+ *     const result = await withTransaction(async (client) => {
+ *       const { rows } = await client.query(...);
+ *       if (rows.length === 0) throw new HttpError(404, "No existe");
+ *       // ... más trabajo ...
+ *       return { id: ... };
+ *     });
+ *     res.json(result);
+ *   } catch (e) {
+ *     const status = e.status || 500;
+ *     res.status(status).json({ error: e.message || "Error interno" });
+ *   }
+ */
+export async function withTransaction(fn) {
+  const client = await pool.connect();
+  let txStarted = false;
+  try {
+    await client.query("BEGIN");
+    txStarted = true;
+    const result = await fn(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (e) {
+    if (txStarted) {
+      try { await client.query("ROLLBACK"); } catch (_) { /* ignore */ }
+    }
+    if (e instanceof HttpError) throw e;
+    if (e && typeof e === "object" && e.code) {
+      if (e.code === "23503") throw new HttpError(409, "Referencia inválida (clave foránea)");
+      if (e.code === "23505") throw new HttpError(409, "Registro duplicado");
+      if (e.code === "23514") throw new HttpError(400, "Dato inválido (restricción CHECK)");
+      if (e.code === "23502") throw new HttpError(400, "Falta un campo obligatorio");
+    }
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
 export async function ensureDatabase() {
   const { rows } = await bootstrap.query(
     "SELECT 1 FROM pg_database WHERE datname = $1",

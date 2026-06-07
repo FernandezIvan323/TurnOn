@@ -235,19 +235,37 @@ JWT_SECRET=cambia-esto-en-produccion
 ```
 
 ### 4. Ejecutar (frontend + backend en paralelo)
+
+Hay **3 formas** de arrancar el servidor. Elige la que prefieras:
+
+#### A) Modo visible (logs en vivo, recomendado para desarrollo)
 ```bash
 npm run dev
 ```
+Levanta frontend (Vite :5180) + backend (Node :3001) en una sola terminal. Si cierras la terminal, el server se apaga.
 
-Esto levanta:
-- **Frontend** (Vite) en `http://localhost:5180`
-- **Backend** (Express) en `http://localhost:3001`
+#### B) Modo detachado (sobrevive al cierre de la terminal, recomendado para uso diario)
+```bash
+npm run dev:detached
+```
+Arranca frontend + backend en segundo plano (ventana oculta). Sobrevive aunque cierres PowerShell/VS Code. El PID se guarda en `server.pid` y los logs en `server.log` / `server-error.log`.
+
+Para detenerlo:
+```bash
+npm run dev:stop
+```
+
+#### C) Solo frontend o solo backend
+```bash
+npm run dev:web   # solo Vite
+npm run dev:api   # solo Node
+```
 
 > Si quieres cambiar el puerto del frontend, edita `vite.config.js` (variable `port`).
 
 ### 5. Primer arranque
 - La base de datos `appturnos` se crea automáticamente si no existe.
-- Las migraciones (8 tablas) se aplican al arrancar.
+- Las migraciones se aplican al arrancar (idempotente).
 - El seed inserta 5 categorías, 14 productos, 9 mesas, 3 repartidores y 3 usuarios de prueba.
 
 ### 6. Acceder
@@ -257,6 +275,12 @@ Abre `http://localhost:5180` y loguéate con:
 | `admin` | `1234` | Cajero / Administrador |
 | `ivan`  | `0000` | Mesero |
 | `maria` | `0000` | Mesera |
+
+### 🛟 Troubleshooting: "La app se queda cargando"
+- Abre `http://localhost:3001/api/health` en el navegador. Si **no responde**, el server está caído.
+- Si arrancaste con `npm run dev` y cerraste la terminal, ya no hay server. Vuelve a arrancarlo o usa `npm run dev:detached`.
+- Si el server está caído, la app muestra un **banner rojo arriba** *"No se puede conectar con el servidor"* con un botón **Reintentar**. Cuando lo arregles y hagas clic, la página se recarga sola.
+- Si el server está vivo pero la app sigue colgada, abre la consola del navegador (F12) y revisa si hay errores 4xx/5xx.
 
 ---
 
@@ -324,11 +348,13 @@ Abre `http://localhost:5180` y loguéate con:
 ## 🧰 Scripts disponibles
 
 ```bash
-npm run dev      # Levanta frontend (Vite) + backend (Node --watch) en paralelo
-npm run dev:web  # Solo frontend
-npm run dev:api  # Solo backend
-npm run build    # Compila el frontend para producción (carpeta dist/)
-npm run preview  # Sirve la build de producción
+npm run dev          # Levanta frontend + backend en una terminal (logs visibles)
+npm run dev:detached # Arranca en segundo plano (sobrevive cierre de terminal)
+npm run dev:stop     # Detiene el server arrancado con dev:detached
+npm run dev:web      # Solo frontend
+npm run dev:api      # Solo backend
+npm run build        # Compila el frontend para producción (carpeta dist/)
+npm run preview      # Sirve la build de producción
 ```
 
 ---

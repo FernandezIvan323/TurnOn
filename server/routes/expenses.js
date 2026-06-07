@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { query } from "../db.js";
+import { query, withTransaction, HttpError } from "../db.js";
 import { authRequired, requireRole } from "../middleware/auth.js";
 
 const router = Router();
@@ -145,20 +145,23 @@ router.post("/", async (req, res) => {
   if (method && !VALID_METHODS.includes(method))
     return res.status(400).json({ error: "payment_method inválido" });
 
-  // Validar que la categoría exista
-  if (catId != null) {
-    const { rows } = await query("SELECT id FROM expense_categories WHERE id = $1 AND active = TRUE", [catId]);
-    if (rows.length === 0)
-      return res.status(400).json({ error: "Categoría inválida o inactiva" });
-  }
-
   try {
-    const { rows } = await query(
-      `INSERT INTO expenses (expense_date, category_id, amount, description, payment_method, user_id)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, expense_date, category_id, amount, description, payment_method, user_id, created_at`,
-      [date, catId, amount, desc, method, req.user.id]
-    );
+    const newId = await withTransaction(async (client) => {
+      if (catId != null) {
+        const { rows } = await client.query(
+          "SELECT id FROM expense_categories WHERE id = $1 AND active = TRUE",
+          [catId]
+        );
+        if (rows.length === 0) throw new HttpError(400, "Categoría inválida o inactiva");
+      }
+      const { rows } = await client.query(
+        `INSERT INTO expenses (expense_date, category_id, amount, description, payment_method, user_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id`,
+        [date, catId, amount, desc, method, req.user.id]
+      );
+      return rows[0].id;
+    });
     const detail = await query(
       `SELECT e.id, e.expense_date, e.category_id, e.amount, e.description,
               e.payment_method, e.user_id, e.created_at,
@@ -168,14 +171,13 @@ router.post("/", async (req, res) => {
          LEFT JOIN expense_categories c ON c.id = e.category_id
          LEFT JOIN users              u ON u.id = e.user_id
         WHERE e.id = $1`,
-      [rows[0].id]
+      [newId]
     );
     res.status(201).json(detail.rows[0]);
   } catch (e) {
-    if (e.code === "23514") {
-      return res.status(400).json({ error: "payment_method no permitido (cash/card/transfer)" });
-    }
-    throw e;
+    const status = e.status || 500;
+    if (status === 500) console.error(`[expenses:POST /]`, e);
+    res.status(status).json({ error: e.message || "Error interno" });
   }
 });
 
@@ -196,46 +198,65 @@ router.put("/:id", async (req, res) => {
     return res.status(400).json({ error: "amount debe ser > 0" });
   if (method && !VALID_METHODS.includes(method))
     return res.status(400).json({ error: "payment_method inválido" });
-  if (catId != null) {
-    const { rows } = await query("SELECT id FROM expense_categories WHERE id = $1 AND active = TRUE", [catId]);
-    if (rows.length === 0)
-      return res.status(400).json({ error: "Categoría inválida o inactiva" });
+
+  try {
+    const updatedId = await withTransaction(async (client) => {
+      if (catId != null) {
+        const { rows } = await client.query(
+          "SELECT id FROM expense_categories WHERE id = $1 AND active = TRUE",
+          [catId]
+        );
+        if (rows.length === 0) throw new HttpError(400, "Categoría inválida o inactiva");
+      }
+      const { rows } = await client.query(
+        `UPDATE expenses
+            SET expense_date   = $2,
+                category_id    = $3,
+                amount         = $4,
+                description    = $5,
+                payment_method = $6
+          WHERE id = $1
+          RETURNING id`,
+        [id, date, catId, amount, desc, method]
+      );
+      if (rows.length === 0) throw new HttpError(404, "Gasto no encontrado");
+      return rows[0].id;
+    });
+    const detail = await query(
+      `SELECT e.id, e.expense_date, e.category_id, e.amount, e.description,
+              e.payment_method, e.user_id, e.created_at,
+              c.name AS category_name, c.icon AS category_icon,
+              u.name AS user_name
+         FROM expenses e
+         LEFT JOIN expense_categories c ON c.id = e.category_id
+         LEFT JOIN users              u ON u.id = e.user_id
+        WHERE e.id = $1`,
+      [updatedId]
+    );
+    res.json(detail.rows[0]);
+  } catch (e) {
+    const status = e.status || 500;
+    if (status === 500) console.error(`[expenses:PUT /:id]`, e);
+    res.status(status).json({ error: e.message || "Error interno" });
   }
-
-  const { rows } = await query(
-    `UPDATE expenses
-        SET expense_date   = $2,
-            category_id    = $3,
-            amount         = $4,
-            description    = $5,
-            payment_method = $6
-      WHERE id = $1
-      RETURNING id, expense_date, category_id, amount, description, payment_method, user_id, created_at`,
-    [id, date, catId, amount, desc, method]
-  );
-  if (rows.length === 0) return res.status(404).json({ error: "Gasto no encontrado" });
-
-  const detail = await query(
-    `SELECT e.id, e.expense_date, e.category_id, e.amount, e.description,
-            e.payment_method, e.user_id, e.created_at,
-            c.name AS category_name, c.icon AS category_icon,
-            u.name AS user_name
-       FROM expenses e
-       LEFT JOIN expense_categories c ON c.id = e.category_id
-       LEFT JOIN users              u ON u.id = e.user_id
-      WHERE e.id = $1`,
-    [id]
-  );
-  res.json(detail.rows[0]);
 });
 
 // DELETE /api/expenses/:id
 router.delete("/:id", async (req, res) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) return res.status(400).json({ error: "ID inválido" });
-  const { rows } = await query("DELETE FROM expenses WHERE id = $1 RETURNING id", [id]);
-  if (rows.length === 0) return res.status(404).json({ error: "Gasto no encontrado" });
-  res.json({ ok: true });
+  try {
+    const ok = await withTransaction(async (client) => {
+      const { rows } = await client.query("DELETE FROM expenses WHERE id = $1 RETURNING id", [id]);
+      if (rows.length === 0) throw new HttpError(404, "Gasto no encontrado");
+      return true;
+    });
+    res.json({ ok });
+  } catch (e) {
+    const status = e.status || 500;
+    if (status === 500) console.error(`[expenses:DELETE /:id]`, e);
+    res.status(status).json({ error: e.message || "Error interno" });
+  }
 });
 
 export default router;

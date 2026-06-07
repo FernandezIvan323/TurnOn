@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { query } from "../db.js";
+import { query, withTransaction, HttpError } from "../db.js";
 import { authRequired, requireRole } from "../middleware/auth.js";
 
 const router = Router();
@@ -137,68 +137,92 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ error: "counted_cash inválido" });
   const notes = (req.body.notes || "").toString().trim() || null;
 
-  // 1) Verificar que no exista un cierre para esa fecha
-  const existing = await query(
-    "SELECT id, closed_at FROM cash_closings WHERE closing_date = $1",
-    [date]
-  );
-  if (existing.rows.length > 0)
-    return res.status(409).json({
-      error: `Ya existe un cierre para ${date}. Los cortes son inmutables.`,
-      closing_id: existing.rows[0].id,
-    });
-
-  // 2) Verificar que no haya pedidos pendientes
-  const pending = await pendingOrdersFor(date);
-  if (pending.length > 0)
-    return res.status(409).json({
-      error: `Hay ${pending.length} pedido(s) pendiente(s). Ciérralos o cancélalos antes de hacer el corte.`,
-      pending_orders: pending,
-    });
-
-  // 3) Calcular resumen del día
-  const summary = await computeDaySummary(date);
-  const expected = Number(initialCash) + Number(summary.cash_sales);
-  const diff = Number(countedCash) - expected;
-
-  // 4) Insertar
   try {
-    const { rows } = await query(
-      `INSERT INTO cash_closings
-        (closing_date, closed_by, total_sales, total_orders,
-         cash_sales, card_sales, transfer_sales, mixed_sales,
-         initial_cash, expected_cash, counted_cash, difference, notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-       RETURNING *`,
-      [
-        date,
-        req.user.id,
-        summary.total_sales,
-        summary.total_orders,
-        summary.cash_sales,
-        summary.card_sales,
-        summary.transfer_sales,
-        summary.mixed_sales,
-        initialCash,
-        expected,
-        countedCash,
-        diff,
-        notes,
-      ]
-    );
+    const closingId = await withTransaction(async (client) => {
+      // 1) Verificar que no exista un cierre para esa fecha
+      const existing = await client.query(
+        "SELECT id FROM cash_closings WHERE closing_date = $1",
+        [date]
+      );
+      if (existing.rows.length > 0) {
+        const err = new HttpError(409, `Ya existe un cierre para ${date}. Los cortes son inmutables.`);
+        err.closing_id = existing.rows[0].id;
+        throw err;
+      }
+
+      // 2) Verificar que no haya pedidos pendientes
+      const { rows: pending } = await client.query(
+        `SELECT o.id, o.type, o.status, o.payment_status, o.total, o.created_at,
+                t.number AS table_number, c.name AS customer_name
+           FROM orders o
+           LEFT JOIN tables t    ON t.id = o.table_id
+           LEFT JOIN customers c ON c.id = o.customer_id
+          WHERE (o.status NOT IN ('delivered','paid','cancelled')
+                 OR o.payment_status <> 'paid')
+            AND o.status <> 'cancelled'
+          LIMIT 50`
+      );
+      if (pending.length > 0) {
+        const err = new HttpError(
+          409,
+          `Hay ${pending.length} pedido(s) pendiente(s). Ciérralos o cancélalos antes de hacer el corte.`
+        );
+        err.pending_orders = pending;
+        throw err;
+      }
+
+      // 3) Calcular resumen del día
+      const { rows: sales } = await client.query(
+        `SELECT COUNT(*)::int                     AS total_orders,
+                COALESCE(SUM(total),0)::numeric    AS total_sales,
+                COALESCE(SUM(total) FILTER (WHERE payment_method='cash'),0)::numeric     AS cash_sales,
+                COALESCE(SUM(total) FILTER (WHERE payment_method='card'),0)::numeric     AS card_sales,
+                COALESCE(SUM(total) FILTER (WHERE payment_method='transfer'),0)::numeric AS transfer_sales,
+                COALESCE(SUM(total) FILTER (WHERE payment_method='mixed'),0)::numeric    AS mixed_sales
+           FROM orders
+          WHERE DATE(closed_at AT TIME ZONE 'America/Mexico_City') = $1
+            AND payment_status = 'paid'`,
+        [date]
+      );
+      const summary = sales[0] || {
+        total_orders: 0, total_sales: 0, cash_sales: 0, card_sales: 0, transfer_sales: 0, mixed_sales: 0,
+      };
+      const expected = Number(initialCash) + Number(summary.cash_sales);
+      const diff = Number(countedCash) - expected;
+
+      // 4) Insertar
+      const { rows: ins } = await client.query(
+        `INSERT INTO cash_closings
+          (closing_date, closed_by, total_sales, total_orders,
+           cash_sales, card_sales, transfer_sales, mixed_sales,
+           initial_cash, expected_cash, counted_cash, difference, notes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+         RETURNING id`,
+        [
+          date, req.user.id,
+          summary.total_sales, summary.total_orders,
+          summary.cash_sales, summary.card_sales, summary.transfer_sales, summary.mixed_sales,
+          initialCash, expected, countedCash, diff, notes,
+        ]
+      );
+      return ins[0].id;
+    });
+
     const detail = await query(
       `SELECT cc.*, u.name AS closed_by_name
          FROM cash_closings cc
          LEFT JOIN users u ON u.id = cc.closed_by
         WHERE cc.id = $1`,
-      [rows[0].id]
+      [closingId]
     );
     res.status(201).json(detail.rows[0]);
   } catch (e) {
-    if (e.code === "23505") {
-      return res.status(409).json({ error: "Ya existe un cierre para esa fecha" });
-    }
-    throw e;
+    const status = e.status || 500;
+    if (status === 500) console.error(`[cashClosings:POST /]`, e);
+    const body = { error: e.message || "Error interno" };
+    if (e.closing_id) body.closing_id = e.closing_id;
+    if (e.pending_orders) body.pending_orders = e.pending_orders;
+    res.status(status).json(body);
   }
 });
 

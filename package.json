@@ -7,6 +7,9 @@
     "dev": "concurrently -n web,api -c green,cyan \"npm:dev:web\" \"npm:dev:api\"",
     "dev:web": "vite",
     "dev:api": "node --watch server/index.js",
+    "dev:start": "concurrently -k -n web,api -c green,cyan \"npm:dev:web\" \"npm:dev:api\"",
+    "dev:detached": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-detached.ps1",
+    "dev:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-server.ps1",
     "build": "vite build",
     "preview": "vite preview"
   },

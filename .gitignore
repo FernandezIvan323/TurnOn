@@ -21,6 +21,7 @@ server/.env
 # Server runtime files
 server.log
 server-error.log
+server.pid
 
 # Editor directories and files
 .vscode/*

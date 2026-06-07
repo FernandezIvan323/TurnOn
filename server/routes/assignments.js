@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { query, getClient } from "../db.js";
+import { query, withTransaction, HttpError } from "../db.js";
 import { authRequired, requireRole } from "../middleware/auth.js";
 
 const router = Router();
@@ -59,23 +59,22 @@ router.put("/:user_id", authRequired, requireRole("admin"), async (req, res) => 
     }
   }
 
-  const client = await getClient();
   try {
-    await client.query("BEGIN");
-    await client.query("DELETE FROM waiter_tables WHERE user_id = $1", [userId]);
-    for (const tid of ids) {
-      await client.query(
-        "INSERT INTO waiter_tables (user_id, table_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-        [userId, tid]
-      );
-    }
-    await client.query("COMMIT");
-    res.json({ ok: true, count: ids.length });
+    const count = await withTransaction(async (tx) => {
+      await tx.query("DELETE FROM waiter_tables WHERE user_id = $1", [userId]);
+      for (const tid of ids) {
+        await tx.query(
+          "INSERT INTO waiter_tables (user_id, table_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+          [userId, tid]
+        );
+      }
+      return ids.length;
+    });
+    res.json({ ok: true, count });
   } catch (e) {
-    await client.query("ROLLBACK");
-    throw e;
-  } finally {
-    client.release();
+    const status = e.status || 500;
+    if (status === 500) console.error(`[assignments:PUT /:user_id]`, e);
+    res.status(status).json({ error: e.message || "Error interno" });
   }
 });
 

@@ -1,8 +1,9 @@
 import axios from "axios";
+import { serverEvents } from "./events";
 
 const api = axios.create({
   baseURL: "/api",
-  timeout: 15000,
+  timeout: 10000,
 });
 
 api.interceptors.request.use((config) => {
@@ -11,9 +12,42 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Reintento 1x para errores transitorios de red o 5xx. No reintenta 4xx
+// (es responsabilidad del cliente: 400, 401, 403, 404, 409...).
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const MAX_RETRIES = 1;
+const RETRY_DELAY = 1500;
+const NETWORK_ERR_CODES = new Set([
+  "ERR_NETWORK",
+  "ECONNABORTED",
+  "ECONNREFUSED",
+  "ECONNRESET",
+  "ETIMEDOUT",
+  "ENOTFOUND",
+]);
+
 api.interceptors.response.use(
-  (r) => r,
-  (err) => {
+  (r) => {
+    serverEvents.emit(serverEvents.NETWORK_UP);
+    return r;
+  },
+  async (err) => {
+    const config = err?.config;
+    const status = err?.response?.status;
+    const isNetwork = !err?.response || NETWORK_ERR_CODES.has(err?.code);
+    const is5xx = status >= 500 && status < 600;
+    const canRetry = isNetwork || is5xx;
+
+    if (isNetwork || is5xx) {
+      serverEvents.emit(serverEvents.NETWORK_DOWN);
+    }
+
+    if (config && canRetry && !config.__retried) {
+      config.__retried = true;
+      await sleep(RETRY_DELAY);
+      return api.request(config);
+    }
+
     if (err.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -22,5 +56,8 @@ api.interceptors.response.use(
     return Promise.reject(err);
   }
 );
+
+// Limite de retries por instancia (algunos pages usan api directo, no el wrapper)
+export const MAX_RETRIES_GLOBAL = MAX_RETRIES;
 
 export default api;
