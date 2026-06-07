@@ -140,4 +140,20 @@ export async function seed() {
       [adminPin, waiterPin]
     );
   }
+
+  // Categorías de gastos
+  const expCatCount = await pool.query("SELECT COUNT(*)::int c FROM expense_categories");
+  if (expCatCount.rows[0].c === 0) {
+    console.log("[seed] Insertando categorías de gastos…");
+    await pool.query(
+      `INSERT INTO expense_categories (name, icon) VALUES
+         ('Compras','ShoppingCart'),
+         ('Servicios','Zap'),
+         ('Sueldos','Wallet'),
+         ('Mantenimiento','Wrench'),
+         ('Insumos','Package'),
+         ('Limpieza','Sparkles'),
+         ('Otros','Receipt')`
+    );
+  }
 }

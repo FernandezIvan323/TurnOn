@@ -11,6 +11,7 @@ import Customers from "./pages/customers/Customers";
 import Menu from "./pages/admin/Menu";
 import Staff from "./pages/admin/Staff";
 import Reports from "./pages/admin/Reports";
+import Expenses from "./pages/admin/Expenses";
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/cashier/closing" element={<CashClosing />} />
         <Route path="/cashier/closing/history" element={<ClosingHistory />} />
         <Route path="/customers" element={<Customers />} />
+        <Route path="/admin/expenses" element={<Expenses />} />
         <Route path="/menu" element={<Menu />} />
         <Route path="/staff" element={<Staff />} />
         <Route path="/reports" element={<Reports />} />

@@ -11,6 +11,7 @@ import {
   Home,
   BookOpen,
   ScrollText,
+  TrendingDown,
 } from "lucide-react";
 
 const items = [
@@ -20,6 +21,7 @@ const items = [
   { to: "/delivery",     label: "Domicilios",     icon: Truck,           roles: ["admin"] },
   { to: "/cashier",      label: "Caja",           icon: Calculator,      roles: ["admin"] },
   { to: "/cashier/closing", label: "Corte de caja", icon: ScrollText,    roles: ["admin"] },
+  { to: "/admin/expenses",  label: "Gastos",      icon: TrendingDown,    roles: ["admin"] },
   { to: "/customers",    label: "Clientes",       icon: Users,           roles: ["admin"] },
   { to: "/staff",        label: "Personal",       icon: LayoutDashboard, roles: ["admin"] },
   { to: "/reports",      label: "Reportes",       icon: BarChart3,       roles: ["admin"] },

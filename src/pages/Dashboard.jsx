@@ -41,12 +41,17 @@ function Trend({ current, previous }) {
 
 function AdminDashboard() {
   const [data, setData] = useState(null);
+  const [expensesData, setExpensesData] = useState(null);
   const [loading, setLoading] = useState(true);
   const load = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get("/dashboard/summary");
+      const [{ data }, { data: exp }] = await Promise.all([
+        api.get("/dashboard/summary"),
+        api.get("/expenses/summary", { params: { date: new Date().toISOString().slice(0, 10) } }),
+      ]);
       setData(data);
+      setExpensesData(exp);
     } finally { setLoading(false); }
   };
   useEffect(() => {
@@ -67,11 +72,25 @@ function AdminDashboard() {
           </button>
         }
       />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
         <Stat icon={DollarSign} label="Ventas hoy" value={money(t.total_sales || 0)} hint={<Trend current={t.total_sales} previous={data?.yesterday_sales} />} />
         <Stat icon={Receipt} label="Pedidos cobrados" value={t.orders_count || 0} hint={`${t.delivery_count || 0} domicilios · ${t.table_count || 0} mesas · ${t.pickup_count || 0} llevar`} color="bg-amber-50 text-amber-700" darkColor="dark:bg-amber-900/30 dark:text-amber-300" />
         <Stat icon={ShoppingBag} label="Ticket promedio" value={money(t.avg_ticket || 0)} hint="Promedio por pedido" color="bg-indigo-50 text-indigo-700" darkColor="dark:bg-indigo-900/30 dark:text-indigo-300" />
         <Stat icon={Truck} label="Domicilios cobrados" value={t.delivery_count || 0} hint={`${t.table_count || 0} cuentas de mesa`} color="bg-sky-50 text-sky-700" darkColor="dark:bg-sky-900/30 dark:text-sky-300" />
+        <Link to="/admin/expenses" className="card p-5 hover:shadow-pop transition group">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
+              <TrendingDown size={20} />
+            </div>
+            <div>
+              <div className="text-sm text-ink-500 dark:text-ink-400">Gastos hoy</div>
+              <div className="text-2xl font-semibold text-rose-700 dark:text-rose-400">{money(expensesData?.total_expenses || 0)}</div>
+            </div>
+          </div>
+          <div className="text-xs text-ink-400 dark:text-ink-500 mt-3">
+            {expensesData?.expense_count || 0} gasto(s) · click para ver
+          </div>
+        </Link>
       </div>
       <h2 className="text-sm font-semibold text-ink-500 dark:text-ink-400 uppercase tracking-wide mb-3">
         Operación en tiempo real

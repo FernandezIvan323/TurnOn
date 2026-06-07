@@ -137,3 +137,24 @@ CREATE TABLE IF NOT EXISTS cash_closings (
 );
 CREATE INDEX IF NOT EXISTS idx_cash_closings_date  ON cash_closings(closing_date DESC);
 CREATE INDEX IF NOT EXISTS idx_cash_closings_user  ON cash_closings(closed_by);
+
+-- Gastos del día
+CREATE TABLE IF NOT EXISTS expense_categories (
+  id     SERIAL PRIMARY KEY,
+  name   VARCHAR(60) UNIQUE NOT NULL,
+  icon   VARCHAR(30),
+  active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS expenses (
+  id             SERIAL PRIMARY KEY,
+  expense_date   DATE NOT NULL,
+  category_id    INT REFERENCES expense_categories(id) ON DELETE SET NULL,
+  amount         NUMERIC(10,2) NOT NULL,
+  description    TEXT,
+  payment_method VARCHAR(20) CHECK (payment_method IN ('cash','card','transfer')),
+  user_id        INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(expense_date DESC);
+CREATE INDEX IF NOT EXISTS idx_expenses_cat  ON expenses(category_id);

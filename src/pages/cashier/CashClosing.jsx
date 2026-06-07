@@ -240,6 +240,26 @@ function ClosingForm({ preview, date, onSuccess }) {
             <div className="font-bold text-ink-800 dark:text-ink-100">{money(preview.mixed_sales)}</div>
           </div>
         </div>
+        {preview.expense_summary && (
+          <div className="mt-3 pt-3 border-t border-paper-200 dark:border-ink-800">
+            <div className="grid grid-cols-3 gap-2 text-sm">
+              <div>
+                <div className="text-ink-500 dark:text-ink-400 text-xs">Gastos</div>
+                <div className="font-bold text-rose-700 dark:text-rose-400">−{money(preview.expense_summary.total_expenses)}</div>
+              </div>
+              <div>
+                <div className="text-ink-500 dark:text-ink-400 text-xs">Neto del día</div>
+                <div className={`font-bold ${preview.expense_summary.net >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}`}>
+                  {money(preview.expense_summary.net)}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] text-ink-500 dark:text-ink-400">No afecta el arqueo</div>
+                <div className="text-[10px] text-ink-500 dark:text-ink-400">solo informativo</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -340,7 +360,11 @@ export default function CashClosing() {
   const load = async (d) => {
     setLoading(true); setErr(null);
     try {
-      const { data } = await api.get("/cash-closings/preview", { params: { date: d } });
+      const [{ data }, expRes] = await Promise.all([
+        api.get("/cash-closings/preview", { params: { date: d } }),
+        api.get("/expenses/summary", { params: { date: d } }).catch(() => ({ data: null })),
+      ]);
+      data.expense_summary = expRes?.data || null;
       setPreview(data);
       if (data.already_closed) {
         const { data: detail } = await api.get(`/cash-closings/${data.already_closed.id}`);
