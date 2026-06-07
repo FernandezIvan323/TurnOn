@@ -20,6 +20,25 @@ export const formatDate = (iso) => {
   });
 };
 
+// Para columnas DATE de Postgres que llegan como "YYYY-MM-DDT05:00:00.000Z"
+// o "YYYY-MM-DD". Extrae solo la parte de fecha sin aplicar el shift de TZ.
+export const dateOnlyUTC = (iso) => {
+  if (!iso) return "—";
+  if (typeof iso === "string") {
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) {
+      const [, y, mo, d] = m;
+      // Construir Date en hora local para que se muestre la fecha tal como está
+      return new Date(Number(y), Number(mo) - 1, Number(d)).toLocaleDateString("es-MX", {
+        day: "2-digit", month: "short", year: "numeric",
+      });
+    }
+  }
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
+};
+
 export const statusLabels = {
   pending: "Pendiente",
   preparing: "En preparación",

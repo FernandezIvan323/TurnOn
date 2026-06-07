@@ -32,12 +32,15 @@ function DeliveryModal({ person, onClose, onSaved }) {
   const [phone, setPhone] = useState(person?.phone || "");
   const [status, setStatus] = useState(person?.status || "available");
   const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState(null);
   const save = async () => {
-    setSaving(true);
+    setSaving(true); setErr(null);
     try {
       if (person) await api.put(`/delivery/${person.id}`, { name, phone, status });
       else await api.post("/delivery", { name, phone });
       onSaved(); onClose();
+    } catch (e) {
+      setErr(e.response?.data?.error || e.message);
     } finally { setSaving(false); }
   };
   return (
@@ -61,6 +64,11 @@ function DeliveryModal({ person, onClose, onSaved }) {
             </select>
           </>
         )}
+        {err && (
+          <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
+            {err}
+          </div>
+        )}
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
           <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
@@ -78,12 +86,15 @@ function TableModal({ table, onClose, onSaved }) {
     active: table?.active ?? true,
   });
   const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState(null);
   const save = async () => {
-    setSaving(true);
+    setSaving(true); setErr(null);
     try {
       if (table) await api.put(`/tables/${table.id}`, { ...form, capacity: Number(form.capacity) });
       else await api.post("/tables", { ...form, capacity: Number(form.capacity) });
       onSaved(); onClose();
+    } catch (e) {
+      setErr(e.response?.data?.error || e.message);
     } finally { setSaving(false); }
   };
   return (
@@ -103,6 +114,11 @@ function TableModal({ table, onClose, onSaved }) {
           <input type="checkbox" checked={form.active} onChange={(e) => setForm({...form, active: e.target.checked})} />
           Activa
         </label>
+        {err && (
+          <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
+            {err}
+          </div>
+        )}
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
           <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>

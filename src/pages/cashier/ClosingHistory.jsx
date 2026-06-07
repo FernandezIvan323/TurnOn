@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
-import { money } from "../../lib/format";
+import { money, dateOnlyUTC } from "../../lib/format";
 import { History, ArrowLeft, Receipt, Printer } from "lucide-react";
 
 function dateOnly(iso) {
-  return new Date(iso).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
+  return dateOnlyUTC(iso);
 }
 
 export default function ClosingHistory() {

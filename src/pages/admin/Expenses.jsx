@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
-import { money, formatTime } from "../../lib/format";
+import { money, formatTime, dateOnlyUTC } from "../../lib/format";
+import { todayLocalISO } from "../../lib/date";
 import {
   TrendingDown, Plus, Pencil, Trash2, X, Wallet, ShoppingCart, Zap, Wrench, Package, Sparkles, Receipt,
   Banknote, CreditCard, Building2, Filter, ArrowRight,
@@ -19,14 +20,11 @@ const METHOD_LABELS = {
 };
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return todayLocalISO();
 }
 
 function dateOnly(iso) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
+  return dateOnlyUTC(iso);
 }
 
 function ExpenseModal({ open, onClose, onSaved, expense, categories }) {

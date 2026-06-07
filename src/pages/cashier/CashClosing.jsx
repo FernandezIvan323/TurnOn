@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
-import { money, typeLabels, statusLabels } from "../../lib/format";
+import { money, typeLabels, statusLabels, dateOnlyUTC } from "../../lib/format";
+import { todayLocalISO } from "../../lib/date";
 import {
   Calculator,
   Banknote,
@@ -19,8 +20,7 @@ import {
 } from "lucide-react";
 
 function todayISO() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
+  return todayLocalISO();
 }
 
 function MethodRow({ icon: Icon, label, value, color = "text-ink-700" }) {

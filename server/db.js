@@ -18,6 +18,7 @@ const {
   DB_USER = "postgres",
   DB_PASSWORD = "",
   DB_NAME = "appturnos",
+  DB_TZ = "America/Mexico_City",
 } = process.env;
 
 // Pool "bootstrap" conectado a la base postgres para poder CREAR la DB si no existe.
@@ -39,6 +40,16 @@ const pool = new Pool({
 
 pool.on("error", (err) => {
   console.error("Error inesperado en el pool de PostgreSQL", err);
+});
+
+// Setear la zona horaria de la sesión de Postgres para que las DATE
+// se devuelvan alineadas con la hora local de México (evita off-by-one).
+pool.on("connect", async (client) => {
+  try {
+    await client.query(`SET timezone = '${DB_TZ}'`);
+  } catch (e) {
+    console.error("[db] No se pudo setear timezone:", e.message);
+  }
 });
 
 export const query = (text, params) => pool.query(text, params);

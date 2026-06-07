@@ -4,6 +4,7 @@ import api from "../lib/api";
 import Header from "../components/Header";
 import { useAuth } from "../store/auth";
 import { money, formatTime, statusLabels, statusColors } from "../lib/format";
+import { todayLocalISO } from "../lib/date";
 import {
   DollarSign, ShoppingBag, Truck, Utensils, Receipt, Clock,
   PackageCheck, Bike, AlertCircle, RefreshCw, TrendingUp, TrendingDown,
@@ -48,7 +49,7 @@ function AdminDashboard() {
     try {
       const [{ data }, { data: exp }] = await Promise.all([
         api.get("/dashboard/summary"),
-        api.get("/expenses/summary", { params: { date: new Date().toISOString().slice(0, 10) } }),
+        api.get("/expenses/summary", { params: { date: todayLocalISO() } }),
       ]);
       setData(data);
       setExpensesData(exp);
