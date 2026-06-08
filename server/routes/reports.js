@@ -172,6 +172,89 @@ router.get("/never-sold", async (_req, res) => {
   res.json(rows);
 });
 
+// Reporte diario completo (para PDF)
+router.get("/daily-complete", async (req, res) => {
+  const { date } = req.query;
+  const d = date || new Date().toISOString().slice(0, 10);
+
+  const [sales, byCategory, topProducts, expenses, tipData] = await Promise.all([
+    // Resumen de ventas del día
+    query(
+      `SELECT COUNT(*)::int AS orders,
+              COALESCE(SUM(total),0)::numeric AS total_sales,
+              COUNT(*) FILTER (WHERE type='delivery')::int AS delivery_count,
+              COUNT(*) FILTER (WHERE type='table')::int AS table_count,
+              COALESCE(AVG(total),0)::numeric AS avg_ticket
+         FROM orders
+        WHERE payment_status='paid'
+          AND DATE(created_at) = $1`, [d]
+    ),
+    // Ventas por categoría
+    query(
+      `SELECT COALESCE(c.name, 'Sin categoría') AS category,
+              COALESCE(SUM(oi.quantity * oi.unit_price),0)::numeric AS revenue,
+              SUM(oi.quantity)::int AS qty
+         FROM order_items oi
+         JOIN orders o ON o.id = oi.order_id
+         LEFT JOIN products p ON p.id = oi.product_id
+         LEFT JOIN categories c ON c.id = p.category_id
+        WHERE o.payment_status='paid'
+          AND DATE(o.created_at) = $1
+        GROUP BY c.name
+        ORDER BY revenue DESC`, [d]
+    ),
+    // Top 10 productos
+    query(
+      `SELECT oi.name_snapshot AS name,
+              c.name AS category,
+              SUM(oi.quantity)::int AS qty,
+              COALESCE(SUM(oi.quantity * oi.unit_price),0)::numeric AS revenue,
+              COUNT(DISTINCT oi.order_id)::int AS orders_count
+         FROM order_items oi
+         JOIN orders o ON o.id = oi.order_id
+         LEFT JOIN products p ON p.id = oi.product_id
+         LEFT JOIN categories c ON c.id = p.category_id
+        WHERE o.payment_status='paid'
+          AND DATE(o.created_at) = $1
+        GROUP BY oi.name_snapshot, c.name
+        ORDER BY qty DESC LIMIT 10`, [d]
+    ),
+    // Gastos del día
+    query(
+      `SELECT COUNT(*)::int AS count,
+              COALESCE(SUM(amount),0)::numeric AS total_expenses
+         FROM expenses
+        WHERE DATE(created_at) = $1`, [d]
+    ),
+    // Propinas del día
+    query(
+      `SELECT COUNT(*)::int AS tip_count,
+              COALESCE(SUM(tip),0)::numeric AS total_tips
+         FROM orders
+        WHERE payment_status='paid'
+          AND tip > 0
+          AND DATE(created_at) = $1`, [d]
+    ),
+  ]);
+
+  const s = sales.rows[0];
+  res.json({
+    date: d,
+    summary: {
+      orders: s.orders,
+      total_sales: s.total_sales,
+      total_tips: tipData.rows[0].total_tips,
+      net_sales: Number(s.total_sales) + Number(tipData.rows[0].total_tips),
+      delivery_count: s.delivery_count,
+      table_count: s.table_count,
+      avg_ticket: s.avg_ticket,
+    },
+    expenses: expenses.rows[0],
+    by_category: byCategory.rows,
+    top_products: topProducts.rows,
+  });
+});
+
 // Domicilios entregados por repartidor
 router.get("/delivery-by-person", async (req, res) => {
   const { from, to } = req.query;

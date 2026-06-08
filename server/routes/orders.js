@@ -6,7 +6,7 @@ const router = Router();
 
 const ORDER_COLUMNS = `
   o.id, o.type, o.status, o.payment_status, o.payment_method,
-  o.total, o.notes, o.cancel_reason, o.created_at, o.closed_at,
+  o.total, o.tip, o.notes, o.cancel_reason, o.created_at, o.closed_at,
   o.table_id, o.customer_id, o.user_id, o.delivery_person_id,
   t.number AS table_number, t.label AS table_label,
   c.name AS customer_name, c.phone AS customer_phone, c.address AS customer_address,
@@ -14,6 +14,32 @@ const ORDER_COLUMNS = `
   u.name AS user_name,
   d.name AS delivery_name, d.phone AS delivery_phone
 `;
+
+async function deductStockForOrder(client, orderId) {
+  const { rows: items } = await client.query(
+    "SELECT product_id, quantity FROM order_items WHERE order_id = $1",
+    [orderId]
+  );
+  for (const item of items) {
+    await client.query(
+      "UPDATE products SET stock = GREATEST(stock - $2, 0) WHERE id = $1",
+      [item.product_id, item.quantity]
+    );
+  }
+}
+
+async function restoreStockForOrder(client, orderId) {
+  const { rows: items } = await client.query(
+    "SELECT product_id, quantity FROM order_items WHERE order_id = $1",
+    [orderId]
+  );
+  for (const item of items) {
+    await client.query(
+      "UPDATE products SET stock = stock + $2 WHERE id = $1",
+      [item.product_id, item.quantity]
+    );
+  }
+}
 
 async function recomputeOrderTotal(client, orderId) {
   const { rows } = await client.query(
@@ -238,6 +264,9 @@ router.post("/:id/status", authRequired, requireRole("admin"), async (req, res) 
           [o.delivery_person_id]
         );
       }
+      if (status === "delivered") {
+        await deductStockForOrder(client, req.params.id);
+      }
       await client.query(
         `UPDATE orders
             SET status = $2,
@@ -256,7 +285,7 @@ router.post("/:id/status", authRequired, requireRole("admin"), async (req, res) 
 
 // Cerrar / cobrar pedido (admin)
 router.post("/:id/close", authRequired, requireRole("admin"), async (req, res) => {
-  const { payment_method = "cash" } = req.body;
+  const { payment_method = "cash", tip = 0 } = req.body;
   try {
     await withTransaction(async (client) => {
       const { rows } = await client.query(
@@ -270,14 +299,17 @@ router.post("/:id/close", authRequired, requireRole("admin"), async (req, res) =
           [rows[0].delivery_person_id]
         );
       }
+      await deductStockForOrder(client, req.params.id);
+
       await client.query(
         `UPDATE orders
             SET status = 'delivered',
                 payment_status = 'paid',
                 payment_method = $2,
+                tip = COALESCE($3, 0),
                 closed_at = NOW()
           WHERE id = $1`,
-        [req.params.id, payment_method]
+        [req.params.id, payment_method, tip]
       );
     });
     res.json({ ok: true });
@@ -334,6 +366,8 @@ router.post("/:id/reopen", authRequired, requireRole("admin"), async (req, res) 
       } else {
         next = "preparing";
       }
+
+      await restoreStockForOrder(client, req.params.id);
 
       await client.query(
         `UPDATE orders

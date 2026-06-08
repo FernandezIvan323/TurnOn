@@ -3,15 +3,24 @@ import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { money, formatTime, typeLabels, statusLabels, statusColors } from "../../lib/format";
-import { CheckCircle2, Receipt, X, Calculator, CreditCard, Wallet, Banknote, Building2, Truck, Utensils, ScrollText } from "lucide-react";
+import { CheckCircle2, Receipt, X, Calculator, CreditCard, Wallet, Banknote, Building2, Truck, Utensils, ScrollText, Users } from "lucide-react";
+
+const TIP_PRESETS = [0, 10, 15, 20];
 
 function CloseModal({ order, mode = "close", onClose, onClosed }) {
   // mode: 'close' = cobrar y cerrar (efectivo al entregar / mesa)
   // mode: 'prepay' = pre-cobrar (transferencia ya confirmada, pedido sigue en camino)
   const isPrepay = mode === "prepay";
   const [method, setMethod] = useState(isPrepay ? "transfer" : "cash");
+  const [tipPct, setTipPct] = useState(0);
+  const [split, setSplit] = useState(1);
+  const [showSplit, setShowSplit] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+
+  const totalNum = Number(order.total);
+  const tipAmount = isPrepay ? 0 : Math.round(totalNum * tipPct) / 100;
+  const grandTotal = totalNum + tipAmount;
 
   const submit = async () => {
     setBusy(true); setErr(null);
@@ -19,7 +28,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
       if (isPrepay) {
         await api.post(`/orders/${order.id}/prepay`, { payment_method: method });
       } else {
-        await api.post(`/orders/${order.id}/close`, { payment_method: method });
+        await api.post(`/orders/${order.id}/close`, { payment_method: method, tip: tipAmount });
       }
       onClosed(); onClose();
     } catch (e) {
@@ -47,14 +56,63 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
         </h2>
         <div className="bg-paper-100 dark:bg-ink-950 rounded-xl p-4 mb-4 text-center">
           <div className="text-sm text-ink-500 dark:text-ink-400">{isPrepay ? "Monto pre-cobrado" : "Total a cobrar"}</div>
-          <div className="text-3xl font-bold text-ink-800 dark:text-ink-100">{money(order.total)}</div>
+          <div className="text-3xl font-bold text-ink-800 dark:text-ink-100">{money(grandTotal)}</div>
+          {!isPrepay && tipAmount > 0 && (
+            <div className="text-xs text-ink-500 dark:text-ink-400 mt-1">
+              {money(totalNum)} + {money(tipAmount)} propina ({tipPct}%)
+            </div>
+          )}
           <div className="text-xs text-ink-500 dark:text-ink-400 mt-1">
             {order.type === "table" ? `Mesa ${order.table_number}` : `${order.customer_name} · ${order.customer_neighborhood || ""}`}
           </div>
+          {!isPrepay && showSplit && split > 1 && (
+            <div className="mt-2 pt-2 border-t border-paper-200 dark:border-ink-700 text-sm">
+              <div className="text-ink-500 dark:text-ink-400">Por persona:</div>
+              <div className="text-xl font-bold text-ink-800 dark:text-ink-100">{money(grandTotal / split)}</div>
+            </div>
+          )}
         </div>
         {isPrepay && (
           <div className="mb-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
             El pedido se marcará como pagado y seguirá en camino. El cierre final se hará al entregar.
+          </div>
+        )}
+        {!isPrepay && (
+          <>
+            <label className="label">Propina</label>
+            <div className="flex gap-2 mb-4">
+              {TIP_PRESETS.map((pct) => (
+                <button
+                  key={pct}
+                  onClick={() => setTipPct(pct)}
+                  className={`flex-1 px-3 py-2 rounded-xl border text-sm font-medium transition ${
+                    tipPct === pct
+                      ? "bg-brand-600 text-white border-brand-600"
+                      : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-ink-900 dark:text-ink-200 dark:border-ink-700 dark:hover:bg-ink-800"
+                  }`}
+                >
+                  {pct > 0 ? `${pct}%` : "Sin"}
+                </button>
+              ))}
+            </div>
+            </>
+          )}
+        {!isPrepay && (
+          <div className="mb-4">
+            <button
+              onClick={() => setShowSplit((s) => !s)}
+              className={`flex items-center gap-2 text-sm font-medium ${showSplit ? "text-brand-600 dark:text-brandDark-300" : "text-ink-500 dark:text-ink-400"}`}
+            >
+              <Users size={14}/> {showSplit ? "Ocultar división" : "Dividir cuenta"}
+            </button>
+            {showSplit && (
+              <div className="flex items-center gap-2 mt-2">
+                <button onClick={() => setSplit(Math.max(1, split - 1))} className="w-8 h-8 rounded-lg bg-paper-200 dark:bg-ink-800 flex items-center justify-center text-sm font-semibold">-</button>
+                <span className="w-12 text-center text-lg font-bold text-ink-800 dark:text-ink-100">{split}</span>
+                <button onClick={() => setSplit(Math.min(20, split + 1))} className="w-8 h-8 rounded-lg bg-paper-200 dark:bg-ink-800 flex items-center justify-center text-sm font-semibold">+</button>
+                <span className="text-xs text-ink-500 dark:text-ink-400 ml-1">persona{split !== 1 ? "s" : ""}</span>
+              </div>
+            )}
           </div>
         )}
         <label className="label">Método de pago</label>
@@ -109,7 +167,9 @@ function OrderRow({ order, onClose, onPrepay }) {
         </div>
         {order.notes && <div className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">Nota: {order.notes}</div>}
         {order.payment_status === "paid" && (
-          <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">✓ Ya pagado ({order.payment_method})</div>
+          <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">
+            ✓ Pagado ({order.payment_method}){Number(order.tip) > 0 ? ` + ${money(order.tip)} propina` : ""}
+          </div>
         )}
       </div>
       <div className="text-right">

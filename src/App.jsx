@@ -13,6 +13,7 @@ import Staff from "./pages/admin/Staff";
 import Reports from "./pages/admin/Reports";
 import Expenses from "./pages/admin/Expenses";
 import Inventory from "./pages/admin/Inventory";
+import DailyReport from "./pages/admin/DailyReport";
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/staff" element={<Staff />} />
         <Route path="/admin/inventory" element={<Inventory />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/reports/daily" element={<DailyReport />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

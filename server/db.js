@@ -131,6 +131,7 @@ export async function runMigrations() {
   await pool.query(`
     ALTER TABLE products ADD COLUMN IF NOT EXISTS stock NUMERIC(10,2) NOT NULL DEFAULT 0;
     ALTER TABLE products ADD COLUMN IF NOT EXISTS min_stock NUMERIC(10,2) NOT NULL DEFAULT 0;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS tip NUMERIC(10,2) NOT NULL DEFAULT 0;
   `);
   await pool.query(`
     CREATE TABLE IF NOT EXISTS stock_movements (

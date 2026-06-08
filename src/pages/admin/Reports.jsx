@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import BarChart from "../../components/BarChart";
 import { money } from "../../lib/format";
 import {
   DollarSign, TrendingUp, TrendingDown, ShoppingBag, Truck, Award,
-  Clock, Users as UsersIcon, AlertCircle, Tag, Calendar,
+  Clock, Users as UsersIcon, AlertCircle, Tag, Calendar, Printer,
 } from "lucide-react";
 
 function RangePicker({ value, onChange }) {
@@ -84,6 +85,7 @@ function TrendPill({ current, previous, format = (n) => n }) {
 }
 
 export default function Reports() {
+  const nav = useNavigate();
   const [preset, setPreset] = useState("week");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
@@ -140,7 +142,12 @@ export default function Reports() {
         title="Reportes"
         subtitle={range.label}
         right={
-          <RangePicker value={preset} onChange={setPreset} />
+          <div className="flex items-center gap-2">
+            <RangePicker value={preset} onChange={setPreset} />
+            <button onClick={() => nav("/reports/daily")} className="btn-primary text-sm">
+              <Printer size={14}/> Reporte diario
+            </button>
+          </div>
         }
       />
 
