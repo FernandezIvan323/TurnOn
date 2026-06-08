@@ -1,60 +1,66 @@
-# Arranc la API + Vite en segundo plano, sobrevive al cierre de terminal.
+# Arranca Vite + API como DOS procesos independientes (no concurrently).
+# Si uno muere, el otro sigue vivo. Sobreviven al cierre de terminal.
 # Uso: powershell -ExecutionPolicy Bypass -File scripts/start-detached.ps1
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $root
 
-$pidFile = Join-Path $root "server.pid"
-$apiLog  = Join-Path $root "server.log"
-$apiErr  = Join-Path $root "server-error.log"
+$pidVite = Join-Path $root "vite.pid"
+$pidApi  = Join-Path $root "api.pid"
+$logVite = Join-Path $root "vite.log"
+$logApi  = Join-Path $root "api.log"
+$errVite = Join-Path $root "vite-error.log"
+$errApi  = Join-Path $root "api-error.log"
 
 function Test-Port([int]$Port) {
   $conn = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
   return $null -ne $conn
 }
 
-# 1. Si ya hay un server.pid valido y vivo, no hacer nada.
-if (Test-Path -LiteralPath $pidFile) {
-  $existing = Get-Content -LiteralPath $pidFile -ErrorAction SilentlyContinue
-  if ($existing -and (Get-Process -Id $existing -ErrorAction SilentlyContinue)) {
-    Write-Host "[detached] Server ya esta corriendo (PID $existing). Nada que hacer."
-    exit 0
-  } else {
-    Remove-Item -LiteralPath $pidFile -Force -ErrorAction SilentlyContinue
-  }
+function Is-Alive([string]$PidFile) {
+  if (-not (Test-Path -LiteralPath $PidFile)) { return $false }
+  $pid = Get-Content -LiteralPath $PidFile -ErrorAction SilentlyContinue
+  if (-not $pid) { return $false }
+  return $null -ne (Get-Process -Id $pid -ErrorAction SilentlyContinue)
 }
 
-# 2. Si los puertos ya estan ocupados por algo que no es nuestro, abortar.
+function Start-One([string]$Name, [string]$Cmd, [string]$PidFile, [string]$Log, [string]$Err) {
+  if (Is-Alive $PidFile) {
+    $existing = Get-Content $PidFile
+    Write-Host "[detached] $Name ya esta corriendo (PID $existing)." -ForegroundColor Yellow
+    return
+  }
+  Remove-Item -LiteralPath $PidFile -ErrorAction SilentlyContinue
+  $proc = Start-Process -FilePath "cmd.exe" -ArgumentList @("/c", $Cmd) `
+    -WorkingDirectory $root `
+    -RedirectStandardOutput $Log -RedirectStandardError $Err `
+    -WindowStyle Hidden -PassThru
+  Start-Sleep -Milliseconds 500
+  if ($proc.HasExited) {
+    Write-Host "[detached] ERROR: $Name fallo al arrancar. Revisa $Err" -ForegroundColor Red
+    return
+  }
+  $proc.Id | Set-Content -LiteralPath $PidFile -Encoding ascii
+  Write-Host "[detached] $Name arrancado (PID $($proc.Id)). Log: $Log" -ForegroundColor Green
+}
+
+# Verificar puertos
 if (Test-Port 3001) {
-  Write-Host "[detached] ERROR: el puerto 3001 ya esta en uso por otro proceso. Liberalo primero." -ForegroundColor Red
+  Write-Host "[detached] ERROR: puerto 3001 ocupado. Mata el proceso y reintenta." -ForegroundColor Red
   exit 1
 }
-if (Test-Port 5180) {
-  Write-Host "[detached] AVISO: el puerto 5180 ya esta en uso. Vite no podra arrancar." -ForegroundColor Yellow
-}
 
-# 3. Limpiar logs viejos.
-"" | Set-Content -LiteralPath $apiLog -Encoding utf8
-"" | Set-Content -LiteralPath $apiErr -Encoding utf8
+# Limpiar logs viejos
+"" | Set-Content $logVite -Encoding utf8
+"" | Set-Content $errVite -Encoding utf8
+"" | Set-Content $logApi  -Encoding utf8
+"" | Set-Content $errApi  -Encoding utf8
 
-# 4. Lanzar concurrently en una ventana oculta, redirigir salida.
-$cmd = "npm run dev:start"
-$startArgs = @{
-  FilePath               = "powershell.exe"
-  ArgumentList           = @("-NoProfile", "-Command", $cmd)
-  WorkingDirectory       = $root
-  RedirectStandardOutput = $apiLog
-  RedirectStandardError  = $apiErr
-  WindowStyle            = "Hidden"
-  PassThru               = $true
-}
+# Arrancar API primero (mas lento)
+Start-One "API"  "npm run dev:api"  $pidApi  $logApi  $errApi
 
-$proc = Start-Process @startArgs
-$proc.Id | Set-Content -LiteralPath $pidFile -Encoding ascii
+# Arrancar Vite
+Start-One "Vite" "npm run dev:web" $pidVite $logVite $errVite
 
-Write-Host "[detached] Server arrancado. PID principal: $($proc.Id)"
-Write-Host "[detached] PID guardado en: $pidFile"
-Write-Host "[detached] Logs:    $apiLog"
-Write-Host "[detached] Errores: $apiErr"
-Write-Host "[detached] Para detenerlo ejecuta: npm run dev:stop"
+Write-Host "[detached] Para detener: npm run dev:stop"

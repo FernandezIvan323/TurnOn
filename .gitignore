@@ -18,10 +18,16 @@ dist-ssr
 !.env.example
 server/.env
 
-# Server runtime files
+# Runtime files (logs, PIDs)
 server.log
 server-error.log
 server.pid
+vite.log
+vite-error.log
+api.log
+api-error.log
+vite.pid
+api.pid
 
 # Editor directories and files
 .vscode/*

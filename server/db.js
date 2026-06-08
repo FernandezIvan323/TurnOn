@@ -42,15 +42,8 @@ pool.on("error", (err) => {
   console.error("Error inesperado en el pool de PostgreSQL", err);
 });
 
-// Setear la zona horaria de la sesión de Postgres para que las DATE
-// se devuelvan alineadas con la hora local de México (evita off-by-one).
-pool.on("connect", async (client) => {
-  try {
-    await client.query(`SET timezone = '${DB_TZ}'`);
-  } catch (e) {
-    console.error("[db] No se pudo setear timezone:", e.message);
-  }
-});
+// NOTA: el timezone se setea dentro de withTransaction() antes de BEGIN para
+// evitar el DeprecationWarning de pg (no llamar query() en pool.on("connect")).
 
 export const query = (text, params) => pool.query(text, params);
 export const getClient = () => pool.connect();
@@ -94,6 +87,7 @@ export async function withTransaction(fn) {
   const client = await pool.connect();
   let txStarted = false;
   try {
+    await client.query(`SET timezone = '${DB_TZ}'`);
     await client.query("BEGIN");
     txStarted = true;
     const result = await fn(client);
