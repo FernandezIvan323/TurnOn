@@ -1,7 +1,11 @@
 {
   "name": "appturnos",
-  "private": true,
-  "version": "1.0.0",
+  "private": false,
+  "description": "Sistema de gestión integral para restaurant con acera, mesas y pedidos a domicilio.",
+  "author": "Ivan Fernandez",
+  "license": "MIT",
+  "keywords": ["restaurant", "pos", "delivery", "mesas", "gestion", "comedor"],
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "concurrently -n web,api -c green,cyan \"npm:dev:web\" \"npm:dev:api\"",
