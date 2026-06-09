@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
 import LogoutConfirm from "./LogoutConfirm";
@@ -33,7 +33,7 @@ const items = [
 
 const labelFor = (it, role) => {
   if (it.label) return it.label;
-  if (it.labelKey === "catalog") return role === "admin" ? "Menú" : "Catálogo";
+  if (it.labelKey === "catalog") return role === "admin" ? "MenÃº" : "CatÃ¡logo";
   return "";
 };
 
@@ -44,15 +44,15 @@ export default function Sidebar() {
   if (!user) return null;
 
   return (
-    <aside className="w-60 shrink-0 bg-paper-50 border-r border-paper-300 dark:bg-ink-900 dark:border-ink-800 h-screen sticky top-0 flex flex-col">
-      <div className="px-5 py-5 border-b border-paper-300 dark:border-ink-800">
+    <aside className="w-60 shrink-0 bg-paper-50 border-r border-paper-300 dark:bg-obsidian-900 dark:border-obsidian-800 h-screen sticky top-0 flex flex-col">
+      <div className="px-5 py-5 border-b border-paper-300 dark:border-obsidian-800">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-paper-50 dark:bg-ink-800 border border-paper-200 dark:border-ink-700 flex items-center justify-center p-1.5 shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-paper-50 dark:bg-obsidian-800 border border-paper-200 dark:border-obsidian-700 flex items-center justify-center p-1.5 shrink-0">
             <img src="/favicon.svg" alt="AppTurnos" className="w-full h-full" />
           </div>
           <div>
-            <div className="text-lg font-semibold text-ink-800 dark:text-ink-100 leading-tight">AppTurnos</div>
-            <div className="text-xs text-ink-500 dark:text-ink-400">Gestión del restaurant</div>
+            <div className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 leading-tight">AppTurnos</div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">GestiÃ³n del restaurant</div>
           </div>
         </div>
       </div>
@@ -70,8 +70,8 @@ export default function Sidebar() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${
                     isActive
-                      ? "bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300"
-                      : "text-ink-600 hover:bg-paper-200 dark:text-ink-300 dark:hover:bg-ink-800"
+                      ? "bg-brand-50 text-brand-700 dark:bg-wine-900/40 dark:text-wine-300"
+                      : "text-ink-600 hover:bg-paper-200 dark:text-obsidian-200 dark:hover:bg-obsidian-800"
                   }`
                 }
               >
@@ -82,15 +82,15 @@ export default function Sidebar() {
           })}
       </nav>
 
-      <div className="p-3 border-t border-paper-300 dark:border-ink-800">
-        <div className="px-3 py-2 text-xs text-ink-500 dark:text-ink-400">
-          Sesión iniciada como
-          <div className="text-sm font-semibold text-ink-800 dark:text-ink-100">{user.name}</div>
-          <div className="text-xs text-ink-500 dark:text-ink-400 capitalize">
+      <div className="p-3 border-t border-paper-300 dark:border-obsidian-800">
+        <div className="px-3 py-2 text-xs text-ink-500 dark:text-obsidian-400">
+          SesiÃ³n iniciada como
+          <div className="text-sm font-semibold text-ink-800 dark:text-obsidian-50">{user.name}</div>
+          <div className="text-xs text-ink-500 dark:text-obsidian-400 capitalize">
             {user.role === "admin" ? "Cajero / Administrador" : "Mesero"}
           </div>
           {user.role === "waiter" && (
-            <div className="mt-1 text-xs text-ink-500 dark:text-ink-400">
+            <div className="mt-1 text-xs text-ink-500 dark:text-obsidian-400">
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 font-medium">
                 <Utensils size={10}/> {(user.assigned_table_ids || []).length} mesa{((user.assigned_table_ids || []).length === 1) ? "" : "s"} asignada{((user.assigned_table_ids || []).length === 1) ? "" : "s"}
               </span>
@@ -101,7 +101,7 @@ export default function Sidebar() {
           onClick={() => setShowLogout(true)}
           className="btn-ghost w-full justify-start mt-1"
         >
-          <LogOut size={16} /> Cerrar sesión
+          <LogOut size={16} /> Cerrar sesiÃ³n
         </button>
       </div>
       {showLogout && (

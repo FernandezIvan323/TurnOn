@@ -14,8 +14,12 @@ $errVite = Join-Path $root "vite-error.log"
 $errApi  = Join-Path $root "api-error.log"
 
 function Test-Port([int]$Port) {
-  $conn = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
-  return $null -ne $conn
+  $null -ne (Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue)
+}
+
+function Kill-Port([int]$Port) {
+  Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
+    ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
 }
 
 function Is-Alive([string]$PidFile) {
@@ -25,18 +29,26 @@ function Is-Alive([string]$PidFile) {
   return $null -ne (Get-Process -Id $procId -ErrorAction SilentlyContinue)
 }
 
-function Start-One([string]$Name, [string]$Cmd, [string]$PidFile, [string]$Log, [string]$Err) {
+function Start-One([string]$Name, [string]$Cmd, [string]$PidFile, [int]$Port, [string]$Log, [string]$Err) {
   if (Is-Alive $PidFile) {
     $existing = Get-Content $PidFile
     Write-Host "[detached] $Name ya esta corriendo (PID $existing)." -ForegroundColor Yellow
     return
   }
+
+  # Liberar zombie en el puerto antes de arrancar
+  if (Test-Port $Port) {
+    Write-Host "[detached] ${Name}: puerto ${Port} ocupado por zombie. Liberando..." -ForegroundColor Yellow
+    Kill-Port $Port
+    Start-Sleep 1
+  }
+
   Remove-Item -LiteralPath $PidFile -ErrorAction SilentlyContinue
   $proc = Start-Process -FilePath "cmd.exe" -ArgumentList @("/c", $Cmd) `
     -WorkingDirectory $root `
     -RedirectStandardOutput $Log -RedirectStandardError $Err `
     -WindowStyle Hidden -PassThru
-  Start-Sleep -Milliseconds 500
+  Start-Sleep -Milliseconds 1500
   if ($proc.HasExited) {
     Write-Host "[detached] ERROR: $Name fallo al arrancar. Revisa $Err" -ForegroundColor Red
     return
@@ -45,7 +57,7 @@ function Start-One([string]$Name, [string]$Cmd, [string]$PidFile, [string]$Log, 
   Write-Host "[detached] $Name arrancado (PID $($proc.Id)). Log: $Log" -ForegroundColor Green
 }
 
-# --- 1) Si AMBOS ya estan vivos, salir sin tocar nada (no limpiar logs, no revisar puertos) ---
+# --- 1) Si AMBOS ya estan vivos, salir sin tocar nada ---
 $viteAlive = Is-Alive $pidVite
 $apiAlive  = Is-Alive $pidApi
 
@@ -55,13 +67,7 @@ if ($viteAlive -and $apiAlive) {
   exit 0
 }
 
-# --- 2) Verificar puertos solo si el proceso NO esta vivo ---
-if (-not $apiAlive -and (Test-Port 3001)) {
-  Write-Host "[detached] ERROR: puerto 3001 ocupado por otro proceso. Liberalo y reintenta." -ForegroundColor Red
-  exit 1
-}
-
-# --- 3) Limpiar logs solo de los procesos que se van a arrancar ---
+# --- 2) Limpiar logs solo de los procesos que se van a arrancar ---
 try {
   if (-not $viteAlive) { "" | Set-Content $logVite -Encoding utf8; "" | Set-Content $errVite -Encoding utf8 }
   if (-not $apiAlive)  { "" | Set-Content $logApi  -Encoding utf8; "" | Set-Content $errApi  -Encoding utf8 }
@@ -69,8 +75,8 @@ try {
   Write-Host "[detached] AVISO: no se pudieron limpiar logs (¿usados por otro proceso?). Continuando..." -ForegroundColor Yellow
 }
 
-# --- 4) Arrancar cada proceso que falte ---
-if (-not $apiAlive)  { Start-One "API"  "npm run dev:api"  $pidApi  $logApi  $errApi }
-if (-not $viteAlive) { Start-One "Vite" "npm run dev:web" $pidVite $logVite $errVite }
+# --- 3) Arrancar cada proceso que falte ---
+if (-not $apiAlive)  { Start-One "API"  "npm run dev:api"  $pidApi  3001  $logApi  $errApi }
+if (-not $viteAlive) { Start-One "Vite" "npm run dev:web" $pidVite 5180 $logVite $errVite }
 
 Write-Host "[detached] Para detener: npm run dev:stop"

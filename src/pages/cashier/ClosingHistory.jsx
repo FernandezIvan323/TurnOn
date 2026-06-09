@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
@@ -31,7 +31,7 @@ export default function ClosingHistory() {
   return (
     <div>
       <Header
-        title="Histórico de cortes"
+        title="HistÃ³rico de cortes"
         subtitle="Listado de cierres Z realizados"
         right={
           <Link to="/cashier/closing" className="btn-secondary text-sm">
@@ -61,17 +61,17 @@ export default function ClosingHistory() {
       </div>
 
       {loading ? (
-        <div className="card p-8 text-center text-ink-500 dark:text-ink-400">Cargando…</div>
+        <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Cargandoâ€¦</div>
       ) : closings.length === 0 ? (
-        <div className="card p-8 text-center text-ink-500 dark:text-ink-400">
-          <History size={32} className="mx-auto text-ink-300 dark:text-ink-700 mb-2"/>
-          No hay cortes registrados todavía.
+        <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">
+          <History size={32} className="mx-auto text-ink-300 dark:text-obsidian-300 mb-2"/>
+          No hay cortes registrados todavÃ­a.
         </div>
       ) : (
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-paper-100 dark:bg-ink-950 text-ink-600 dark:text-ink-300 text-xs uppercase">
+              <thead className="bg-paper-100 dark:bg-obsidian-950 text-ink-600 dark:text-obsidian-200 text-xs uppercase">
                 <tr>
                   <th className="text-left px-4 py-2.5">Fecha</th>
                   <th className="text-right px-4 py-2.5">Pedidos</th>
@@ -96,10 +96,10 @@ export default function ClosingHistory() {
                   return (
                     <tr
                       key={c.id}
-                      className="border-t border-paper-200 dark:border-ink-800 hover:bg-paper-100 dark:hover:bg-ink-900 cursor-pointer"
+                      className="border-t border-paper-200 dark:border-obsidian-800 hover:bg-paper-100 dark:hover:bg-obsidian-900 cursor-pointer"
                       onClick={() => setSelected(c)}
                     >
-                      <td className="px-4 py-3 font-medium text-ink-800 dark:text-ink-100">{dateOnly(c.closing_date)}</td>
+                      <td className="px-4 py-3 font-medium text-ink-800 dark:text-obsidian-50">{dateOnly(c.closing_date)}</td>
                       <td className="px-4 py-3 text-right">{c.total_orders}</td>
                       <td className="px-4 py-3 text-right font-semibold">{money(c.total_sales)}</td>
                       <td className="px-4 py-3 text-right">{money(c.cash_sales)}</td>
@@ -108,7 +108,7 @@ export default function ClosingHistory() {
                       <td className={`px-4 py-3 text-right font-semibold ${diffClass}`}>
                         {d > 0 ? "+" : ""}{money(d)}
                       </td>
-                      <td className="px-4 py-3 text-ink-600 dark:text-ink-300">{c.closed_by_name || "—"}</td>
+                      <td className="px-4 py-3 text-ink-600 dark:text-obsidian-200">{c.closed_by_name || "â€”"}</td>
                       <td className="px-4 py-3 text-right">
                         <Receipt size={14} className="text-ink-400"/>
                       </td>
@@ -129,21 +129,21 @@ export default function ClosingHistory() {
             id="closing-printable"
           >
             <div className="flex items-start justify-between mb-3 print:hidden">
-              <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100">Corte del {dateOnly(selected.closing_date)}</h2>
+              <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Corte del {dateOnly(selected.closing_date)}</h2>
               <button onClick={() => setSelected(null)} className="btn-ghost text-sm">Cerrar</button>
             </div>
 
             <div className="hidden print:block mb-3">
               <h1 className="text-xl font-bold">Corte de caja</h1>
-              <div className="text-sm">AppTurnos · {dateOnly(selected.closing_date)}</div>
-              <div className="text-sm">Cajero: {selected.closed_by_name || "—"}</div>
+              <div className="text-sm">AppTurnos Â· {dateOnly(selected.closing_date)}</div>
+              <div className="text-sm">Cajero: {selected.closed_by_name || "â€”"}</div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-              <div className="bg-paper-100 dark:bg-ink-950 rounded-xl p-3">
-                <div className="text-xs text-ink-500 dark:text-ink-400">Ventas</div>
-                <div className="font-bold text-ink-800 dark:text-ink-100">{money(selected.total_sales)}</div>
-                <div className="text-xs text-ink-500 dark:text-ink-400">{selected.total_orders} pedidos</div>
+              <div className="bg-paper-100 dark:bg-obsidian-950 rounded-xl p-3">
+                <div className="text-xs text-ink-500 dark:text-obsidian-400">Ventas</div>
+                <div className="font-bold text-ink-800 dark:text-obsidian-50">{money(selected.total_sales)}</div>
+                <div className="text-xs text-ink-500 dark:text-obsidian-400">{selected.total_orders} pedidos</div>
               </div>
               <div className={`rounded-xl p-3 ${
                 Math.abs(Number(selected.difference)) < 0.01
@@ -152,23 +152,23 @@ export default function ClosingHistory() {
                     ? "bg-blue-50 dark:bg-blue-900/20"
                     : "bg-rose-50 dark:bg-rose-900/20"
               }`}>
-                <div className="text-xs text-ink-500 dark:text-ink-400">Diferencia</div>
+                <div className="text-xs text-ink-500 dark:text-obsidian-400">Diferencia</div>
                 <div className="font-bold">{Number(selected.difference) > 0 ? "+" : ""}{money(selected.difference)}</div>
-                <div className="text-xs text-ink-500 dark:text-ink-400">
-                  Esp. {money(selected.expected_cash)} · Con. {money(selected.counted_cash)}
+                <div className="text-xs text-ink-500 dark:text-obsidian-400">
+                  Esp. {money(selected.expected_cash)} Â· Con. {money(selected.counted_cash)}
                 </div>
               </div>
             </div>
 
             <div className="space-y-1 text-sm">
-              <div className="flex justify-between"><span className="text-ink-500 dark:text-ink-400">Efectivo</span><span className="font-medium">{money(selected.cash_sales)}</span></div>
-              <div className="flex justify-between"><span className="text-ink-500 dark:text-ink-400">Tarjeta</span><span className="font-medium">{money(selected.card_sales)}</span></div>
-              <div className="flex justify-between"><span className="text-ink-500 dark:text-ink-400">Transferencia</span><span className="font-medium">{money(selected.transfer_sales)}</span></div>
-              <div className="flex justify-between"><span className="text-ink-500 dark:text-ink-400">Mixto</span><span className="font-medium">{money(selected.mixed_sales)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-500 dark:text-obsidian-400">Efectivo</span><span className="font-medium">{money(selected.cash_sales)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-500 dark:text-obsidian-400">Tarjeta</span><span className="font-medium">{money(selected.card_sales)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-500 dark:text-obsidian-400">Transferencia</span><span className="font-medium">{money(selected.transfer_sales)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-500 dark:text-obsidian-400">Mixto</span><span className="font-medium">{money(selected.mixed_sales)}</span></div>
             </div>
 
             {selected.notes && (
-              <div className="mt-3 p-3 rounded-xl bg-paper-100 dark:bg-ink-950 text-sm text-ink-700 dark:text-ink-200 whitespace-pre-wrap">
+              <div className="mt-3 p-3 rounded-xl bg-paper-100 dark:bg-obsidian-950 text-sm text-ink-700 dark:text-obsidian-100 whitespace-pre-wrap">
                 {selected.notes}
               </div>
             )}

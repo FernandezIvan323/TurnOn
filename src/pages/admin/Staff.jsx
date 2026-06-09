@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
@@ -12,13 +12,13 @@ function Tabs({ value, onChange }) {
     { v: "assignments",  l: "Asignar",      icon: UserCog },
   ];
   return (
-    <div className="flex gap-1 bg-paper-50 dark:bg-ink-900 border border-paper-300 dark:border-ink-700 rounded-xl p-1 flex-wrap">
+    <div className="flex gap-1 bg-paper-50 dark:bg-obsidian-900 border border-paper-300 dark:border-obsidian-700 rounded-xl p-1 flex-wrap">
       {tabs.map((t) => (
         <button
           key={t.v}
           onClick={() => onChange(t.v)}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 ${
-            value === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-ink-300 hover:bg-paper-200 dark:hover:bg-ink-800"
+            value === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
           }`}
         >
           <t.icon size={14}/> {t.l}
@@ -48,12 +48,12 @@ function DeliveryModal({ person, onClose, onSaved }) {
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-md p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100">{person ? "Editar" : "Nuevo"} repartidor</h2>
+          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">{person ? "Editar" : "Nuevo"} repartidor</h2>
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
         <label className="label">Nombre</label>
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-        <label className="label mt-3">Teléfono</label>
+        <label className="label mt-3">TelÃ©fono</label>
         <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} />
         {person && (
           <>
@@ -72,7 +72,7 @@ function DeliveryModal({ person, onClose, onSaved }) {
         )}
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
+          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardandoâ€¦" : "Guardar"}</button>
         </div>
       </div>
     </div>
@@ -102,16 +102,16 @@ function TableModal({ table, onClose, onSaved }) {
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-md p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100">{table ? "Editar" : "Nueva"} mesa</h2>
+          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">{table ? "Editar" : "Nueva"} mesa</h2>
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
-        <label className="label">Número / identificador</label>
-        <input className="input" value={form.number} onChange={(e) => setForm({...form, number: e.target.value})} placeholder="1, 2, P1, B1…" />
+        <label className="label">NÃºmero / identificador</label>
+        <input className="input" value={form.number} onChange={(e) => setForm({...form, number: e.target.value})} placeholder="1, 2, P1, B1â€¦" />
         <label className="label mt-3">Etiqueta (opcional)</label>
-        <input className="input" value={form.label} onChange={(e) => setForm({...form, label: e.target.value})} placeholder="Patio 1, Barra 2…" />
+        <input className="input" value={form.label} onChange={(e) => setForm({...form, label: e.target.value})} placeholder="Patio 1, Barra 2â€¦" />
         <label className="label mt-3">Capacidad</label>
         <input className="input" type="number" value={form.capacity} onChange={(e) => setForm({...form, capacity: e.target.value})} />
-        <label className="flex items-center gap-2 text-sm text-ink-600 dark:text-ink-300 mt-3">
+        <label className="flex items-center gap-2 text-sm text-ink-600 dark:text-obsidian-200 mt-3">
           <input type="checkbox" checked={form.active} onChange={(e) => setForm({...form, active: e.target.checked})} />
           Activa
         </label>
@@ -122,7 +122,7 @@ function TableModal({ table, onClose, onSaved }) {
         )}
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
+          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardandoâ€¦" : "Guardar"}</button>
         </div>
       </div>
     </div>
@@ -152,13 +152,13 @@ function AddTableModal({ waiter, availableTables, onClose, onAssigned }) {
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-lg p-5 max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100">Asignar mesas a {waiter.name}</h2>
+          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Asignar mesas a {waiter.name}</h2>
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
-        <p className="text-sm text-ink-500 dark:text-ink-400 mb-3">Selecciona las mesas (toca para marcar). Las mesas ya asignadas a otro mesero no aparecen.</p>
+        <p className="text-sm text-ink-500 dark:text-obsidian-400 mb-3">Selecciona las mesas (toca para marcar). Las mesas ya asignadas a otro mesero no aparecen.</p>
         {availableTables.length === 0 ? (
           <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
-            No hay mesas disponibles para asignar (todas están asignadas a otros meseros).
+            No hay mesas disponibles para asignar (todas estÃ¡n asignadas a otros meseros).
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -170,18 +170,18 @@ function AddTableModal({ waiter, availableTables, onClose, onAssigned }) {
                   onClick={() => toggle(t.id)}
                   className={`p-3 rounded-xl border-2 text-left transition ${
                     on
-                      ? "border-brand-500 bg-brand-50 dark:bg-brand-900/30"
-                      : "border-paper-300 dark:border-ink-700 hover:border-brand-300"
+                      ? "border-brand-500 bg-brand-50 dark:bg-wine-900/30"
+                      : "border-paper-300 dark:border-obsidian-700 hover:border-brand-300"
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-bold text-ink-800 dark:text-ink-100">Mesa {t.number}</div>
-                      {t.label && <div className="text-xs text-ink-500 dark:text-ink-400">{t.label}</div>}
+                      <div className="font-bold text-ink-800 dark:text-obsidian-50">Mesa {t.number}</div>
+                      {t.label && <div className="text-xs text-ink-500 dark:text-obsidian-400">{t.label}</div>}
                     </div>
                     {on
                       ? <Check size={16} className="text-brand-600 dark:text-brand-400"/>
-                      : <PlusCircle size={16} className="text-ink-300 dark:text-ink-600"/>}
+                      : <PlusCircle size={16} className="text-ink-300 dark:text-obsidian-500"/>}
                   </div>
                 </button>
               );
@@ -192,7 +192,7 @@ function AddTableModal({ waiter, availableTables, onClose, onAssigned }) {
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
           <button onClick={save} disabled={saving || availableTables.length === 0} className="btn-primary">
-            {saving ? "Asignando…" : `Asignar ${selected.size > 0 ? `(${selected.size})` : ""}`}
+            {saving ? "Asignandoâ€¦" : `Asignar ${selected.size > 0 ? `(${selected.size})` : ""}`}
           </button>
         </div>
       </div>
@@ -219,14 +219,14 @@ function WaiterModal({ onClose, onSaved }) {
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-md p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100">Nuevo mesero</h2>
+          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Nuevo mesero</h2>
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
         <label className="label">Usuario</label>
         <input className="input" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoFocus autoComplete="off" />
         <label className="label mt-3">Nombre completo</label>
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" />
-        <label className="label mt-3">PIN (4 dígitos)</label>
+        <label className="label mt-3">PIN (4 dÃ­gitos)</label>
         <input className="input" type="password" maxLength={4} inputMode="numeric" pattern="[0-9]*" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} autoComplete="new-password" />
         {err && (
           <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
@@ -236,7 +236,7 @@ function WaiterModal({ onClose, onSaved }) {
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
           <button onClick={save} disabled={saving || !username || !name || pin.length !== 4} className="btn-primary">
-            {saving ? "Guardando…" : "Crear mesero"}
+            {saving ? "Guardandoâ€¦" : "Crear mesero"}
           </button>
         </div>
       </div>
@@ -269,29 +269,29 @@ function AssignmentsTab() {
 
   return (
     <div className="space-y-4">
-      <div className="card p-4 text-sm text-ink-600 dark:text-ink-300">
+      <div className="card p-4 text-sm text-ink-600 dark:text-obsidian-200">
         <p>Asigna mesas a cada mesero. Una mesa solo puede estar asignada a <b>un mesero a la vez</b>. Recomendado: 3-4 mesas por mesero.</p>
       </div>
       {assignments.length === 0 ? (
-        <div className="card p-8 text-center text-ink-500 dark:text-ink-400">
-          <UserCog size={32} className="mx-auto text-ink-300 dark:text-ink-700 mb-2"/>
-          No hay meseros activos. Crea uno primero desde otro sistema o vía SQL.
+        <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">
+          <UserCog size={32} className="mx-auto text-ink-300 dark:text-obsidian-300 mb-2"/>
+          No hay meseros activos. Crea uno primero desde otro sistema o vÃ­a SQL.
         </div>
       ) : (
         assignments.map((w) => (
           <div key={w.user_id} className="card p-4">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <div className="font-semibold text-ink-800 dark:text-ink-100 flex items-center gap-2">
+                <div className="font-semibold text-ink-800 dark:text-obsidian-50 flex items-center gap-2">
                   <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 flex items-center justify-center font-semibold">
                     {w.user_name.split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase()}
                   </div>
                   {w.user_name}
                 </div>
-                <div className="text-xs text-ink-500 dark:text-ink-400 ml-11">@{w.username}</div>
+                <div className="text-xs text-ink-500 dark:text-obsidian-400 ml-11">@{w.username}</div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-ink-500 dark:text-ink-400">
+                <span className="text-xs text-ink-500 dark:text-obsidian-400">
                   {w.tables.length} mesa{w.tables.length === 1 ? "" : "s"}
                 </span>
                 <button onClick={() => setToAdd(w)} className="btn-secondary text-xs">
@@ -300,17 +300,17 @@ function AssignmentsTab() {
               </div>
             </div>
             {w.tables.length === 0 ? (
-              <div className="text-sm text-ink-400 dark:text-ink-500 italic ml-11">
-                Sin mesas asignadas — el mesero no podrá tomar pedidos.
+              <div className="text-sm text-ink-400 dark:text-obsidian-500 italic ml-11">
+                Sin mesas asignadas â€” el mesero no podrÃ¡ tomar pedidos.
               </div>
             ) : (
               <div className="flex flex-wrap gap-2 ml-11">
                 {w.tables.map((t) => (
                   <span
                     key={t.id}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-100 text-brand-800 text-sm font-medium dark:bg-brand-900/40 dark:text-brand-300"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-100 text-brand-800 text-sm font-medium dark:bg-wine-900/40 dark:text-wine-300"
                   >
-                    Mesa {t.number}{t.label ? ` · ${t.label}` : ""}
+                    Mesa {t.number}{t.label ? ` Â· ${t.label}` : ""}
                     <button
                       onClick={() => removeOne(w.user_id, t.id)}
                       className="ml-1 hover:text-rose-600 dark:hover:text-rose-400"
@@ -355,14 +355,14 @@ export default function Staff() {
   useEffect(() => { load(); }, []);
 
   if (user?.role !== "admin") {
-    return <div className="card p-8 text-center text-ink-500 dark:text-ink-400">Esta sección es solo para el administrador.</div>;
+    return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Esta secciÃ³n es solo para el administrador.</div>;
   }
 
   return (
     <div>
       <Header
         title="Personal y mesas"
-        subtitle="Gestión de repartidores, mesas y asignaciones"
+        subtitle="GestiÃ³n de repartidores, mesas y asignaciones"
         right={
           <div className="flex items-center gap-2">
             <Tabs value={tab} onChange={setTab} />
@@ -378,35 +378,35 @@ export default function Staff() {
       {tab === "delivery" && (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-paper-200 dark:bg-ink-800 text-ink-600 dark:text-ink-300 text-left">
+            <thead className="bg-paper-200 dark:bg-obsidian-800 text-ink-600 dark:text-obsidian-200 text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">Nombre</th>
-                <th className="px-4 py-2 font-medium">Teléfono</th>
+                <th className="px-4 py-2 font-medium">TelÃ©fono</th>
                 <th className="px-4 py-2 font-medium">Estado</th>
                 <th className="px-4 py-2 font-medium w-32 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {delivery.map((p) => (
-                <tr key={p.id} className="border-t border-paper-200 dark:border-ink-800">
-                  <td className="px-4 py-2 font-medium text-ink-800 dark:text-ink-100">{p.name}</td>
-                  <td className="px-4 py-2 text-ink-600 dark:text-ink-300">{p.phone || "—"}</td>
+                <tr key={p.id} className="border-t border-paper-200 dark:border-obsidian-800">
+                  <td className="px-4 py-2 font-medium text-ink-800 dark:text-obsidian-50">{p.name}</td>
+                  <td className="px-4 py-2 text-ink-600 dark:text-obsidian-200">{p.phone || "â€”"}</td>
                   <td className="px-4 py-2">
                     <span className={`badge ${
                       p.status === "available" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" :
                       p.status === "busy" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" :
-                      "bg-slate-100 text-slate-600 dark:bg-ink-800 dark:text-ink-400"
+                      "bg-slate-100 text-slate-600 dark:bg-obsidian-800 dark:text-obsidian-400"
                     }`}>
                       {p.status === "available" ? "Disponible" : p.status === "busy" ? "Ocupado" : "Fuera de turno"}
                     </span>
                   </td>
                   <td className="px-4 py-2 text-right">
                     <button onClick={() => setEditing({ type: "delivery", value: p })} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                    <button onClick={async () => { if (confirm(`¿Eliminar a ${p.name}?`)) { await api.delete(`/delivery/${p.id}`); load(); } }} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
+                    <button onClick={async () => { if (confirm(`Â¿Eliminar a ${p.name}?`)) { await api.delete(`/delivery/${p.id}`); load(); } }} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
                   </td>
                 </tr>
               ))}
-              {delivery.length === 0 && <tr><td colSpan={4} className="px-4 py-6 text-center text-ink-400 dark:text-ink-500">No hay repartidores. Crea uno con "Nuevo".</td></tr>}
+              {delivery.length === 0 && <tr><td colSpan={4} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">No hay repartidores. Crea uno con "Nuevo".</td></tr>}
             </tbody>
           </table>
         </div>
@@ -415,7 +415,7 @@ export default function Staff() {
       {tab === "waiters" && (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-paper-200 dark:bg-ink-800 text-ink-600 dark:text-ink-300 text-left">
+            <thead className="bg-paper-200 dark:bg-obsidian-800 text-ink-600 dark:text-obsidian-200 text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">Usuario</th>
                 <th className="px-4 py-2 font-medium">Nombre</th>
@@ -424,17 +424,17 @@ export default function Staff() {
             </thead>
             <tbody>
               {waiters.map((w) => (
-                <tr key={w.id} className="border-t border-paper-200 dark:border-ink-800">
-                  <td className="px-4 py-2 font-mono text-ink-700 dark:text-ink-200">@{w.username}</td>
-                  <td className="px-4 py-2 font-medium text-ink-800 dark:text-ink-100">{w.name}</td>
+                <tr key={w.id} className="border-t border-paper-200 dark:border-obsidian-800">
+                  <td className="px-4 py-2 font-mono text-ink-700 dark:text-obsidian-100">@{w.username}</td>
+                  <td className="px-4 py-2 font-medium text-ink-800 dark:text-obsidian-50">{w.name}</td>
                   <td className="px-4 py-2">
-                    <span className={`badge ${w.active ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-ink-800 dark:text-ink-400"}`}>
+                    <span className={`badge ${w.active ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-obsidian-800 dark:text-obsidian-400"}`}>
                       {w.active ? "Activo" : "Inactivo"}
                     </span>
                   </td>
                 </tr>
               ))}
-              {waiters.length === 0 && <tr><td colSpan={3} className="px-4 py-6 text-center text-ink-400 dark:text-ink-500">No hay meseros registrados. Crea uno con "Nuevo".</td></tr>}
+              {waiters.length === 0 && <tr><td colSpan={3} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">No hay meseros registrados. Crea uno con "Nuevo".</td></tr>}
             </tbody>
           </table>
         </div>
@@ -443,9 +443,9 @@ export default function Staff() {
       {tab === "tables" && (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-paper-200 dark:bg-ink-800 text-ink-600 dark:text-ink-300 text-left">
+            <thead className="bg-paper-200 dark:bg-obsidian-800 text-ink-600 dark:text-obsidian-200 text-left">
               <tr>
-                <th className="px-4 py-2 font-medium">N°</th>
+                <th className="px-4 py-2 font-medium">NÂ°</th>
                 <th className="px-4 py-2 font-medium">Etiqueta</th>
                 <th className="px-4 py-2 font-medium">Capacidad</th>
                 <th className="px-4 py-2 font-medium">Estado actual</th>
@@ -454,21 +454,21 @@ export default function Staff() {
             </thead>
             <tbody>
               {tables.map((t) => (
-                <tr key={t.id} className="border-t border-paper-200 dark:border-ink-800">
-                  <td className="px-4 py-2 font-bold text-ink-800 dark:text-ink-100">{t.number}</td>
-                  <td className="px-4 py-2 text-ink-600 dark:text-ink-300">{t.label || "—"}</td>
-                  <td className="px-4 py-2 text-ink-600 dark:text-ink-300">{t.capacity}</td>
+                <tr key={t.id} className="border-t border-paper-200 dark:border-obsidian-800">
+                  <td className="px-4 py-2 font-bold text-ink-800 dark:text-obsidian-50">{t.number}</td>
+                  <td className="px-4 py-2 text-ink-600 dark:text-obsidian-200">{t.label || "â€”"}</td>
+                  <td className="px-4 py-2 text-ink-600 dark:text-obsidian-200">{t.capacity}</td>
                   <td className="px-4 py-2">
                     {t.current_order_id ? <span className="badge bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">Ocupada</span>
                                          : <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Libre</span>}
                   </td>
                   <td className="px-4 py-2 text-right">
                     <button onClick={() => setEditing({ type: "table", value: t })} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                    <button onClick={async () => { if (confirm(`¿Eliminar mesa ${t.number}?`)) { await api.delete(`/tables/${t.id}`); load(); } }} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
+                    <button onClick={async () => { if (confirm(`Â¿Eliminar mesa ${t.number}?`)) { await api.delete(`/tables/${t.id}`); load(); } }} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
                   </td>
                 </tr>
               ))}
-              {tables.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-ink-400 dark:text-ink-500">No hay mesas. Crea una con "Nuevo".</td></tr>}
+              {tables.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">No hay mesas. Crea una con "Nuevo".</td></tr>}
             </tbody>
           </table>
         </div>

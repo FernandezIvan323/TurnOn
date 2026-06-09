@@ -50,13 +50,13 @@ export const statusLabels = {
 };
 
 export const statusColors = {
-  pending: "bg-amber-100 text-amber-800",
-  preparing: "bg-blue-100 text-blue-800",
-  on_the_way: "bg-indigo-100 text-indigo-800",
-  delivered: "bg-emerald-100 text-emerald-800",
-  ready_to_pay: "bg-sky-100 text-sky-800",
-  paid: "bg-emerald-100 text-emerald-800",
-  cancelled: "bg-rose-100 text-rose-800",
+  pending: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+  preparing: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
+  on_the_way: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300",
+  delivered: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+  ready_to_pay: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300",
+  paid: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+  cancelled: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300",
 };
 
 export const typeLabels = {

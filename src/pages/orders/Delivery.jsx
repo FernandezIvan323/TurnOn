@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
@@ -12,7 +12,7 @@ import {
 
 const COLUMNS = [
   { key: "pending",   title: "Pendientes",     tone: "bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800/50" },
-  { key: "preparing", title: "En preparación", tone: "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800/50" },
+  { key: "preparing", title: "En preparaciÃ³n", tone: "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800/50" },
   { key: "on_the_way",title: "En camino",      tone: "bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800/50" },
   { key: "delivered", title: "Entregados",     tone: "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/50" },
 ];
@@ -26,27 +26,27 @@ function OrderCard({ order, onClick, onAssign, onCancel, onPreparing, onBackPend
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="text-xs text-ink-400 dark:text-ink-500">#{order.id} · {formatTime(order.created_at)}</div>
-          <div className="font-semibold text-ink-800 dark:text-ink-100 flex items-center gap-1.5">
+          <div className="text-xs text-ink-400 dark:text-obsidian-500">#{order.id} Â· {formatTime(order.created_at)}</div>
+          <div className="font-semibold text-ink-800 dark:text-obsidian-50 flex items-center gap-1.5">
             <UserIcon size={14} className="text-ink-400" />
-            {order.customer_name || "—"}
+            {order.customer_name || "â€”"}
           </div>
         </div>
         <div className="text-right">
-          <div className="font-semibold text-ink-800 dark:text-ink-100">{money(order.total)}</div>
+          <div className="font-semibold text-ink-800 dark:text-obsidian-50">{money(order.total)}</div>
           {isPaid && (
             <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 mt-0.5">
-              ✓ Pagado {order.payment_method ? `(${order.payment_method})` : ""}
+              âœ“ Pagado {order.payment_method ? `(${order.payment_method})` : ""}
             </div>
           )}
           {order.delivery_name && (
-            <div className="text-[10px] text-ink-500 dark:text-ink-400 mt-0.5">
+            <div className="text-[10px] text-ink-500 dark:text-obsidian-400 mt-0.5">
               <Truck size={10} className="inline" /> {order.delivery_name}
             </div>
           )}
         </div>
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-500 dark:text-ink-400">
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-500 dark:text-obsidian-400">
         {order.customer_phone && (
           <span className="inline-flex items-center gap-1"><Phone size={12}/>{order.customer_phone}</span>
         )}
@@ -63,9 +63,9 @@ function OrderCard({ order, onClick, onAssign, onCancel, onPreparing, onBackPend
             <button
               onClick={(e) => { e.stopPropagation(); onPreparing(order); }}
               className="flex-1 h-8 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center justify-center gap-1 transition"
-              title="Marcar como en preparación"
+              title="Marcar como en preparaciÃ³n"
             >
-              <ChefHat size={14}/> En preparación
+              <ChefHat size={14}/> En preparaciÃ³n
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onAssign(order); }}
@@ -102,7 +102,7 @@ function OrderCard({ order, onClick, onAssign, onCancel, onPreparing, onBackPend
         )}
         {order.status === "on_the_way" && (
           <span className="badge bg-emerald-100 text-emerald-800 w-full justify-center py-1 dark:bg-emerald-900/40 dark:text-emerald-300">
-            <CheckCircle2 size={12} className="mr-1" /> {isPaid ? "Pagado · listo para cerrar al entregar" : "Listo para cerrar al entregar"}
+            <CheckCircle2 size={12} className="mr-1" /> {isPaid ? "Pagado Â· listo para cerrar al entregar" : "Listo para cerrar al entregar"}
           </span>
         )}
         {order.status === "delivered" && (
@@ -187,8 +187,8 @@ function NewOrderModal({ onClose, onCreated }) {
   const submit = async () => {
     setError(null);
     if (cart.length === 0) return setError("Agrega al menos un producto");
-    if (!name || !phone) return setError("Nombre y teléfono del cliente son requeridos");
-    if (!address) return setError("Dirección de entrega requerida");
+    if (!name || !phone) return setError("Nombre y telÃ©fono del cliente son requeridos");
+    if (!address) return setError("DirecciÃ³n de entrega requerida");
     setSaving(true);
     try {
       let cust = customer;
@@ -213,18 +213,18 @@ function NewOrderModal({ onClose, onCreated }) {
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="px-5 py-4 border-b border-paper-300 dark:border-ink-800 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100">Nuevo pedido a domicilio</h2>
+        <div className="px-5 py-4 border-b border-paper-300 dark:border-obsidian-800 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Nuevo pedido a domicilio</h2>
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 flex-1 overflow-hidden">
-          <div className="p-5 border-r border-paper-300 dark:border-ink-800 overflow-y-auto">
-            <h3 className="text-sm font-semibold text-ink-700 dark:text-ink-200 mb-3">Datos del cliente</h3>
+          <div className="p-5 border-r border-paper-300 dark:border-obsidian-800 overflow-y-auto">
+            <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-3">Datos del cliente</h3>
 
             {!customer && (
               <div className="relative mb-3" ref={searchRef}>
-                <label className="label">Buscar cliente existente (nombre o teléfono)</label>
+                <label className="label">Buscar cliente existente (nombre o telÃ©fono)</label>
                 <div className="relative">
                   <Search size={14} className="absolute left-3 top-3 text-ink-400"/>
                   <input
@@ -233,7 +233,7 @@ function NewOrderModal({ onClose, onCreated }) {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onFocus={() => suggestions.length > 0 && setShowSugg(true)}
                     onBlur={() => setTimeout(() => setShowSugg(false), 180)}
-                    placeholder="Ej. Juan Pérez o 555-1234…"
+                    placeholder="Ej. Juan PÃ©rez o 555-1234â€¦"
                     autoComplete="off"
                   />
                 </div>
@@ -244,10 +244,10 @@ function NewOrderModal({ onClose, onCreated }) {
                         key={s.id}
                         type="button"
                         onMouseDown={() => fillFromCustomer(s)}
-                        className="w-full text-left px-3 py-2 hover:bg-paper-200 dark:hover:bg-ink-800 border-b border-paper-200 dark:border-ink-800 last:border-0"
+                        className="w-full text-left px-3 py-2 hover:bg-paper-200 dark:hover:bg-obsidian-800 border-b border-paper-200 dark:border-obsidian-800 last:border-0"
                       >
-                        <div className="font-medium text-ink-800 dark:text-ink-100 text-sm">{s.name}</div>
-                        <div className="text-xs text-ink-500 dark:text-ink-400 flex items-center gap-2">
+                        <div className="font-medium text-ink-800 dark:text-obsidian-50 text-sm">{s.name}</div>
+                        <div className="text-xs text-ink-500 dark:text-obsidian-400 flex items-center gap-2">
                           <Phone size={10}/> {s.phone}
                           {s.neighborhood && <><MapPin size={10}/> {s.neighborhood}</>}
                         </div>
@@ -256,7 +256,7 @@ function NewOrderModal({ onClose, onCreated }) {
                   </div>
                 )}
                 {showSugg && searchTerm.length >= 2 && suggestions.length === 0 && (
-                  <div className="absolute z-10 mt-1 w-full card px-3 py-2 text-sm text-ink-500 dark:text-ink-400">
+                  <div className="absolute z-10 mt-1 w-full card px-3 py-2 text-sm text-ink-500 dark:text-obsidian-400">
                     Sin coincidencias. Completa los datos abajo para crear el cliente.
                   </div>
                 )}
@@ -264,16 +264,16 @@ function NewOrderModal({ onClose, onCreated }) {
             )}
 
             {customer && (
-              <div className="mb-3 card p-3 border-brand-300 bg-brand-50/40 dark:bg-brand-900/20 dark:border-brand-800">
+              <div className="mb-3 card p-3 border-brand-300 bg-brand-50/40 dark:bg-wine-900/20 dark:border-brand-800">
                 <div className="flex items-start justify-between">
                   <div>
-                    <div className="text-xs text-brand-700 dark:text-brand-300 font-medium">Cliente seleccionado</div>
-                    <div className="font-semibold text-ink-800 dark:text-ink-100">{customer.name}</div>
-                    <div className="text-xs text-ink-500 dark:text-ink-400 flex items-center gap-2">
+                    <div className="text-xs text-brand-700 dark:text-wine-300 font-medium">Cliente seleccionado</div>
+                    <div className="font-semibold text-ink-800 dark:text-obsidian-50">{customer.name}</div>
+                    <div className="text-xs text-ink-500 dark:text-obsidian-400 flex items-center gap-2">
                       <Phone size={10}/> {customer.phone}
                     </div>
                   </div>
-                  <button onClick={clearCustomer} className="btn-ghost text-xs" title="Quitar selección">
+                  <button onClick={clearCustomer} className="btn-ghost text-xs" title="Quitar selecciÃ³n">
                     <X size={14}/>
                   </button>
                 </div>
@@ -286,14 +286,14 @@ function NewOrderModal({ onClose, onCreated }) {
                 <input className="input" value={name} onChange={(e) => setName(e.target.value)} disabled={!!customer} />
               </div>
               <div>
-                <label className="label">Teléfono</label>
+                <label className="label">TelÃ©fono</label>
                 <div className="relative">
                   <Phone size={14} className="absolute left-3 top-3 text-ink-400"/>
                   <input className="input pl-8" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={!!customer} />
                 </div>
               </div>
               <div>
-                <label className="label">Dirección de entrega</label>
+                <label className="label">DirecciÃ³n de entrega</label>
                 <div className="relative">
                   <MapPin size={14} className="absolute left-3 top-3 text-ink-400"/>
                   <input className="input pl-8" value={address} onChange={(e) => setAddress(e.target.value)} />
@@ -311,39 +311,39 @@ function NewOrderModal({ onClose, onCreated }) {
               </div>
               <div>
                 <label className="label">Notas de la entrega</label>
-                <textarea rows={2} className="input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej. Tocar timbre 2 veces, trae cambio de 1000…" />
+                <textarea rows={2} className="input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej. Tocar timbre 2 veces, trae cambio de 1000â€¦" />
               </div>
             </div>
 
-            <h3 className="text-sm font-semibold text-ink-700 dark:text-ink-200 mt-5 mb-2">Carrito</h3>
-            {cart.length === 0 && <div className="text-sm text-ink-400 dark:text-ink-500">Agrega productos del menú →</div>}
+            <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mt-5 mb-2">Carrito</h3>
+            {cart.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500">Agrega productos del menÃº â†’</div>}
             <div className="space-y-2">
               {cart.map((c) => (
                 <div key={c.product_id} className="flex items-center gap-2 text-sm">
                   <div className="flex-1">
-                    <div className="font-medium text-ink-700 dark:text-ink-200">{c.name}</div>
-                    <div className="text-xs text-ink-500 dark:text-ink-400">{money(c.unit_price)} c/u</div>
+                    <div className="font-medium text-ink-700 dark:text-obsidian-100">{c.name}</div>
+                    <div className="text-xs text-ink-500 dark:text-obsidian-400">{money(c.unit_price)} c/u</div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => changeQty(c.product_id, c.quantity - 1)} className="w-7 h-7 rounded-lg bg-paper-200 dark:bg-ink-800 hover:bg-paper-300 dark:hover:bg-ink-700">-</button>
+                    <button onClick={() => changeQty(c.product_id, c.quantity - 1)} className="w-7 h-7 rounded-lg bg-paper-200 dark:bg-obsidian-800 hover:bg-paper-300 dark:hover:bg-obsidian-700">-</button>
                     <span className="w-7 text-center font-semibold">{c.quantity}</span>
-                    <button onClick={() => changeQty(c.product_id, c.quantity + 1)} className="w-7 h-7 rounded-lg bg-paper-200 dark:bg-ink-800 hover:bg-paper-300 dark:hover:bg-ink-700">+</button>
+                    <button onClick={() => changeQty(c.product_id, c.quantity + 1)} className="w-7 h-7 rounded-lg bg-paper-200 dark:bg-obsidian-800 hover:bg-paper-300 dark:hover:bg-obsidian-700">+</button>
                   </div>
                   <div className="w-20 text-right font-semibold">{money(c.unit_price * c.quantity)}</div>
                 </div>
               ))}
             </div>
             {cart.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-paper-200 dark:border-ink-800 flex items-center justify-between">
-                <span className="text-sm text-ink-500 dark:text-ink-400">Total</span>
-                <span className="text-xl font-bold text-ink-800 dark:text-ink-100">{money(total)}</span>
+              <div className="mt-3 pt-3 border-t border-paper-200 dark:border-obsidian-800 flex items-center justify-between">
+                <span className="text-sm text-ink-500 dark:text-obsidian-400">Total</span>
+                <span className="text-xl font-bold text-ink-800 dark:text-obsidian-50">{money(total)}</span>
               </div>
             )}
             {error && <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{error}</div>}
           </div>
 
-          <div className="p-5 overflow-y-auto bg-paper-100 dark:bg-ink-950">
-            <h3 className="text-sm font-semibold text-ink-700 dark:text-ink-200 mb-3">Menú</h3>
+          <div className="p-5 overflow-y-auto bg-paper-100 dark:bg-obsidian-950">
+            <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-3">MenÃº</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {products.map((p) => (
                 <button
@@ -351,22 +351,22 @@ function NewOrderModal({ onClose, onCreated }) {
                   onClick={() => addToCart(p)}
                   className="card p-3 text-left hover:border-brand-400 dark:hover:border-brand-600 transition"
                 >
-                  <div className="text-xs text-ink-400 dark:text-ink-500">{p.category_name || "Sin categoría"}</div>
-                  <div className="font-medium text-ink-800 dark:text-ink-100 text-sm">{p.name}</div>
-                  <div className="text-brand-700 dark:text-brand-300 font-semibold mt-1">{money(p.price)}</div>
+                  <div className="text-xs text-ink-400 dark:text-obsidian-500">{p.category_name || "Sin categorÃ­a"}</div>
+                  <div className="font-medium text-ink-800 dark:text-obsidian-50 text-sm">{p.name}</div>
+                  <div className="text-brand-700 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
                 </button>
               ))}
-              {products.length === 0 && <div className="text-sm text-ink-400 dark:text-ink-500 col-span-full">No hay productos en el menú. Agrega desde "Menú (catálogo)".</div>}
+              {products.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500 col-span-full">No hay productos en el menÃº. Agrega desde "MenÃº (catÃ¡logo)".</div>}
             </div>
           </div>
         </div>
 
-        <div className="px-5 py-3 border-t border-paper-300 dark:border-ink-800 flex items-center justify-between">
-          <div className="text-sm text-ink-500 dark:text-ink-400">{cart.length} productos · {money(total)}</div>
+        <div className="px-5 py-3 border-t border-paper-300 dark:border-obsidian-800 flex items-center justify-between">
+          <div className="text-sm text-ink-500 dark:text-obsidian-400">{cart.length} productos Â· {money(total)}</div>
           <div className="flex gap-2">
             <button onClick={onClose} className="btn-secondary">Cancelar</button>
             <button onClick={submit} disabled={saving} className="btn-primary">
-              {saving ? "Guardando…" : "Crear pedido"}
+              {saving ? "Guardandoâ€¦" : "Crear pedido"}
             </button>
           </div>
         </div>
@@ -390,8 +390,8 @@ function AssignModal({ order, onClose, onAssigned }) {
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-md p-5">
-        <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100 mb-3">Asignar repartidor · #{order.id}</h2>
-        <div className="text-sm text-ink-500 dark:text-ink-400 mb-3">{order.customer_name} · {order.customer_address}</div>
+        <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-3">Asignar repartidor Â· #{order.id}</h2>
+        <div className="text-sm text-ink-500 dark:text-obsidian-400 mb-3">{order.customer_name} Â· {order.customer_address}</div>
         {persons.length === 0 && <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">No hay repartidores registrados.</div>}
         <div className="space-y-2 max-h-80 overflow-y-auto">
           {persons.map((p) => (
@@ -401,11 +401,11 @@ function AssignModal({ order, onClose, onAssigned }) {
               className="w-full card p-3 text-left hover:border-brand-400 dark:hover:border-brand-600 flex items-center justify-between transition"
             >
               <div>
-                <div className="font-medium text-ink-800 dark:text-ink-100">{p.name}</div>
-                <div className="text-xs text-ink-500 dark:text-ink-400">{p.phone || "Sin teléfono"}</div>
+                <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
+                <div className="text-xs text-ink-500 dark:text-obsidian-400">{p.phone || "Sin telÃ©fono"}</div>
               </div>
               <div className="text-right">
-                <div className="text-xs font-semibold text-ink-600 dark:text-ink-300">{p.active_orders} activo{p.active_orders !== 1 ? "s" : ""}</div>
+                <div className="text-xs font-semibold text-ink-600 dark:text-obsidian-200">{p.active_orders} activo{p.active_orders !== 1 ? "s" : ""}</div>
                 <ChevronRight size={18} className="text-ink-400 ml-auto" />
               </div>
             </button>
@@ -440,38 +440,38 @@ function OrderDetailModal({ order, onClose, onChanged }) {
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-2xl p-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100">Pedido #{order.id}</h2>
+          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Pedido #{order.id}</h2>
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
         <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-          <div><span className="text-ink-400 dark:text-ink-500">Cliente:</span> <b>{order.customer_name}</b></div>
-          <div><span className="text-ink-400 dark:text-ink-500">Teléfono:</span> {order.customer_phone}</div>
-          <div className="col-span-2"><span className="text-ink-400 dark:text-ink-500">Dirección:</span> {order.customer_address} {order.customer_neighborhood && `· ${order.customer_neighborhood}`}</div>
-          {order.customer_reference && <div className="col-span-2"><span className="text-ink-400 dark:text-ink-500">Referencia:</span> {order.customer_reference}</div>}
-          {order.delivery_name && <div><span className="text-ink-400 dark:text-ink-500">Repartidor:</span> <b>{order.delivery_name}</b></div>}
-          <div><span className="text-ink-400 dark:text-ink-500">Estado:</span> <span className={`badge ${statusColors[order.status]}`}>{statusLabels[order.status]}</span></div>
+          <div><span className="text-ink-400 dark:text-obsidian-500">Cliente:</span> <b>{order.customer_name}</b></div>
+          <div><span className="text-ink-400 dark:text-obsidian-500">TelÃ©fono:</span> {order.customer_phone}</div>
+          <div className="col-span-2"><span className="text-ink-400 dark:text-obsidian-500">DirecciÃ³n:</span> {order.customer_address} {order.customer_neighborhood && `Â· ${order.customer_neighborhood}`}</div>
+          {order.customer_reference && <div className="col-span-2"><span className="text-ink-400 dark:text-obsidian-500">Referencia:</span> {order.customer_reference}</div>}
+          {order.delivery_name && <div><span className="text-ink-400 dark:text-obsidian-500">Repartidor:</span> <b>{order.delivery_name}</b></div>}
+          <div><span className="text-ink-400 dark:text-obsidian-500">Estado:</span> <span className={`badge ${statusColors[order.status]}`}>{statusLabels[order.status]}</span></div>
         </div>
         {order.notes && (
           <div className="card p-3 bg-amber-50 border-amber-200 mb-3 text-sm text-amber-900 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
             <StickyNote size={14} className="inline mr-1" /> {order.notes}
           </div>
         )}
-        {loading ? <div className="text-sm text-ink-500 dark:text-ink-400">Cargando…</div> : (
+        {loading ? <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargandoâ€¦</div> : (
           <div className="space-y-1.5">
             {items.map((it) => (
-              <div key={it.id} className="flex items-center justify-between text-sm py-1.5 border-b border-paper-200 dark:border-ink-800">
+              <div key={it.id} className="flex items-center justify-between text-sm py-1.5 border-b border-paper-200 dark:border-obsidian-800">
                 <div>
-                  <div className="font-medium text-ink-800 dark:text-ink-100">{it.name_snapshot} {it.notes && <span className="text-xs text-amber-700 dark:text-amber-400">· {it.notes}</span>}</div>
-                  <div className="text-xs text-ink-500 dark:text-ink-400">{money(it.unit_price)} c/u</div>
+                  <div className="font-medium text-ink-800 dark:text-obsidian-50">{it.name_snapshot} {it.notes && <span className="text-xs text-amber-700 dark:text-amber-400">Â· {it.notes}</span>}</div>
+                  <div className="text-xs text-ink-500 dark:text-obsidian-400">{money(it.unit_price)} c/u</div>
                 </div>
-                <div className="font-semibold text-ink-700 dark:text-ink-200">x{it.quantity}</div>
+                <div className="font-semibold text-ink-700 dark:text-obsidian-100">x{it.quantity}</div>
               </div>
             ))}
           </div>
         )}
-        <div className="mt-4 pt-3 border-t border-paper-200 dark:border-ink-800 flex items-center justify-between">
-          <span className="text-ink-500 dark:text-ink-400">Total</span>
-          <span className="text-2xl font-bold text-ink-800 dark:text-ink-100">{money(order.total)}</span>
+        <div className="mt-4 pt-3 border-t border-paper-200 dark:border-obsidian-800 flex items-center justify-between">
+          <span className="text-ink-500 dark:text-obsidian-400">Total</span>
+          <span className="text-2xl font-bold text-ink-800 dark:text-obsidian-50">{money(order.total)}</span>
         </div>
         {order.status === "on_the_way" && (
           <button onClick={closePaid} className="btn-primary w-full mt-4">
@@ -511,8 +511,8 @@ function HistoryModal({ onClose }) {
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-2xl max-h-[90vh] flex flex-col">
-        <div className="px-5 py-4 border-b border-paper-300 dark:border-ink-800 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100 flex items-center gap-2">
+        <div className="px-5 py-4 border-b border-paper-300 dark:border-obsidian-800 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 flex items-center gap-2">
             <Clock size={18}/> Historial de entregas
           </h2>
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
@@ -525,31 +525,31 @@ function HistoryModal({ onClose }) {
                 onClick={() => loadHistory(p.id)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition border ${
                   selected === p.id
-                    ? "bg-brand-500 text-white border-brand-500 dark:bg-brandDark-500 dark:text-[#1E222B]"
-                    : "bg-paper-50 text-ink-600 border-paper-300 hover:bg-paper-200 dark:bg-[#262B36] dark:text-ink-300 dark:border-white/5 dark:hover:bg-[#2E3440]"
+                    ? "bg-brand-500 text-white border-brand-500 dark:bg-wine-600 dark:text-white"
+                    : "bg-paper-50 text-ink-600 border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-200 dark:border-obsidian-700/50 dark:hover:bg-obsidian-800"
                 }`}
               >
                 {p.name}
               </button>
             ))}
           </div>
-          {!selected && <div className="text-sm text-ink-400 dark:text-ink-500 text-center py-8">Selecciona un repartidor para ver su historial</div>}
-          {loading && <div className="text-sm text-ink-500 dark:text-ink-400">Cargando…</div>}
+          {!selected && <div className="text-sm text-ink-400 dark:text-obsidian-500 text-center py-8">Selecciona un repartidor para ver su historial</div>}
+          {loading && <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargandoâ€¦</div>}
           {err && <div className="text-sm text-rose-700 bg-rose-50 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300">{err}</div>}
           {selected && !loading && !err && history.length === 0 && (
-            <div className="text-sm text-ink-400 dark:text-ink-500 text-center py-8">{pname} no tiene entregas registradas.</div>
+            <div className="text-sm text-ink-400 dark:text-obsidian-500 text-center py-8">{pname} no tiene entregas registradas.</div>
           )}
           {selected && !loading && history.length > 0 && (
             <div className="space-y-2">
               {history.map((o) => (
                 <div key={o.id} className="flex items-center justify-between card p-3 text-sm">
                   <div>
-                    <div className="font-medium text-ink-800 dark:text-ink-100">#{o.id} · {o.customer_name}</div>
-                    <div className="text-xs text-ink-500 dark:text-ink-400">{o.customer_address}</div>
+                    <div className="font-medium text-ink-800 dark:text-obsidian-50">#{o.id} Â· {o.customer_name}</div>
+                    <div className="text-xs text-ink-500 dark:text-obsidian-400">{o.customer_address}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold text-ink-700 dark:text-ink-200">{money(o.total)}</div>
-                    <div className="text-xs text-ink-400 dark:text-ink-500">{new Date(o.created_at).toLocaleDateString()}</div>
+                    <div className="font-semibold text-ink-700 dark:text-obsidian-100">{money(o.total)}</div>
+                    <div className="text-xs text-ink-400 dark:text-obsidian-500">{new Date(o.created_at).toLocaleDateString()}</div>
                   </div>
                 </div>
               ))}
@@ -584,19 +584,19 @@ function ReopenModal({ order, onClose, onReopened }) {
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-md p-6">
-        <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100 mb-3 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-3 flex items-center gap-2">
           <AlertTriangle size={20} className="text-amber-600"/>
           Reabrir pedido #{order.id}
         </h2>
         <div className="card p-3 bg-amber-50 border-amber-200 mb-3 text-sm text-amber-900 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
-          <b>Esta acción es delicada.</b> Va a:
+          <b>Esta acciÃ³n es delicada.</b> Va a:
           <ul className="list-disc pl-5 mt-1 space-y-0.5">
-            <li>Deshacer el cobro ({money(order.total)} · {order.payment_method || "?"})</li>
-            <li>Devolver el pedido a {order.delivery_person_id ? "En camino (repartidor vuelve a estar ocupado)" : "En preparación"}</li>
-            <li>Si ya se contabilizó en reportes de hoy, no se actualizará</li>
+            <li>Deshacer el cobro ({money(order.total)} Â· {order.payment_method || "?"})</li>
+            <li>Devolver el pedido a {order.delivery_person_id ? "En camino (repartidor vuelve a estar ocupado)" : "En preparaciÃ³n"}</li>
+            <li>Si ya se contabilizÃ³ en reportes de hoy, no se actualizarÃ¡</li>
           </ul>
         </div>
-        <label className="label">Escribe <code className="px-1.5 py-0.5 rounded bg-ink-100 dark:bg-ink-800 text-amber-700 dark:text-amber-300 font-mono text-xs">{required}</code> para confirmar:</label>
+        <label className="label">Escribe <code className="px-1.5 py-0.5 rounded bg-ink-100 dark:bg-obsidian-800 text-amber-700 dark:text-amber-300 font-mono text-xs">{required}</code> para confirmar:</label>
         <input
           autoFocus
           className="input"
@@ -608,7 +608,7 @@ function ReopenModal({ order, onClose, onReopened }) {
         <div className="mt-4 flex gap-2">
           <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1">
-            {busy ? "Reabriendo…" : "Reabrir pedido"}
+            {busy ? "Reabriendoâ€¦" : "Reabrir pedido"}
           </button>
         </div>
       </div>
@@ -668,7 +668,7 @@ export default function Delivery() {
   };
 
   if (user?.role !== "admin") {
-    return <div className="card p-8 text-center text-ink-500 dark:text-ink-400">Esta sección es solo para el cajero/administrador.</div>;
+    return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Esta secciÃ³n es solo para el cajero/administrador.</div>;
   }
 
   return (
@@ -704,20 +704,20 @@ export default function Delivery() {
             onClick={() => setFilter("delivered")}
             className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:underline"
           >
-            Ver todos ({totalDeliveredCount}) →
+            Ver todos ({totalDeliveredCount}) â†’
           </button>
         </div>
       )}
 
       {loading ? (
-        <div className="text-sm text-ink-500 dark:text-ink-400">Cargando…</div>
+        <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargandoâ€¦</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {COLUMNS.map((col) => (
             <div key={col.key} className={`rounded-2xl border ${col.tone} p-3 min-h-[200px]`}>
               <div className="flex items-center justify-between mb-3 px-1">
-                <h3 className="font-semibold text-ink-700 dark:text-ink-200">{col.title}</h3>
-                <span className="text-xs text-ink-500 dark:text-ink-400 bg-paper-50 dark:bg-ink-900 px-2 py-0.5 rounded-full border border-paper-300 dark:border-ink-700">
+                <h3 className="font-semibold text-ink-700 dark:text-obsidian-100">{col.title}</h3>
+                <span className="text-xs text-ink-500 dark:text-obsidian-400 bg-paper-50 dark:bg-obsidian-900 px-2 py-0.5 rounded-full border border-paper-300 dark:border-obsidian-700">
                   {byStatus(col.key).length}
                 </span>
               </div>
@@ -735,7 +735,7 @@ export default function Delivery() {
                   />
                 ))}
                 {byStatus(col.key).length === 0 && (
-                  <div className="text-center text-xs text-ink-400 dark:text-ink-500 py-6">Sin pedidos</div>
+                  <div className="text-center text-xs text-ink-400 dark:text-obsidian-500 py-6">Sin pedidos</div>
                 )}
               </div>
             </div>
@@ -751,9 +751,9 @@ export default function Delivery() {
       {toCancel && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
           <div className="card w-full max-w-md p-5">
-            <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100 mb-3">Cancelar pedido #{toCancel.id}</h2>
+            <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-3">Cancelar pedido #{toCancel.id}</h2>
             <label className="label">Motivo</label>
-            <input className="input" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Cliente no contesta, dirección errónea…" />
+            <input className="input" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Cliente no contesta, direcciÃ³n errÃ³neaâ€¦" />
             <div className="mt-4 flex justify-end gap-2">
               <button onClick={() => { setToCancel(null); setCancelReason(""); }} className="btn-secondary">Volver</button>
               <button onClick={cancel} className="btn-danger">Cancelar pedido</button>

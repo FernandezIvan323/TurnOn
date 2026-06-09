@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
@@ -51,30 +51,30 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
   return (
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-md p-6">
-        <h2 className="text-lg font-semibold text-ink-800 dark:text-ink-100 mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-4 flex items-center gap-2">
           <Receipt size={20}/> {isPrepay ? "Pre-cobrar" : "Cobrar"} pedido #{order.id}
         </h2>
-        <div className="bg-paper-100 dark:bg-ink-950 rounded-xl p-4 mb-4 text-center">
-          <div className="text-sm text-ink-500 dark:text-ink-400">{isPrepay ? "Monto pre-cobrado" : "Total a cobrar"}</div>
-          <div className="text-3xl font-bold text-ink-800 dark:text-ink-100">{money(grandTotal)}</div>
+        <div className="bg-paper-100 dark:bg-obsidian-950 rounded-xl p-4 mb-4 text-center">
+          <div className="text-sm text-ink-500 dark:text-obsidian-400">{isPrepay ? "Monto pre-cobrado" : "Total a cobrar"}</div>
+          <div className="text-3xl font-bold text-ink-800 dark:text-obsidian-50">{money(grandTotal)}</div>
           {!isPrepay && tipAmount > 0 && (
-            <div className="text-xs text-ink-500 dark:text-ink-400 mt-1">
+            <div className="text-xs text-ink-500 dark:text-obsidian-400 mt-1">
               {money(totalNum)} + {money(tipAmount)} propina ({tipPct}%)
             </div>
           )}
-          <div className="text-xs text-ink-500 dark:text-ink-400 mt-1">
-            {order.type === "table" ? `Mesa ${order.table_number}` : `${order.customer_name} · ${order.customer_neighborhood || ""}`}
+          <div className="text-xs text-ink-500 dark:text-obsidian-400 mt-1">
+            {order.type === "table" ? `Mesa ${order.table_number}` : `${order.customer_name} Â· ${order.customer_neighborhood || ""}`}
           </div>
           {!isPrepay && showSplit && split > 1 && (
-            <div className="mt-2 pt-2 border-t border-paper-200 dark:border-ink-700 text-sm">
-              <div className="text-ink-500 dark:text-ink-400">Por persona:</div>
-              <div className="text-xl font-bold text-ink-800 dark:text-ink-100">{money(grandTotal / split)}</div>
+            <div className="mt-2 pt-2 border-t border-paper-200 dark:border-obsidian-700 text-sm">
+              <div className="text-ink-500 dark:text-obsidian-400">Por persona:</div>
+              <div className="text-xl font-bold text-ink-800 dark:text-obsidian-50">{money(grandTotal / split)}</div>
             </div>
           )}
         </div>
         {isPrepay && (
           <div className="mb-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
-            El pedido se marcará como pagado y seguirá en camino. El cierre final se hará al entregar.
+            El pedido se marcarÃ¡ como pagado y seguirÃ¡ en camino. El cierre final se harÃ¡ al entregar.
           </div>
         )}
         {!isPrepay && (
@@ -88,7 +88,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
                   className={`flex-1 px-3 py-2 rounded-xl border text-sm font-medium transition ${
                     tipPct === pct
                       ? "bg-brand-600 text-white border-brand-600"
-                      : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-ink-900 dark:text-ink-200 dark:border-ink-700 dark:hover:bg-ink-800"
+                      : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-100 dark:border-obsidian-700 dark:hover:bg-obsidian-800"
                   }`}
                 >
                   {pct > 0 ? `${pct}%` : "Sin"}
@@ -101,21 +101,21 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
           <div className="mb-4">
             <button
               onClick={() => setShowSplit((s) => !s)}
-              className={`flex items-center gap-2 text-sm font-medium ${showSplit ? "text-brand-600 dark:text-brandDark-300" : "text-ink-500 dark:text-ink-400"}`}
+              className={`flex items-center gap-2 text-sm font-medium ${showSplit ? "text-brand-600 dark:text-wine-300" : "text-ink-500 dark:text-obsidian-400"}`}
             >
-              <Users size={14}/> {showSplit ? "Ocultar división" : "Dividir cuenta"}
+              <Users size={14}/> {showSplit ? "Ocultar divisiÃ³n" : "Dividir cuenta"}
             </button>
             {showSplit && (
               <div className="flex items-center gap-2 mt-2">
-                <button onClick={() => setSplit(Math.max(1, split - 1))} className="w-8 h-8 rounded-lg bg-paper-200 dark:bg-ink-800 flex items-center justify-center text-sm font-semibold">-</button>
-                <span className="w-12 text-center text-lg font-bold text-ink-800 dark:text-ink-100">{split}</span>
-                <button onClick={() => setSplit(Math.min(20, split + 1))} className="w-8 h-8 rounded-lg bg-paper-200 dark:bg-ink-800 flex items-center justify-center text-sm font-semibold">+</button>
-                <span className="text-xs text-ink-500 dark:text-ink-400 ml-1">persona{split !== 1 ? "s" : ""}</span>
+                <button onClick={() => setSplit(Math.max(1, split - 1))} className="w-8 h-8 rounded-lg bg-paper-200 dark:bg-obsidian-800 flex items-center justify-center text-sm font-semibold">-</button>
+                <span className="w-12 text-center text-lg font-bold text-ink-800 dark:text-obsidian-50">{split}</span>
+                <button onClick={() => setSplit(Math.min(20, split + 1))} className="w-8 h-8 rounded-lg bg-paper-200 dark:bg-obsidian-800 flex items-center justify-center text-sm font-semibold">+</button>
+                <span className="text-xs text-ink-500 dark:text-obsidian-400 ml-1">persona{split !== 1 ? "s" : ""}</span>
               </div>
             )}
           </div>
         )}
-        <label className="label">Método de pago</label>
+        <label className="label">MÃ©todo de pago</label>
         <div className="grid grid-cols-2 gap-2 mb-4">
           {methods.map((m) => (
             <button
@@ -124,7 +124,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
               className={`px-3 py-2.5 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5 ${
                 method === m.v
                   ? "bg-brand-600 text-white border-brand-600"
-                  : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-ink-900 dark:text-ink-200 dark:border-ink-700 dark:hover:bg-ink-800"
+                  : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-100 dark:border-obsidian-700 dark:hover:bg-obsidian-800"
               }`}
             >
               <m.icon size={14}/> {m.l}
@@ -135,7 +135,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
         <div className="flex gap-2">
           <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1">
-            {busy ? "Procesando…" : (isPrepay ? "Confirmar pre-cobro" : "Confirmar cobro")}
+            {busy ? "Procesandoâ€¦" : (isPrepay ? "Confirmar pre-cobro" : "Confirmar cobro")}
           </button>
         </div>
       </div>
@@ -148,9 +148,9 @@ function OrderRow({ order, onClose, onPrepay }) {
   return (
     <div className="card p-4 flex items-center justify-between gap-4">
       <div className="flex-1">
-        <div className="flex items-center gap-2 text-xs text-ink-500 dark:text-ink-400">
+        <div className="flex items-center gap-2 text-xs text-ink-500 dark:text-obsidian-400">
           <span>#{order.id}</span>
-          <span>·</span>
+          <span>Â·</span>
           <span>{formatTime(order.created_at)}</span>
           <span className={`badge inline-flex items-center gap-1 ${
             isDelivery ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300" : "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300"
@@ -160,20 +160,20 @@ function OrderRow({ order, onClose, onPrepay }) {
           </span>
           <span className={`badge ${statusColors[order.status]}`}>{statusLabels[order.status]}</span>
         </div>
-        <div className="font-semibold text-ink-800 dark:text-ink-100 mt-0.5">
+        <div className="font-semibold text-ink-800 dark:text-obsidian-50 mt-0.5">
           {order.type === "table"
-            ? `Mesa ${order.table_number}` + (order.table_label ? ` · ${order.table_label}` : "")
-            : `${order.customer_name}${order.customer_neighborhood ? " · " + order.customer_neighborhood : ""}`}
+            ? `Mesa ${order.table_number}` + (order.table_label ? ` Â· ${order.table_label}` : "")
+            : `${order.customer_name}${order.customer_neighborhood ? " Â· " + order.customer_neighborhood : ""}`}
         </div>
         {order.notes && <div className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">Nota: {order.notes}</div>}
         {order.payment_status === "paid" && (
           <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">
-            ✓ Pagado ({order.payment_method}){Number(order.tip) > 0 ? ` + ${money(order.tip)} propina` : ""}
+            âœ“ Pagado ({order.payment_method}){Number(order.tip) > 0 ? ` + ${money(order.tip)} propina` : ""}
           </div>
         )}
       </div>
       <div className="text-right">
-        <div className="text-xl font-bold text-ink-800 dark:text-ink-100">{money(order.total)}</div>
+        <div className="text-xl font-bold text-ink-800 dark:text-obsidian-50">{money(order.total)}</div>
         {isDelivery && order.status === "on_the_way" && order.payment_status !== "paid" && (
           <div className="flex flex-col gap-1 mt-1">
             <button onClick={() => onPrepay(order)} className="btn-secondary text-xs">
@@ -211,7 +211,7 @@ export default function Cashier() {
     const params = { payment: tab === "paid" ? "paid" : "pending" };
     if (typeFilter !== "all") params.type = typeFilter;
     const { data } = await api.get("/orders", { params });
-    // Ordenar por antigüedad
+    // Ordenar por antigÃ¼edad
     data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     setOrders(data);
     setLoading(false);
@@ -232,7 +232,7 @@ export default function Cashier() {
         subtitle="Cierre y cobro de pedidos"
         right={
           <div className="flex gap-2 items-center">
-            <div className="flex gap-1 bg-paper-50 dark:bg-ink-900 border border-paper-300 dark:border-ink-700 rounded-xl p-1">
+            <div className="flex gap-1 bg-paper-50 dark:bg-obsidian-900 border border-paper-300 dark:border-obsidian-700 rounded-xl p-1">
               {[
                 { v: "pending",  l: "Por cobrar" },
                 { v: "paid",     l: "Cobrados" },
@@ -241,7 +241,7 @@ export default function Cashier() {
                   key={t.v}
                   onClick={() => setTab(t.v)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                    tab === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-ink-300 hover:bg-paper-200 dark:hover:bg-ink-800"
+                    tab === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
                   }`}
                 >
                   {t.l}
@@ -262,8 +262,8 @@ export default function Cashier() {
             <Calculator size={18}/>
           </div>
           <div>
-            <div className="text-xs text-ink-500 dark:text-ink-400">Mesas pendientes</div>
-            <div className="text-xl font-bold text-ink-800 dark:text-ink-100">{summary.tables}</div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Mesas pendientes</div>
+            <div className="text-xl font-bold text-ink-800 dark:text-obsidian-50">{summary.tables}</div>
           </div>
         </div>
         <div className="card p-4 flex items-center gap-3">
@@ -271,17 +271,17 @@ export default function Cashier() {
             <Calculator size={18}/>
           </div>
           <div>
-            <div className="text-xs text-ink-500 dark:text-ink-400">Domicilios pendientes</div>
-            <div className="text-xl font-bold text-ink-800 dark:text-ink-100">{summary.deliveries}</div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Domicilios pendientes</div>
+            <div className="text-xl font-bold text-ink-800 dark:text-obsidian-50">{summary.deliveries}</div>
           </div>
         </div>
         <div className="card p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-brand-50 text-brand-700 dark:bg-wine-900/30 dark:text-wine-300 flex items-center justify-center">
             <Receipt size={18}/>
           </div>
           <div>
-            <div className="text-xs text-ink-500 dark:text-ink-400">Total {tab === "pending" ? "a cobrar" : "cobrado"}</div>
-            <div className="text-xl font-bold text-ink-800 dark:text-ink-100">{money(summary.total)}</div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Total {tab === "pending" ? "a cobrar" : "cobrado"}</div>
+            <div className="text-xl font-bold text-ink-800 dark:text-obsidian-50">{money(summary.total)}</div>
           </div>
         </div>
       </div>
@@ -299,7 +299,7 @@ export default function Cashier() {
             className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
               typeFilter === t.v
                 ? "bg-ink-800 text-white dark:bg-ink-100 dark:text-ink-900"
-                : "bg-paper-50 text-ink-600 border border-paper-300 hover:bg-paper-200 dark:bg-ink-900 dark:text-ink-300 dark:border-ink-700 dark:hover:bg-ink-800"
+                : "bg-paper-50 text-ink-600 border border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-200 dark:border-obsidian-700 dark:hover:bg-obsidian-800"
             }`}
           >
             {t.l}
@@ -308,10 +308,10 @@ export default function Cashier() {
       </div>
 
       {loading ? (
-        <div className="text-sm text-ink-500 dark:text-ink-400">Cargando…</div>
+        <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargandoâ€¦</div>
       ) : orders.length === 0 ? (
-        <div className="card p-8 text-center text-ink-500 dark:text-ink-400">
-          <Calculator size={32} className="mx-auto text-ink-300 dark:text-ink-700 mb-2"/>
+        <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">
+          <Calculator size={32} className="mx-auto text-ink-300 dark:text-obsidian-300 mb-2"/>
           No hay pedidos {tab === "pending" ? "pendientes de cobro" : "cobrados"}.
         </div>
       ) : (
