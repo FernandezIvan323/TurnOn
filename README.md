@@ -1,5 +1,5 @@
 ![Build](https://img.shields.io/badge/build-passing-brightgreen?logo=github)
-![Version](https://img.shields.io/badge/version-1.0.1-blue?logo=react)
+![Version](https://img.shields.io/badge/version-1.1.0-blue?logo=react)
 ![Node](https://img.shields.io/badge/node-18%2B-339933?logo=nodedotjs)
 ![React](https://img.shields.io/badge/react-19-61DAFB?logo=react)
 ![PostgreSQL](https://img.shields.io/badge/postgresql-18%2B-4169E1?logo=postgresql)
@@ -91,8 +91,8 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 
 ### 🎨 UI/UX
 - **Modo claro / oscuro** con toggle en el Header (persiste en localStorage, detecta preferencia del SO).
-- **Tokyo Night** en modo oscuro: fondo `#1A1B26`, superficie `#24283B`, acento verde lima vibrante `#9ECE6A`.
-- Tema claro: paleta crema (`paper-*`) con acento oliva (`brand-*`).
+- **Obsidian Wine** en modo oscuro: paleta `#0b090a` → `#ffffff` con acentos vino tinto `#660708` y rojos vívidos `#BA181B` / `#E5383B`.
+- **Calcite** en modo claro: grises cálidos, naranja vibrante `#FD7B41` y durazno suave `#EDBF9B` sobre fondo `#DDDCDB`.
 - Diseño responsive optimizado para laptop y tablet.
 - Componentes con Tailwind CSS y lucide-react.
 
@@ -251,8 +251,10 @@ DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=TU_PASSWORD
 DB_NAME=appturnos
+DB_TZ=America/Mexico_City
 PORT=3001
-JWT_SECRET=cambia-esto-en-produccion
+JWT_SECRET=genera-un-secreto-aleatorio
+CORS_ORIGINS=http://localhost:5180,http://127.0.0.1:5180
 ```
 
 ### 3. Ejecutar
@@ -277,9 +279,9 @@ Abre `http://localhost:5180`
 
 | Usuario | PIN | Rol |
 |---------|-----|-----|
-| `admin` | `1234` | Cajero / Administrador |
-| `ivan` | `0000` | Mesero |
-| `maria` | `0000` | Mesera |
+| `admin` | `7482` | Cajero / Administrador |
+| `ivan` | `3197` | Mesero |
+| `maria` | `3197` | Mesera |
 
 ---
 
@@ -447,13 +449,33 @@ npm run preview        # Sirve build de producción
 
 ## 🔒 Seguridad
 
-- `server/.env` contiene credenciales — **nunca subir a git** (`.gitignore` lo bloquea).
-- En producción: cambiar `JWT_SECRET`, contraseñas del seed, y usar HTTPS (nginx/Caddy).
-- El sistema usa `bcryptjs` para hashear PINs.
+- **Helmet**: cabeceras HTTP de seguridad (CSP, XSS, HSTS, X-Frame-Options).
+- **CORS restringido**: solo orígenes permitidos vía `CORS_ORIGINS` (por defecto localhost:5180).
+- **Rate limiting**: máximo 10 intentos de login cada 15 minutos por IP.
+- **JWT con secreto fuerte**: 64 bytes aleatorios con `crypto.randomBytes`.
+- **SQL parametrizado**: todas las queries usan `$1, $2…` sin interpolación directa.
+- **BCrypt**: PINs almacenados con salt de 10 rondas.
+- **Errores controlados**: los errores 500 no exponen mensajes internos al cliente.
+- **Transacciones atómicas**: `withTransaction` con `FOR UPDATE` y rollback automático.
+- **`.env` en `.gitignore`**: credenciales nunca se suben al repositorio.
+- **En producción**: usar HTTPS (nginx/Caddy) y cambiar los PINs por defecto desde Personal → Meseros.
 
 ---
 
 ## 📋 Changelog
+
+### v1.1.0 (2026-06-09) — Seguridad integral
+- **Helmet**: cabeceras HTTP de seguridad (CSP, XSS, HSTS, X-Frame-Options).
+- **CORS restringido**: solo orígenes permitidos configurados en `CORS_ORIGINS`.
+- **Rate limiting**: máximo 10 intentos de login cada 15 minutos por IP.
+- **JWT_SECRET**: secreto criptográfico de 64 bytes (generado con `crypto.randomBytes`).
+- **SQL Injection fix**: timezone ahora usa query parametrizada en `withTransaction`.
+- **Error handler**: errores 500 no exponen `err.message` interno al cliente.
+- **Seed seguro**: PINs por defecto cambiados a `7482` (admin) y `3197` (meseros).
+- **Obsidian Wine**: nuevo tema oscuro con paleta vino tinto (fondo `#0b090a`, rojos vívidos).
+- **Calcite**: nuevo tema claro con grises cálidos, naranja `#FD7B41` y durazno `#EDBF9B`.
+- **Zombie ports**: `Kill-Port` espera hasta 5s sondeando que el puerto esté realmente libre.
+- **Puerto 3001**: `server/index.js` reintenta hasta 5 veces si el puerto está ocupado (EADDRINUSE).
 
 ### v1.0.1 (2026-06-08)
 - Tokyo Night dark mode (colores vibrantes #1A1B26 / #9ECE6A)
