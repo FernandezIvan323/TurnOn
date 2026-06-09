@@ -20,6 +20,13 @@ function Test-Port([int]$Port) {
 function Kill-Port([int]$Port) {
   Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
     ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
+  # Esperar hasta que el puerto esté realmente libre (máx 5s)
+  for ($i = 0; $i -lt 10; $i++) {
+    if (-not (Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue)) {
+      return
+    }
+    Start-Sleep -Milliseconds 500
+  }
 }
 
 function Is-Alive([string]$PidFile) {

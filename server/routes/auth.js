@@ -1,10 +1,19 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { query } from "../db.js";
 import { authRequired, requireRole } from "../middleware/auth.js";
 
 const router = Router();
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Demasiados intentos. Intenta de nuevo en 15 minutos." },
+});
 
 async function getAssignedTableIds(userId) {
   const { rows } = await query(
@@ -28,7 +37,7 @@ async function buildUserPayload(row) {
   };
 }
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   const { username, pin } = req.body || {};
   if (!username || !pin)
     return res.status(400).json({ error: "Usuario y PIN son requeridos" });

@@ -87,7 +87,7 @@ export async function withTransaction(fn) {
   const client = await pool.connect();
   let txStarted = false;
   try {
-    await client.query(`SET timezone = '${DB_TZ}'`);
+    await client.query("SET timezone = $1", [DB_TZ]);
     await client.query("BEGIN");
     txStarted = true;
     const result = await fn(client);
@@ -213,8 +213,8 @@ export async function seed() {
   const usersCount = await pool.query("SELECT COUNT(*)::int c FROM users");
   if (usersCount.rows[0].c === 0) {
     console.log("[seed] Insertando usuarios…");
-    const adminPin = await bcrypt.hash("1234", 10);
-    const waiterPin = await bcrypt.hash("0000", 10);
+    const adminPin = await bcrypt.hash("7482", 10);
+    const waiterPin = await bcrypt.hash("3197", 10);
     await pool.query(
       "INSERT INTO users (username, name, pin, role) VALUES " +
         "('admin','Administrador (Caja)',$1,'admin')," +
