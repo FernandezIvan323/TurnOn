@@ -159,16 +159,7 @@ function AdminDashboard() {
           <div className="text-[11px] text-ink-400 dark:text-obsidian-500 mt-1">Productos por reordenar</div>
         </Link>
       </div>
-      <div className="card p-6 text-sm text-ink-500 dark:text-obsidian-400">
-        <p className="font-medium text-ink-700 dark:text-obsidian-100 mb-2">Cómo empezar</p>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>Ve a <b>Mesas</b> para tomar pedidos en la acera.</li>
-          <li>Ve a <b>Domicilios</b> para registrar pedidos por teléfono (tu prioridad).</li>
-          <li>En <b>Menú</b> configura el catálogo de productos.</li>
-          <li>En <b>Personal</b> agrega repartidores, meseros y asigna mesas.</li>
-          <li>En <b>Reportes</b> consulta ventas, productos más vendidos y métricas.</li>
-        </ul>
-      </div>
+
     </div>
   );
 }

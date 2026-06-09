@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
+import ConfirmModal from "../../components/ConfirmModal";
 import { useAuth } from "../../store/auth";
 import { money } from "../../lib/format";
 import { Plus, Edit2, Trash2, X, Tag, ShoppingBag, Search, CheckCircle2, XCircle } from "lucide-react";
@@ -213,6 +214,8 @@ function AdminMenu() {
   const [creatingCat, setCreatingCat] = useState(false);
   const [editingProd, setEditingProd] = useState(null);
   const [creatingProd, setCreatingProd] = useState(false);
+  const [confirmDeleteProd, setConfirmDeleteProd] = useState(null);
+  const [confirmDeleteCat, setConfirmDeleteCat] = useState(null);
 
   const load = async () => {
     const [p, c] = await Promise.all([api.get("/products"), api.get("/categories")]);
@@ -250,7 +253,7 @@ function AdminMenu() {
               </div>
               <div className="flex gap-1">
                 <button onClick={() => setEditingCat(c)} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                <button onClick={async () => { if (confirm(`¿Eliminar categoría "${c.name}"?`)) { await api.delete(`/categories/${c.id}`); load(); } }} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
+                <button onClick={() => setConfirmDeleteCat(c)} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
               </div>
             </div>
             {c.products.length === 0 ? (
@@ -268,7 +271,7 @@ function AdminMenu() {
                       {!p.available && <span className="badge bg-slate-100 text-slate-500 dark:bg-obsidian-800 dark:text-obsidian-400">No disponible</span>}
                       <div className="flex gap-1">
                         <button onClick={() => setEditingProd(p)} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                        <button onClick={async () => { if (confirm(`¿Eliminar "${p.name}"?`)) { await api.delete(`/products/${p.id}`); load(); } }} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
+                        <button onClick={() => setConfirmDeleteProd(p)} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
                       </div>
                     </div>
                   </div>
@@ -304,6 +307,36 @@ function AdminMenu() {
       {editingCat && <CategoryModal cat={editingCat} onClose={() => setEditingCat(null)} onSaved={load} />}
       {creatingProd && <ProductModal categories={categories} onClose={() => setCreatingProd(false)} onSaved={load} />}
       {editingProd && <ProductModal product={editingProd} categories={categories} onClose={() => setEditingProd(null)} onSaved={load} />}
+
+      {confirmDeleteProd && (
+        <ConfirmModal
+          title="Eliminar producto"
+          message={`¿Eliminar "${confirmDeleteProd.name}"? Esta acción no se puede deshacer.`}
+          confirmText="Eliminar"
+          icon={Trash2}
+          onConfirm={async () => {
+            await api.delete(`/products/${confirmDeleteProd.id}`);
+            setConfirmDeleteProd(null);
+            load();
+          }}
+          onCancel={() => setConfirmDeleteProd(null)}
+        />
+      )}
+
+      {confirmDeleteCat && (
+        <ConfirmModal
+          title="Eliminar categoría"
+          message={`¿Eliminar la categoría "${confirmDeleteCat.name}"? Los productos no se eliminarán, solo quedarán sin categoría.`}
+          confirmText="Eliminar"
+          icon={Trash2}
+          onConfirm={async () => {
+            await api.delete(`/categories/${confirmDeleteCat.id}`);
+            setConfirmDeleteCat(null);
+            load();
+          }}
+          onCancel={() => setConfirmDeleteCat(null)}
+        />
+      )}
     </div>
   );
 }
