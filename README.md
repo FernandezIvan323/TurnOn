@@ -1,5 +1,5 @@
 ![Build](https://img.shields.io/badge/build-passing-brightgreen?logo=github)
-![Version](https://img.shields.io/badge/version-1.1.0-blue?logo=react)
+![Version](https://img.shields.io/badge/version-1.1.3-blue?logo=react)
 ![Node](https://img.shields.io/badge/node-18%2B-339933?logo=nodedotjs)
 ![React](https://img.shields.io/badge/react-19-61DAFB?logo=react)
 ![PostgreSQL](https://img.shields.io/badge/postgresql-18%2B-4169E1?logo=postgresql)
@@ -34,7 +34,7 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 - **Tablero Kanban** con 4 columnas: Pendientes → En preparación → En camino → Entregados.
 - **Búsqueda predictiva de clientes** por nombre o teléfono con dropdown.
 - **Multi-repartidor**: un repartidor puede llevar varios pedidos simultáneamente. Cada uno muestra sus órdenes activas.
-- **Historial de entregas** por repartidor.
+- **Historial de entregas** por repartidor con **total acumulado** de dinero entregado.
 - Cierre con 2 modalidades:
   - **Cobrar al entregar** (efectivo contra entrega).
   - **Pre-cobrar transferencia** (paga antes, sigue en camino).
@@ -49,6 +49,13 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 - Apertura de cuenta al agregar el primer producto.
 - Botón directo "Ir a cobrar".
 - **Historial de pedidos por mesa**.
+
+### 💸 Control de deudas
+- **Pedidos no pagados**: marca entregas o cuentas de mesa como "deuda" cuando el cliente no paga.
+- **Página dedicada `/debts`**: lista todas las deudas activas con filtro por tipo (delivery/mesa).
+- **Antigüedad**: muestra días desde que se registró la deuda con alerta visual a partir de 7 días.
+- **Cobro directo**: botón "Cobrar" desde la lista para registrar el pago al instante.
+- No bloquea el corte de caja — las deudas se gestionan por separado.
 
 ### 💰 Caja / Cobro
 - Pedidos pendientes agrupados por antigüedad.
@@ -94,6 +101,7 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 - **Obsidian Wine** en modo oscuro: paleta `#0b090a` → `#ffffff` con acentos vino tinto `#660708` y rojos vívidos `#BA181B` / `#E5383B`.
 - **Calcite** en modo claro: grises cálidos, naranja vibrante `#FD7B41` y durazno suave `#EDBF9B` sobre fondo `#DDDCDB`.
 - Diseño responsive optimizado para laptop y tablet.
+- Modales de confirmación personalizados (reemplazan `confirm()` nativo).
 - Componentes con Tailwind CSS y lucide-react.
 
 ---
@@ -171,6 +179,7 @@ AppTurnos/
 │   └── pages/
 │       ├── Login.jsx             # Login con teclado numérico
 │       ├── Dashboard.jsx         # Admin + Waiter dashboard
+│       ├── Debts.jsx             # Control de deudas pendientes
 │       ├── orders/
 │       │   └── Delivery.jsx      # Kanban + crear pedido + historial
 │       ├── tables/
@@ -222,7 +231,8 @@ AppTurnos/
 `pending → preparing → ready_to_pay → delivered` (mesas)
 
 ### Estados de pago
-`pending → paid`
+`pending → paid` (pago normal)  
+`pending → debt` (deuda) → `paid` (cobro posterior)
 
 ---
 
@@ -384,7 +394,7 @@ MESAS (en el restaurant)
 | GET/POST/PUT/DELETE | `/api/delivery` |
 | GET | `/api/delivery/history?delivery_person_id=` |
 
-### Pedidos (18 endpoints)
+### Pedidos (20 endpoints)
 | Método | Ruta | Uso |
 |--------|------|-----|
 | GET | `/api/orders` | Lista con filtros |
@@ -396,6 +406,8 @@ MESAS (en el restaurant)
 | POST | `/:id/status` | Cambiar estado |
 | POST | `/:id/close` | Cobrar y cerrar |
 | POST | `/:id/prepay` | Pre-cobrar transferencia |
+| POST | `/:id/mark-delivered` | Marcar entregado como deuda |
+| POST | `/:id/pay-debt` | Cobrar deuda pendiente |
 | POST | `/:id/reopen` | Reabrir |
 | GET | `/table-history/:table_id` | Historial de mesa |
 
@@ -463,6 +475,21 @@ npm run preview        # Sirve build de producción
 ---
 
 ## 📋 Changelog
+
+### v1.1.3 (2026-06-09) — Control de deudas y estabilidad
+- **Deudas**: nuevo módulo de control de pedidos no pagados.
+  - Botón "Entregado (deuda)" en domicilios (pedidos en camino) y mesas (cuentas listas para cobrar).
+  - Nuevo `payment_status = 'debt'` para diferenciar deudas de pedidos activos.
+  - Página `/debts` con listado completo, filtro por tipo (delivery/mesa/pickup), antigüedad y botón "Cobrar".
+  - Endpoints `POST /orders/:id/mark-delivered` y `POST /orders/:id/pay-debt`.
+  - Corte de caja ya no bloquea por deudas pendientes.
+- **Historial de repartidor**: muestra el total de dinero entregado por cada repartidor.
+- **Modal de confirmación**: componente `ConfirmModal.jsx` reutilizable que reemplaza el `confirm()` nativo del navegador en eliminación de productos y categorías.
+- **Eliminada sección "Cómo empezar"** del Dashboard de admin.
+- **Fix**: query SQL de historial de entregas corregida (`o.customer_name` → `c.name` con `LEFT JOIN customers`).
+- **Fix**: ServerStatus ya no recarga la página al recuperarse de un error transitorio.
+- **Fix**: encoding UTF-8 corrupto en toda la UI.
+- **Fix**: Kill-Port mata toda la cadena node (hijo + `--watch` padre + huérfanos).
 
 ### v1.1.0 (2026-06-09) — Seguridad integral
 - **Helmet**: cabeceras HTTP de seguridad (CSP, XSS, HSTS, X-Frame-Options).
