@@ -335,4 +335,46 @@ router.get("/daily-history", async (req, res) => {
   res.json(rows);
 });
 
+// Historial de mesero (ventas, productos, clientes, cobros)
+router.get("/waiter-history", async (req, res) => {
+  const { user_id, limit = 100 } = req.query;
+  if (!user_id) return res.status(400).json({ error: "user_id requerido" });
+
+  const orders = await query(
+    `SELECT o.id, o.type, o.status, o.total, o.tip, o.payment_method,
+            o.payment_status, o.created_at, o.closed_at,
+            t.number AS table_number, t.label AS table_label,
+            c.name AS customer_name, c.phone AS customer_phone
+       FROM orders o
+       LEFT JOIN tables t ON t.id = o.table_id
+       LEFT JOIN customers c ON c.id = o.customer_id
+      WHERE o.user_id = $1
+      ORDER BY o.created_at DESC
+      LIMIT $2`,
+    [user_id, limit]
+  );
+
+  const items = await query(
+    `SELECT oi.order_id, oi.name_snapshot, oi.unit_price, oi.quantity, oi.notes
+       FROM order_items oi
+       JOIN orders o ON o.id = oi.order_id
+      WHERE o.user_id = $1
+      ORDER BY oi.order_id, oi.id`,
+    [user_id, limit]
+  );
+
+  const itemsByOrder = {};
+  items.rows.forEach((item) => {
+    if (!itemsByOrder[item.order_id]) itemsByOrder[item.order_id] = [];
+    itemsByOrder[item.order_id].push(item);
+  });
+
+  const result = orders.rows.map((o) => ({
+    ...o,
+    items: itemsByOrder[o.id] || [],
+  }));
+
+  res.json(result);
+});
+
 export default router;

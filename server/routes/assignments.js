@@ -64,7 +64,7 @@ router.put("/:user_id", authRequired, requireRole("admin"), async (req, res) => 
       await tx.query("DELETE FROM waiter_tables WHERE user_id = $1", [userId]);
       for (const tid of ids) {
         await tx.query(
-          "INSERT INTO waiter_tables (user_id, table_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+          "INSERT INTO waiter_tables (user_id, table_id) VALUES ($1, $2)",
           [userId, tid]
         );
       }

@@ -2,7 +2,8 @@
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
-import { Plus, Edit2, Trash2, X, Bike, Utensils, UserCog, Check, PlusCircle, XCircle, UserPlus } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Bike, Utensils, UserCog, Check, PlusCircle, XCircle, UserPlus, Clock } from "lucide-react";
+import ConfirmModal from "../../components/ConfirmModal";
 
 function Tabs({ value, onChange }) {
   const tabs = [
@@ -129,8 +130,12 @@ function TableModal({ table, onClose, onSaved }) {
   );
 }
 
-function AddTableModal({ waiter, availableTables, onClose, onAssigned }) {
-  const [selected, setSelected] = useState(new Set());
+function AddTableModal({ waiter, availableTables, assignedTableIds, allTables, onClose, onAssigned }) {
+  const [selected, setSelected] = useState(() => {
+    const initial = new Set();
+    assignedTableIds.forEach((id) => initial.add(id));
+    return initial;
+  });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
   const toggle = (id) => {
@@ -143,27 +148,33 @@ function AddTableModal({ waiter, availableTables, onClose, onAssigned }) {
   const save = async () => {
     setSaving(true); setErr(null);
     try {
-      await api.put(`/assignments/${waiter.id}`, { table_ids: Array.from(selected) });
+      await api.put(`/assignments/${waiter.user_id}`, { table_ids: Array.from(selected) });
       onAssigned(); onClose();
     } catch (e) { setErr(e.response?.data?.error || e.message); }
     finally { setSaving(false); }
   };
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-      <div className="card w-full max-w-lg p-5 max-h-[80vh] flex flex-col">
+    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="card w-full max-w-lg p-5 max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Asignar mesas a {waiter.name}</h2>
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
-        <p className="text-sm text-ink-500 dark:text-obsidian-400 mb-3">Selecciona las mesas (toca para marcar). Las mesas ya asignadas a otro mesero no aparecen.</p>
-        {availableTables.length === 0 ? (
+        <p className="text-sm text-ink-500 dark:text-obsidian-400 mb-1">
+          Toca las mesas para marcar/desmarcar. Las ya asignadas aparecen marcadas.
+        </p>
+        <p className="text-xs text-ink-400 dark:text-obsidian-500 mb-3">
+          Mesas seleccionadas: <span className="font-semibold text-brand-600 dark:text-brand-400">{selected.size}</span>
+        </p>
+        {allTables.length === 0 ? (
           <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
             No hay mesas disponibles para asignar (todas están asignadas a otros meseros).
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {availableTables.map((t) => {
+            {allTables.map((t) => {
               const on = selected.has(t.id);
+              const isAssignedToOther = assignedTableIds.has(t.id);
               return (
                 <button
                   key={t.id}
@@ -191,8 +202,8 @@ function AddTableModal({ waiter, availableTables, onClose, onAssigned }) {
         {err && <div className="mt-2 text-sm text-rose-700 dark:text-rose-300">{err}</div>}
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button onClick={save} disabled={saving || availableTables.length === 0} className="btn-primary">
-            {saving ? "Asignando…" : `Asignar ${selected.size > 0 ? `(${selected.size})` : ""}`}
+          <button onClick={save} disabled={saving || allTables.length === 0} className="btn-primary">
+            {saving ? "Guardando…" : `Guardar (${selected.size})`}
           </button>
         </div>
       </div>
@@ -248,21 +259,12 @@ function AssignmentsTab() {
   const [assignments, setAssignments] = useState([]);
   const [tables, setTables] = useState([]);
   const [toAdd, setToAdd] = useState(null);
-  const [err, setErr] = useState(null);
 
   const load = async () => {
     const [a, t] = await Promise.all([api.get("/assignments"), api.get("/tables")]);
     setAssignments(a.data); setTables(t.data);
   };
   useEffect(() => { load(); }, []);
-
-  const removeOne = async (userId, tableId) => {
-    setErr(null);
-    try {
-      await api.delete(`/assignments/${userId}/${tableId}`);
-      await load();
-    } catch (e) { setErr(e.response?.data?.error || e.message); }
-  };
 
   const assignedTableIds = new Set();
   assignments.forEach((a) => a.tables.forEach((t) => assignedTableIds.add(t.id)));
@@ -311,13 +313,6 @@ function AssignmentsTab() {
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-100 text-brand-800 text-sm font-medium dark:bg-wine-900/40 dark:text-wine-300"
                   >
                     Mesa {t.number}{t.label ? ` · ${t.label}` : ""}
-                    <button
-                      onClick={() => removeOne(w.user_id, t.id)}
-                      className="ml-1 hover:text-rose-600 dark:hover:text-rose-400"
-                      title="Quitar"
-                    >
-                      <X size={12}/>
-                    </button>
                   </span>
                 ))}
               </div>
@@ -325,16 +320,99 @@ function AssignmentsTab() {
           </div>
         ))
       )}
-      {err && <div className="card p-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{err}</div>}
-
       {toAdd && (
         <AddTableModal
           waiter={toAdd}
-          availableTables={tables.filter((t) => t.active && !assignedTableIds.has(t.id))}
+          allTables={tables.filter((t) => t.active && !assignedTableIds.has(t.id) || toAdd.tables.some((wt) => wt.id === t.id))}
+          assignedTableIds={new Set(toAdd.tables.map((t) => t.id))}
           onClose={() => setToAdd(null)}
           onAssigned={load}
         />
       )}
+    </div>
+  );
+}
+
+function WaiterHistoryModal({ waiter, onClose }) {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.get(`/reports/waiter-history?user_id=${waiter.id}`);
+        setOrders(data);
+      } catch { /* */ }
+      setLoading(false);
+    })();
+  }, [waiter.id]);
+
+  const money = (n) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
+
+  const totalVentas = orders.filter((o) => o.payment_status === "paid").reduce((s, o) => s + Number(o.total), 0);
+  const totalPropinas = orders.filter((o) => o.payment_status === "paid").reduce((s, o) => s + Number(o.tip || 0), 0);
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="card w-full max-w-lg p-0 max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b border-paper-200 dark:border-obsidian-700">
+          <div>
+            <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Historial de {waiter.name}</h2>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">
+              {orders.length} pedido{orders.length !== 1 ? "s" : ""} · Total {money(totalVentas)} · Propinas {money(totalPropinas)}
+            </div>
+          </div>
+          <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {loading ? (
+            <div className="text-center text-ink-400 dark:text-obsidian-500 py-8">Cargando…</div>
+          ) : orders.length === 0 ? (
+            <div className="text-center text-ink-400 dark:text-obsidian-500 py-8">No hay pedidos registrados.</div>
+          ) : (
+            orders.map((o) => (
+              <div key={o.id} className="border border-paper-200 dark:border-obsidian-700 rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-2 bg-paper-100 dark:bg-obsidian-800 text-xs text-ink-600 dark:text-obsidian-300">
+                  <span>
+                    📅 {new Date(o.created_at).toLocaleDateString("es-CO")} · 🕐 {new Date(o.created_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                  <span className={`badge text-[10px] ${o.payment_status === "paid" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"}`}>
+                    {o.payment_status === "paid" ? "Pagado" : o.payment_status === "pending" ? "Pendiente" : "Anulado"}
+                  </span>
+                </div>
+                <div className="px-3 py-2 space-y-1.5">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-semibold text-ink-800 dark:text-obsidian-50">
+                      {o.type === "table" ? `🪑 Mesa ${o.table_number || "?"}${o.table_label ? ` · ${o.table_label}` : ""}` : o.type === "pickup" ? "📦 Para llevar" : "🛵 Domicilio"}
+                    </span>
+                    {o.customer_name && <span className="text-ink-500 dark:text-obsidian-400">· {o.customer_name}</span>}
+                    {o.customer_phone && <span className="text-ink-400 dark:text-obsidian-500 text-xs">({o.customer_phone})</span>}
+                  </div>
+                  {o.items.length > 0 && (
+                    <div className="text-xs space-y-0.5">
+                      {o.items.map((item, i) => (
+                        <div key={i} className="flex justify-between text-ink-600 dark:text-obsidian-200">
+                          <span>{item.quantity}x {item.name_snapshot}</span>
+                          <span>{money(item.unit_price * item.quantity)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-1 border-t border-paper-200 dark:border-obsidian-700 text-sm">
+                    <span className="text-ink-500 dark:text-obsidian-400 text-xs">
+                      💰 {o.payment_method === "cash" ? "Efectivo" : o.payment_method === "card" ? "Tarjeta" : o.payment_method === "transfer" ? "Transferencia" : o.payment_method || "—"}
+                    </span>
+                    <div className="text-right">
+                      <span className="font-bold text-ink-800 dark:text-obsidian-50">{money(o.total)}</span>
+                      {Number(o.tip) > 0 && <span className="text-xs text-emerald-600 dark:text-emerald-400 ml-2">+{money(o.tip)} propina</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -347,6 +425,8 @@ export default function Staff() {
   const [tables, setTables] = useState([]);
   const [editing, setEditing] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [historyWaiter, setHistoryWaiter] = useState(null);
 
   const load = async () => {
     const [d, w, t] = await Promise.all([api.get("/delivery"), api.get("/auth/users"), api.get("/tables")]);
@@ -395,14 +475,14 @@ export default function Staff() {
                     <span className={`badge ${
                       p.status === "available" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" :
                       p.status === "busy" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" :
-                      "bg-slate-100 text-slate-600 dark:bg-obsidian-800 dark:text-obsidian-400"
+                       "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
                     }`}>
                       {p.status === "available" ? "Disponible" : p.status === "busy" ? "Ocupado" : "Fuera de turno"}
                     </span>
                   </td>
                   <td className="px-4 py-2 text-right">
                     <button onClick={() => setEditing({ type: "delivery", value: p })} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                    <button onClick={async () => { if (confirm(`¿Eliminar a ${p.name}?`)) { await api.delete(`/delivery/${p.id}`); load(); } }} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
+                    <button onClick={() => setConfirmDelete({ type: "delivery", id: p.id, name: p.name })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
                   </td>
                 </tr>
               ))}
@@ -420,6 +500,7 @@ export default function Staff() {
                 <th className="px-4 py-2 font-medium">Usuario</th>
                 <th className="px-4 py-2 font-medium">Nombre</th>
                 <th className="px-4 py-2 font-medium">Estado</th>
+                <th className="px-4 py-2 font-medium w-24 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -432,9 +513,12 @@ export default function Staff() {
                       {w.active ? "Activo" : "Inactivo"}
                     </span>
                   </td>
+                  <td className="px-4 py-2 text-right">
+                    <button onClick={() => setHistoryWaiter(w)} className="btn-ghost text-xs" title="Ver historial"><Clock size={14}/></button>
+                  </td>
                 </tr>
               ))}
-              {waiters.length === 0 && <tr><td colSpan={3} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">No hay meseros registrados. Crea uno con "Nuevo".</td></tr>}
+              {waiters.length === 0 && <tr><td colSpan={4} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">No hay meseros registrados. Crea uno con "Nuevo".</td></tr>}
             </tbody>
           </table>
         </div>
@@ -445,9 +529,10 @@ export default function Staff() {
           <table className="w-full text-sm">
             <thead className="bg-paper-200 dark:bg-obsidian-800 text-ink-600 dark:text-obsidian-200 text-left">
               <tr>
-                <th className="px-4 py-2 font-medium">NÂ°</th>
+                <th className="px-4 py-2 font-medium">N°</th>
                 <th className="px-4 py-2 font-medium">Etiqueta</th>
                 <th className="px-4 py-2 font-medium">Capacidad</th>
+                <th className="px-4 py-2 font-medium">Mesero</th>
                 <th className="px-4 py-2 font-medium">Estado actual</th>
                 <th className="px-4 py-2 font-medium w-32 text-right">Acciones</th>
               </tr>
@@ -459,16 +544,23 @@ export default function Staff() {
                   <td className="px-4 py-2 text-ink-600 dark:text-obsidian-200">{t.label || "—"}</td>
                   <td className="px-4 py-2 text-ink-600 dark:text-obsidian-200">{t.capacity}</td>
                   <td className="px-4 py-2">
+                    {t.assigned_user_name ? (
+                      <span className="text-sm font-medium text-brand-700 dark:text-brand-400">{t.assigned_user_name}</span>
+                    ) : (
+                      <span className="text-xs text-ink-400 dark:text-obsidian-500 italic">Sin asignar</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2">
                     {t.current_order_id ? <span className="badge bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">Ocupada</span>
                                          : <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Libre</span>}
                   </td>
                   <td className="px-4 py-2 text-right">
                     <button onClick={() => setEditing({ type: "table", value: t })} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                    <button onClick={async () => { if (confirm(`¿Eliminar mesa ${t.number}?`)) { await api.delete(`/tables/${t.id}`); load(); } }} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
+                    <button onClick={() => setConfirmDelete({ type: "table", id: t.id, name: `mesa ${t.number}` })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
                   </td>
                 </tr>
               ))}
-              {tables.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">No hay mesas. Crea una con "Nuevo".</td></tr>}
+              {tables.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">No hay mesas. Crea una con "Nuevo".</td></tr>}
             </tbody>
           </table>
         </div>
@@ -481,6 +573,27 @@ export default function Staff() {
       {creating && tab === "tables" && <TableModal onClose={() => setCreating(false)} onSaved={load} />}
       {editing?.type === "delivery" && <DeliveryModal person={editing.value} onClose={() => setEditing(null)} onSaved={load} />}
       {editing?.type === "table" && <TableModal table={editing.value} onClose={() => setEditing(null)} onSaved={load} />}
+
+      {confirmDelete?.type === "delivery" && (
+        <ConfirmModal
+          title="Eliminar repartidor"
+          message={`¿Eliminar a ${confirmDelete.name}? Esta acción no se puede deshacer.`}
+          confirmText="Eliminar"
+          onConfirm={async () => { await api.delete(`/delivery/${confirmDelete.id}`); setConfirmDelete(null); load(); }}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+      {confirmDelete?.type === "table" && (
+        <ConfirmModal
+          title="Eliminar mesa"
+          message={`¿Eliminar ${confirmDelete.name}? Esta acción no se puede deshacer.`}
+          confirmText="Eliminar"
+          onConfirm={async () => { await api.delete(`/tables/${confirmDelete.id}`); setConfirmDelete(null); load(); }}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+
+      {historyWaiter && <WaiterHistoryModal waiter={historyWaiter} onClose={() => setHistoryWaiter(null)} />}
     </div>
   );
 }
