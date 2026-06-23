@@ -96,7 +96,9 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 - Gestión de **repartidores** (nombre, teléfono, órdenes activas).
 - Gestión de **mesas** (número, etiqueta, capacidad, activa).
 - Gestión de **meseros** (creación con usuario y PIN).
-- **Asignación de mesas** a meseros (una mesa solo a un mesero a la vez).
+- **Asignación de mesas** a meseros: pre-selecciona mesas ya asignadas, muestra mesero en tabla de mesas.
+- **Historial de mesero**: modal con todos los pedidos, items, totales y propinas.
+- **Confirmaciones**: eliminar repartidores y mesas con modal personalizado (sin `confirm()` nativo).
 
 ### 📈 Reportes
 - **5 tabs**: Resumen, Productos, Clientes, Operación, Historial.
@@ -482,6 +484,7 @@ PARA LLEVAR (pickup / walk-in)
 | GET | `/api/reports/never-sold` |
 | GET | `/api/reports/daily-complete` |
 | GET | `/api/reports/daily-history` |
+| GET | `/api/reports/waiter-history` |
 
 ### Otros
 | Método | Ruta |
@@ -524,7 +527,7 @@ npm run preview        # Sirve build de producción
 
 ## 📋 Changelog
 
-### v1.1.4 (2026-06-22) — Pedidos pickup, turnos FIFO, reportes historial
+### v1.1.4 (2026-06-23) — Pedidos pickup, turnos FIFO, historial mesero
 - **Pedidos "Para llevar" (pickup)**: nueva página completa `/pickup` con:
   - Tablero Kanban de 3 columnas (pendiente → preparación → listo para recoger).
   - Creación desde catálogo con carrito, tiempo estimado (5-30 min) y notas por item.
@@ -535,6 +538,8 @@ npm run preview        # Sirve build de producción
   - Mesas ocupadas (ordenadas por antigüedad).
   - Caja (turno numérico en cada pedido).
   - Pickup (turno y countdown del tiempo estimado).
+- **Historial de mesero**: nuevo modal en Staff que muestra pedidos, items, totales y propinas.
+- **Endpoint `/reports/waiter-history`**: historial de pedidos por mesero.
 - **Reportes rediseñados** con 5 tabs:
   - **Resumen**: 6 StatCards (ventas, pedidos, ticket, domicilios, pickup, mesas), métodos de pago, gráfico de ventas, comparativa.
   - **Productos**: top productos (cantidad/ganancia) + productos nunca vendidos.
@@ -542,10 +547,16 @@ npm run preview        # Sirve build de producción
   - **Operación**: horarios pico (gráfico vertical) + ventas por categoría.
   - **Historial**: tabla de días con ventas, gastos, neto, tipos de pedido y estado del corte de caja.
 - **Endpoint `/reports/daily-history`**: historial de días con ventas, gastos y neto (usa `generate_series`).
+- **Staff mejorado**:
+  - Asignación de mesas: pre-selecciona mesas ya asignadas, muestra mesero en tabla de mesas.
+  - ConfirmModal para eliminar repartidores y mesas (reemplaza `confirm()` nativo).
+  - Badge "Fuera de turno" en rojo.
 - **Reporte diario mejorado**: incluye métodos de pago y conteo de pedidos pickup.
 - **BarChart mejorado**: modo vertical, colores personalizados, valores en barras.
 - **Dark mode completado**: DailyReport, Inventory, Expenses ahora soportan modo oscuro.
 - **Fix Expenses**: resumen de gastos ahora usa la fecha del filtro activo.
+- **Fix Asignaciones**: removido `ON CONFLICT DO NOTHING` del INSERT.
+- **Fix Encoding**: corregido character corrupto `N°` en tabla de mesas.
 - **Backend**: migración `estimate_minutes` en orders, columnas `pickup_orders`/`pickup_count` en reportes.
 
 ### v1.1.3 (2026-06-09) — Control de deudas y estabilidad
