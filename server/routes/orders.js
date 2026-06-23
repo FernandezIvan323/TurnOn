@@ -7,6 +7,7 @@ const router = Router();
 const ORDER_COLUMNS = `
   o.id, o.type, o.status, o.payment_status, o.payment_method,
   o.total, o.tip, o.notes, o.cancel_reason, o.created_at, o.closed_at,
+  o.estimate_minutes,
   o.table_id, o.customer_id, o.user_id, o.delivery_person_id,
   t.number AS table_number, t.label AS table_label,
   c.name AS customer_name, c.phone AS customer_phone, c.address AS customer_address,
@@ -101,7 +102,7 @@ router.get("/:id", authRequired, async (req, res) => {
 router.post("/", authRequired, async (req, res) => {
   const {
     type, table_id = null, customer_id = null,
-    notes = null, items = [],
+    notes = null, estimate_minutes = null, items = [],
   } = req.body;
 
   if (!["table", "delivery", "pickup"].includes(type))
@@ -133,9 +134,9 @@ router.post("/", authRequired, async (req, res) => {
       }
 
       const { rows: order } = await client.query(
-        `INSERT INTO orders (type, table_id, customer_id, user_id, status, notes)
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-        [type, table_id, customer_id, req.user.id, "pending", notes]
+        `INSERT INTO orders (type, table_id, customer_id, user_id, status, notes, estimate_minutes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+        [type, table_id, customer_id, req.user.id, "pending", notes, estimate_minutes || null]
       );
       const orderId = order[0].id;
 

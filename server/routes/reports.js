@@ -59,6 +59,7 @@ router.get("/sales", async (req, res) => {
       orders: current.rows.reduce((s, r) => s + r.orders, 0),
       delivery_orders: current.rows.reduce((s, r) => s + r.delivery_orders, 0),
       table_orders: current.rows.reduce((s, r) => s + r.table_orders, 0),
+      pickup_orders: current.rows.reduce((s, r) => s + r.pickup_orders, 0),
       avg_ticket: current.rows.length
         ? current.rows.reduce((s, r) => s + Number(r.avg_ticket), 0) / current.rows.length
         : 0,
@@ -177,13 +178,14 @@ router.get("/daily-complete", async (req, res) => {
   const { date } = req.query;
   const d = date || new Date().toISOString().slice(0, 10);
 
-  const [sales, byCategory, topProducts, expenses, tipData] = await Promise.all([
+  const [sales, byCategory, topProducts, expenses, tipData, paymentMethods] = await Promise.all([
     // Resumen de ventas del día
     query(
       `SELECT COUNT(*)::int AS orders,
               COALESCE(SUM(total),0)::numeric AS total_sales,
               COUNT(*) FILTER (WHERE type='delivery')::int AS delivery_count,
               COUNT(*) FILTER (WHERE type='table')::int AS table_count,
+              COUNT(*) FILTER (WHERE type='pickup')::int AS pickup_count,
               COALESCE(AVG(total),0)::numeric AS avg_ticket
          FROM orders
         WHERE payment_status='paid'
@@ -235,6 +237,17 @@ router.get("/daily-complete", async (req, res) => {
           AND tip > 0
           AND DATE(created_at) = $1`, [d]
     ),
+    // Desglose por método de pago
+    query(
+      `SELECT payment_method,
+              COUNT(*)::int AS count,
+              COALESCE(SUM(total),0)::numeric AS total
+         FROM orders
+        WHERE payment_status='paid'
+          AND DATE(created_at) = $1
+        GROUP BY payment_method
+        ORDER BY total DESC`, [d]
+    ),
   ]);
 
   const s = sales.rows[0];
@@ -247,8 +260,10 @@ router.get("/daily-complete", async (req, res) => {
       net_sales: Number(s.total_sales) + Number(tipData.rows[0].total_tips),
       delivery_count: s.delivery_count,
       table_count: s.table_count,
+      pickup_count: s.pickup_count,
       avg_ticket: s.avg_ticket,
     },
+    payment_methods: paymentMethods.rows,
     expenses: expenses.rows[0],
     by_category: byCategory.rows,
     top_products: topProducts.rows,
@@ -271,6 +286,52 @@ router.get("/delivery-by-person", async (req, res) => {
       ORDER BY deliveries DESC`,
     [from, to]
   );
+  res.json(rows);
+});
+
+// Historial de días (resumen para pestaña Historial en Finanzas)
+router.get("/daily-history", async (req, res) => {
+  const { from, to, limit = 30 } = req.query;
+  const toDate = to || new Date().toISOString().slice(0, 10);
+  const fromDate = from || new Date(new Date(toDate).getTime() - (Number(limit) - 1) * 86400000).toISOString().slice(0, 10);
+
+  const { rows } = await query(
+    `WITH days AS (
+       SELECT d::date AS day
+         FROM generate_series($1::date, $2::date, '1 day'::interval) d
+     )
+     SELECT
+       TO_CHAR(days.day, 'YYYY-MM-DD') AS date,
+       COALESCE(o.orders, 0)::int AS orders,
+       COALESCE(o.total_sales, 0)::numeric AS sales,
+       COALESCE(e.total_expenses, 0)::numeric AS expenses,
+       COALESCE(o.total_sales, 0) - COALESCE(e.total_expenses, 0) AS net,
+       COALESCE(o.table_count, 0)::int AS table_count,
+       COALESCE(o.delivery_count, 0)::int AS delivery_count,
+       COALESCE(o.pickup_count, 0)::int AS pickup_count
+     FROM days
+     LEFT JOIN (
+       SELECT DATE(created_at) AS day,
+              COUNT(*)::int AS orders,
+              COALESCE(SUM(total), 0)::numeric AS total_sales,
+              COUNT(*) FILTER (WHERE type = 'table')::int AS table_count,
+              COUNT(*) FILTER (WHERE type = 'delivery')::int AS delivery_count,
+              COUNT(*) FILTER (WHERE type = 'pickup')::int AS pickup_count
+         FROM orders
+        WHERE payment_status = 'paid'
+        GROUP BY DATE(created_at)
+     ) o ON o.day = days.day
+     LEFT JOIN (
+       SELECT DATE(expense_date) AS day,
+              COALESCE(SUM(amount), 0)::numeric AS total_expenses
+         FROM expenses
+        GROUP BY DATE(expense_date)
+     ) e ON e.day = days.day
+     WHERE COALESCE(o.orders, 0) > 0 OR COALESCE(e.total_expenses, 0) > 0
+     ORDER BY days.day DESC`,
+    [fromDate, toDate]
+  );
+
   res.json(rows);
 });
 

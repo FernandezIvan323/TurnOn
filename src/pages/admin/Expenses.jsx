@@ -229,7 +229,9 @@ export default function Expenses() {
         console.error("[expenses] Error al cargar categorías:", e);
       }
       try {
-        const s = await api.get("/expenses/summary", { params: { date: initialDate } });
+        // Use filter dates for summary if set, otherwise use initialDate
+        const summaryDate = from || initialDate;
+        const s = await api.get("/expenses/summary", { params: { date: summaryDate } });
         setSummary(s.data);
       } catch (e) {
         console.error("[expenses] Error al cargar resumen:", e);

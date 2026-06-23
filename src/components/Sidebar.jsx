@@ -16,6 +16,7 @@ import {
   TrendingDown,
   Package,
   AlertTriangle,
+  ShoppingBag,
 } from "lucide-react";
 
 const items = [
@@ -23,6 +24,7 @@ const items = [
   { to: "/tables",       label: "Mesas",          icon: Utensils,        roles: ["admin", "waiter"] },
   { to: "/menu",         labelKey: "catalog",     icon: BookOpen,        roles: ["admin", "waiter"] },
   { to: "/delivery",     label: "Domicilios",     icon: Truck,           roles: ["admin"] },
+  { to: "/pickup",       label: "Para llevar",     icon: ShoppingBag,     roles: ["admin"] },
   { to: "/debts",        label: "Deudas",         icon: AlertTriangle,   roles: ["admin"] },
   { to: "/cashier",      label: "Caja",           icon: Calculator,      roles: ["admin"] },
   { to: "/cashier/closing", label: "Corte de caja", icon: ScrollText,    roles: ["admin"] },
@@ -70,14 +72,14 @@ export default function Sidebar() {
                 to={it.to}
                 end={it.to === "/"}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${
+                  `flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
                     isActive
                       ? "bg-brand-50 text-brand-700 dark:bg-wine-900/40 dark:text-wine-300"
                       : "text-ink-600 hover:bg-paper-200 dark:text-obsidian-200 dark:hover:bg-obsidian-800"
                   }`
                 }
               >
-                <Icon size={18} />
+                <Icon size={22} />
                 {labelFor(it, user.role)}
               </NavLink>
             );
@@ -103,7 +105,7 @@ export default function Sidebar() {
           onClick={() => setShowLogout(true)}
           className="btn-ghost w-full justify-start mt-1"
         >
-          <LogOut size={16} /> Cerrar sesión
+          <LogOut size={20} /> Cerrar sesión
         </button>
       </div>
       {showLogout && (

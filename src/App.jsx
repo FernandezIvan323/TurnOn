@@ -15,6 +15,7 @@ import Reports from "./pages/admin/Reports";
 import Expenses from "./pages/admin/Expenses";
 import Inventory from "./pages/admin/Inventory";
 import DailyReport from "./pages/admin/DailyReport";
+import PickupPage from "./pages/pickup/PickupPage";
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/delivery" element={<Delivery />} />
+        <Route path="/pickup" element={<PickupPage />} />
         <Route path="/tables" element={<TablesPage />} />
         <Route path="/cashier" element={<Cashier />} />
         <Route path="/cashier/closing" element={<CashClosing />} />

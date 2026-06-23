@@ -2,8 +2,8 @@
 import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
-import { money, formatTime, typeLabels, statusLabels, statusColors } from "../../lib/format";
-import { CheckCircle2, Receipt, X, Calculator, CreditCard, Wallet, Banknote, Building2, Truck, Utensils, ScrollText, Users } from "lucide-react";
+import { money, formatTime, typeLabels, statusLabels, statusColors, typeColors, assignTurns } from "../../lib/format";
+import { CheckCircle2, Receipt, X, Calculator, CreditCard, Wallet, Banknote, Building2, Truck, Utensils, ShoppingBag, ScrollText, Users } from "lucide-react";
 
 const TIP_PRESETS = [0, 10, 15, 20];
 
@@ -143,19 +143,22 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
   );
 }
 
-function OrderRow({ order, onClose, onPrepay }) {
-  const isDelivery = order.type === "delivery";
+function OrderRow({ order, turn, onClose, onPrepay }) {
+  const TypeIcon = order.type === "delivery" ? Truck : order.type === "pickup" ? ShoppingBag : Utensils;
   return (
     <div className="card p-4 flex items-center justify-between gap-4">
       <div className="flex-1">
         <div className="flex items-center gap-2 text-xs text-ink-500 dark:text-obsidian-400">
+          {turn && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-600 text-white dark:bg-wine-500">
+              #{turn}
+            </span>
+          )}
           <span>#{order.id}</span>
           <span>·</span>
           <span>{formatTime(order.created_at)}</span>
-          <span className={`badge inline-flex items-center gap-1 ${
-            isDelivery ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300" : "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300"
-          }`}>
-            {isDelivery ? <Truck size={10}/> : <Utensils size={10}/>}
+          <span className={`badge inline-flex items-center gap-1 ${typeColors[order.type] || typeColors.table}`}>
+            <TypeIcon size={10}/>
             {typeLabels[order.type]}
           </span>
           <span className={`badge ${statusColors[order.status]}`}>{statusLabels[order.status]}</span>
@@ -174,7 +177,7 @@ function OrderRow({ order, onClose, onPrepay }) {
       </div>
       <div className="text-right">
         <div className="text-xl font-bold text-ink-800 dark:text-obsidian-50">{money(order.total)}</div>
-        {isDelivery && order.status === "on_the_way" && order.payment_status !== "paid" && (
+        {order.type === "delivery" && order.status === "on_the_way" && order.payment_status !== "paid" && (
           <div className="flex flex-col gap-1 mt-1">
             <button onClick={() => onPrepay(order)} className="btn-secondary text-xs">
               <CreditCard size={12}/> Pre-cobrar (transfer)
@@ -184,7 +187,7 @@ function OrderRow({ order, onClose, onPrepay }) {
             </button>
           </div>
         )}
-        {(!isDelivery || (isDelivery && order.status !== "on_the_way") || order.payment_status === "paid") && (
+        {(order.type !== "delivery" || (order.type === "delivery" && order.status !== "on_the_way") || order.payment_status === "paid") && (
           order.payment_status !== "paid" ? (
             <button onClick={() => onClose(order)} className="btn-primary text-sm mt-1">
               <CheckCircle2 size={14}/> Cobrar
@@ -211,9 +214,9 @@ export default function Cashier() {
     const params = { payment: tab === "paid" ? "paid" : "pending" };
     if (typeFilter !== "all") params.type = typeFilter;
     const { data } = await api.get("/orders", { params });
-    // Ordenar por antigüedad
+    // Ordenar por antigüedad (FIFO) y asignar turnos
     data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    setOrders(data);
+    setOrders(assignTurns(data));
     setLoading(false);
   };
   useEffect(() => { load(); }, [tab, typeFilter]);
@@ -221,8 +224,9 @@ export default function Cashier() {
   const summary = useMemo(() => {
     const tables = orders.filter((o) => o.type === "table");
     const deliveries = orders.filter((o) => o.type === "delivery");
+    const pickups = orders.filter((o) => o.type === "pickup");
     const total = orders.reduce((s, o) => s + Number(o.total), 0);
-    return { tables: tables.length, deliveries: deliveries.length, total };
+    return { tables: tables.length, deliveries: deliveries.length, pickups: pickups.length, total };
   }, [orders]);
 
   return (
@@ -256,13 +260,13 @@ export default function Cashier() {
       />
 
       {/* Resumen */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
         <div className="card p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 flex items-center justify-center">
             <Calculator size={18}/>
           </div>
           <div>
-            <div className="text-xs text-ink-500 dark:text-obsidian-400">Mesas pendientes</div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Mesas</div>
             <div className="text-xl font-bold text-ink-800 dark:text-obsidian-50">{summary.tables}</div>
           </div>
         </div>
@@ -271,8 +275,17 @@ export default function Cashier() {
             <Calculator size={18}/>
           </div>
           <div>
-            <div className="text-xs text-ink-500 dark:text-obsidian-400">Domicilios pendientes</div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Domicilios</div>
             <div className="text-xl font-bold text-ink-800 dark:text-obsidian-50">{summary.deliveries}</div>
+          </div>
+        </div>
+        <div className="card p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 flex items-center justify-center">
+            <Receipt size={18}/>
+          </div>
+          <div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Para llevar</div>
+            <div className="text-xl font-bold text-ink-800 dark:text-obsidian-50">{summary.pickups}</div>
           </div>
         </div>
         <div className="card p-4 flex items-center gap-3">
@@ -292,6 +305,7 @@ export default function Cashier() {
           { v: "all",      l: "Todos" },
           { v: "table",    l: "Solo mesas" },
           { v: "delivery", l: "Solo domicilios" },
+          { v: "pickup",   l: "Solo para llevar" },
         ].map((t) => (
           <button
             key={t.v}
@@ -316,7 +330,7 @@ export default function Cashier() {
         </div>
       ) : (
         <div className="space-y-2">
-          {orders.map((o) => <OrderRow key={o.id} order={o} onClose={setToClose} onPrepay={setToPrepay} />)}
+          {orders.map((o) => <OrderRow key={o.id} order={o} turn={o.turn_number} onClose={setToClose} onPrepay={setToPrepay} />)}
         </div>
       )}
 

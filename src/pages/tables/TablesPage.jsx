@@ -1,9 +1,9 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
-import { money, formatTime, statusLabels, statusColors } from "../../lib/format";
+import { money, formatTime, statusLabels, statusColors, assignTurns } from "../../lib/format";
 import {
   Plus, X, Minus, CheckCircle2, Receipt, Clock, ChefHat, ArrowLeft, Utensils, History, AlertTriangle,
 } from "lucide-react";
@@ -257,7 +257,7 @@ function TableHistoryModal({ onClose }) {
                   </div>
                   <div className="text-right">
                     <div className="font-semibold text-ink-700 dark:text-obsidian-100">{money(o.total)}</div>
-                    <span className={`badge text-[10px] ${statusColors[o.status]} dark:opacity-80`}>{statusLabels[o.status]}</span>
+                    <span className={`badge text-[10px] ${statusColors[o.status]}`}>{statusLabels[o.status]}</span>
                   </div>
                 </div>
               ))}
@@ -284,6 +284,19 @@ export default function TablesPage() {
     setLoading(false);
   };
   useEffect(() => { load(); const t = setInterval(load, 20_000); return () => clearInterval(t); }, []);
+
+  // Ordenar mesas: ocupadas por antigüedad (FIFO), luego libres
+  const sortedTables = useMemo(() => {
+    const occupied = tables.filter((t) => t.current_order_id);
+    const free = tables.filter((t) => !t.current_order_id);
+    // Ordenar ocupadas por fecha del pedido activo (más viejo primero)
+    occupied.sort((a, b) => new Date(a.current_order_created) - new Date(b.current_order_created));
+    // Asignar turnos
+    const withTurns = occupied.map((t, i) => ({ ...t, _turn: i + 1 }));
+    return [...withTurns, ...free];
+  }, [tables]);
+
+  const nextTable = useMemo(() => sortedTables.find((t) => t._turn), [sortedTables]);
 
   return (
     <div>
@@ -315,12 +328,13 @@ export default function TablesPage() {
         <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-          {tables.map((t) => {
+          {sortedTables.map((t) => {
             const occ = !!t.current_order_id;
             const status = t.current_order_status;
             const readyToPay = status === "ready_to_pay";
             const preparing = status === "preparing";
             const pending = status === "pending";
+            const isNext = nextTable && t.id === nextTable.id;
             let cardClass = "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20";
             let dotClass = "bg-emerald-500";
             if (readyToPay) {
@@ -333,6 +347,11 @@ export default function TablesPage() {
               cardClass = "border-rose-200 bg-rose-50 dark:border-rose-800 dark:bg-rose-900/20";
               dotClass = "bg-rose-500";
             }
+            // Resaltar la mesa siguiente con borde verde
+            if (isNext) {
+              cardClass = "border-brand-500 bg-brand-50 dark:border-wine-400 dark:bg-wine-900/20";
+              dotClass = "bg-brand-500";
+            }
             return (
               <button
                 key={t.id}
@@ -341,11 +360,29 @@ export default function TablesPage() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-xs text-ink-500 dark:text-obsidian-400">Mesa</div>
+                    <div className="flex items-center gap-1.5">
+                      {t._turn && (
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          isNext
+                            ? "bg-brand-600 text-white dark:bg-wine-500"
+                            : "bg-paper-200 text-ink-700 dark:bg-obsidian-800 dark:text-obsidian-200"
+                        }`}>
+                          #{t._turn}
+                        </span>
+                      )}
+                      <div className="text-xs text-ink-500 dark:text-obsidian-400">Mesa</div>
+                    </div>
                     <div className="text-2xl font-bold text-ink-800 dark:text-obsidian-50">{t.number}</div>
                     {t.label && <div className="text-xs text-ink-500 dark:text-obsidian-400">{t.label}</div>}
                   </div>
-                  <div className={`w-3 h-3 rounded-full ${dotClass}`} />
+                  <div className="flex flex-col items-end gap-1">
+                    <div className={`w-3 h-3 rounded-full ${dotClass}`} />
+                    {isNext && (
+                      <span className="text-[9px] font-bold text-brand-700 dark:text-wine-300 uppercase tracking-wider">
+                        SIGUIENTE
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-2 text-xs text-ink-500 dark:text-obsidian-400">Capacidad: {t.capacity}</div>
 

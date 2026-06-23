@@ -144,51 +144,15 @@ export async function runMigrations() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+  // Tiempo estimado para pedidos pickup (para llevar)
+  await pool.query(`
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS estimate_minutes INT;
+  `);
   console.log("[db] Migraciones aplicadas.");
 }
 
 export async function seed() {
-  // Categorías
-  const categoriesCount = await pool.query("SELECT COUNT(*)::int c FROM categories");
-  if (categoriesCount.rows[0].c === 0) {
-    console.log("[seed] Insertando categorías…");
-    await pool.query(
-      "INSERT INTO categories (name, position) VALUES " +
-        "('Bebidas', 1),('Platos fuertes', 2),('Acompañamientos', 3),('Postres', 4),('Extras', 5)"
-    );
-  }
-
-  // Productos base
-  const productsCount = await pool.query("SELECT COUNT(*)::int c FROM products");
-  if (productsCount.rows[0].c === 0) {
-    console.log("[seed] Insertando productos de ejemplo…");
-    const { rows: cats } = await pool.query("SELECT id, name FROM categories ORDER BY id");
-    const findCat = (n) => cats.find((c) => c.name === n)?.id;
-    await pool.query(
-      `INSERT INTO products (category_id, name, description, price) VALUES
-       ($1, 'Coca-Cola 350ml', 'Lata fría', 18.00),
-       ($1, 'Agua mineral 500ml', 'Con o sin gas', 15.00),
-       ($1, 'Jugo de naranja', 'Natural', 22.00),
-       ($2, 'Hamburguesa clásica', 'Carne, queso, lechuga, tomate', 75.00),
-       ($2, 'Hamburguesa doble', 'Doble carne, queso cheddar', 95.00),
-       ($2, 'Hot dog especial', 'Con tocino y queso', 45.00),
-       ($2, 'Pizza personal', 'Margarita o pepperoni', 85.00),
-       ($3, 'Papas fritas', 'Porción personal', 30.00),
-       ($3, 'Aros de cebolla', '8 unidades', 35.00),
-       ($3, 'Ensalada César', 'Con pollo', 60.00),
-       ($4, 'Pastel de chocolate', 'Porción individual', 40.00),
-       ($4, 'Helado', 'Vainilla, chocolate o fresa', 28.00),
-       ($5, 'Salsa extra', 'Picante o BBQ', 5.00),
-       ($5, 'Queso extra', 'Cheddar o mozzarella', 12.00)`,
-      [
-        findCat("Bebidas"),
-        findCat("Platos fuertes"),
-        findCat("Acompañamientos"),
-        findCat("Postres"),
-        findCat("Extras"),
-      ]
-    );
-  }
+  // NOTA: categorías y productos se dejan vacíos para que el usuario los cargue
 
   // Mesas
   const tablesCount = await pool.query("SELECT COUNT(*)::int c FROM tables");

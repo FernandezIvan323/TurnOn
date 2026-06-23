@@ -2,7 +2,7 @@
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
-import { money, formatTime, statusLabels, statusColors, typeLabels } from "../../lib/format";
+import { money, formatTime, statusLabels, statusColors, typeLabels, assignTurns } from "../../lib/format";
 import {
   Phone, MapPin, Plus, ChevronRight, X, User as UserIcon,
   CheckCircle2, Truck, XCircle, StickyNote, Search,
@@ -11,24 +11,35 @@ import {
 } from "lucide-react";
 
 const COLUMNS = [
-  { key: "pending",   title: "Pendientes",     tone: "bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800/50" },
-  { key: "preparing", title: "En preparación", tone: "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800/50" },
-  { key: "on_the_way",title: "En camino",      tone: "bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800/50" },
-  { key: "delivered", title: "Entregados",     tone: "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/50" },
+  { key: "pending",   title: "Pendientes",     tone: "bg-amber-50 border-amber-200 dark:bg-amber-900/60 dark:border-amber-700" },
+  { key: "preparing", title: "En preparación", tone: "bg-blue-50 border-blue-200 dark:bg-blue-900/60 dark:border-blue-700" },
+  { key: "on_the_way",title: "En camino",      tone: "bg-indigo-50 border-indigo-200 dark:bg-indigo-900/60 dark:border-indigo-700" },
+  { key: "delivered", title: "Entregados",     tone: "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/60 dark:border-emerald-700" },
 ];
 
-function OrderCard({ order, onClick, onAssign, onCancel, onPreparing, onBackPending, onReopen }) {
+function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPreparing, onBackPending, onReopen }) {
   const isPaid = order.payment_status === "paid";
   return (
     <div
       onClick={onClick}
-      className="card p-3 cursor-pointer hover:shadow-pop transition"
+      className={`card p-3 cursor-pointer hover:shadow-pop transition ${isNext ? "ring-2 ring-brand-500 dark:ring-wine-400" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="text-xs text-ink-400 dark:text-obsidian-500">#{order.id} · {formatTime(order.created_at)}</div>
+          <div className="flex items-center gap-2 mb-0.5">
+            {turn && (
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                isNext
+                  ? "bg-brand-600 text-white dark:bg-wine-500"
+                  : "bg-paper-200 text-ink-700 dark:bg-obsidian-800 dark:text-obsidian-200"
+              }`}>
+                #{turn}
+              </span>
+            )}
+            <div className="text-xs text-ink-400 dark:text-obsidian-500">#{order.id} · {formatTime(order.created_at)}</div>
+          </div>
           <div className="font-semibold text-ink-800 dark:text-obsidian-50 flex items-center gap-1.5">
-            <UserIcon size={14} className="text-ink-400" />
+            <UserIcon size={14} className="text-ink-400 dark:text-obsidian-500" />
             {order.customer_name || "—"}
           </div>
         </div>
@@ -101,14 +112,14 @@ function OrderCard({ order, onClick, onAssign, onCancel, onPreparing, onBackPend
           </>
         )}
         {order.status === "on_the_way" && (
-          <span className="badge bg-emerald-100 text-emerald-800 w-full justify-center py-1 dark:bg-emerald-900/40 dark:text-emerald-300">
+          <span className="badge bg-emerald-100 text-emerald-800 w-full justify-center py-1 dark:bg-emerald-900/80 dark:text-emerald-200">
             <CheckCircle2 size={12} className="mr-1" /> {isPaid ? "Pagado · listo para cerrar al entregar" : "Listo para cerrar al entregar"}
           </span>
         )}
         {order.status === "delivered" && (
           <button
             onClick={(e) => { e.stopPropagation(); onReopen(order); }}
-            className="w-full h-8 px-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 dark:text-amber-300 text-xs font-medium flex items-center justify-center gap-1 transition"
+            className="w-full h-8 px-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-900/80 dark:hover:bg-amber-900 dark:text-amber-200 text-xs font-medium flex items-center justify-center gap-1 transition"
             title="Reabrir este pedido (corrige errores de cierre)"
           >
             <RotateCcw size={14}/> Reabrir
@@ -226,7 +237,7 @@ function NewOrderModal({ onClose, onCreated }) {
               <div className="relative mb-3" ref={searchRef}>
                 <label className="label">Buscar cliente existente (nombre o teléfono)</label>
                 <div className="relative">
-                  <Search size={14} className="absolute left-3 top-3 text-ink-400"/>
+                  <Search size={14} className="absolute left-3 top-3 text-ink-400 dark:text-obsidian-500"/>
                   <input
                     className="input pl-8"
                     value={searchTerm}
@@ -288,14 +299,14 @@ function NewOrderModal({ onClose, onCreated }) {
               <div>
                 <label className="label">Teléfono</label>
                 <div className="relative">
-                  <Phone size={14} className="absolute left-3 top-3 text-ink-400"/>
+                  <Phone size={14} className="absolute left-3 top-3 text-ink-400 dark:text-obsidian-500"/>
                   <input className="input pl-8" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={!!customer} />
                 </div>
               </div>
               <div>
                 <label className="label">Dirección de entrega</label>
                 <div className="relative">
-                  <MapPin size={14} className="absolute left-3 top-3 text-ink-400"/>
+                  <MapPin size={14} className="absolute left-3 top-3 text-ink-400 dark:text-obsidian-500"/>
                   <input className="input pl-8" value={address} onChange={(e) => setAddress(e.target.value)} />
                 </div>
               </div>
@@ -406,7 +417,7 @@ function AssignModal({ order, onClose, onAssigned }) {
               </div>
               <div className="text-right">
                 <div className="text-xs font-semibold text-ink-600 dark:text-obsidian-200">{p.active_orders} activo{p.active_orders !== 1 ? "s" : ""}</div>
-                <ChevronRight size={18} className="text-ink-400 ml-auto" />
+                <ChevronRight size={18} className="text-ink-400 dark:text-obsidian-500 ml-auto" />
               </div>
             </button>
           ))}
@@ -602,7 +613,7 @@ function ReopenModal({ order, onClose, onReopened }) {
     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <div className="card w-full max-w-md p-6">
         <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-3 flex items-center gap-2">
-          <AlertTriangle size={20} className="text-amber-600"/>
+          <AlertTriangle size={20} className="text-amber-600 dark:text-amber-400"/>
           Reabrir pedido #{order.id}
         </h2>
         <div className="card p-3 bg-amber-50 border-amber-200 mb-3 text-sm text-amber-900 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
@@ -655,13 +666,18 @@ export default function Delivery() {
   useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => {
-    if (filter === "active") return orders.filter((o) => !["delivered", "cancelled"].includes(o.status));
-    if (filter === "delivered") return orders.filter((o) => o.status === "delivered");
-    if (filter === "cancelled") return orders.filter((o) => o.status === "cancelled");
-    return orders;
+    let result;
+    if (filter === "active") result = orders.filter((o) => !["delivered", "cancelled"].includes(o.status));
+    else if (filter === "delivered") result = orders.filter((o) => o.status === "delivered");
+    else if (filter === "cancelled") result = orders.filter((o) => o.status === "cancelled");
+    else result = orders;
+    // FIFO: oldest first, then assign turn numbers
+    const byDate = [...result].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    return assignTurns(byDate);
   }, [orders, filter]);
 
   const byStatus = (s) => filtered.filter((o) => o.status === s);
+  const nextOrder = useMemo(() => filtered.find((o) => o.status === "pending"), [filtered]);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -733,8 +749,8 @@ export default function Delivery() {
           {COLUMNS.map((col) => (
             <div key={col.key} className={`rounded-2xl border ${col.tone} p-3 min-h-[200px]`}>
               <div className="flex items-center justify-between mb-3 px-1">
-                <h3 className="font-semibold text-ink-700 dark:text-obsidian-100">{col.title}</h3>
-                <span className="text-xs text-ink-500 dark:text-obsidian-400 bg-paper-50 dark:bg-obsidian-900 px-2 py-0.5 rounded-full border border-paper-300 dark:border-obsidian-700">
+                <h3 className="font-semibold text-ink-800 dark:text-white">{col.title}</h3>
+                <span className="text-xs text-ink-600 dark:text-obsidian-300 bg-paper-50 dark:bg-obsidian-800 px-2 py-0.5 rounded-full border border-paper-300 dark:border-obsidian-600">
                   {byStatus(col.key).length}
                 </span>
               </div>
@@ -743,6 +759,8 @@ export default function Delivery() {
                   <OrderCard
                     key={o.id}
                     order={o}
+                    turn={o.turn_number}
+                    isNext={nextOrder && o.id === nextOrder.id}
                     onClick={() => setToView(o)}
                     onAssign={(o) => setToAssign(o)}
                     onCancel={(o) => setToCancel(o)}

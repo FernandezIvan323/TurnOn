@@ -23,8 +23,8 @@ function MovementModal({ product, onClose }) {
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
         <div className="p-5 overflow-y-auto flex-1 space-y-2">
-          {loading && <div className="text-sm text-ink-500">Cargando…</div>}
-          {!loading && movements.length === 0 && <div className="text-sm text-ink-400">Sin movimientos registrados.</div>}
+          {loading && <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>}
+          {!loading && movements.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500">Sin movimientos registrados.</div>}
           {movements.map((m) => (
             <div key={m.id} className="flex items-center justify-between card p-3 text-sm">
               <div>
@@ -35,9 +35,9 @@ function MovementModal({ product, onClose }) {
                   {m.type === "entry" ? "Entrada" : m.type === "exit" ? "Salida" : "Ajuste"}
                   <span className="font-bold">{m.quantity}</span>
                 </div>
-                <div className="text-xs text-ink-500">{m.reason || "Sin motivo"}</div>
+                <div className="text-xs text-ink-500 dark:text-obsidian-400">{m.reason || "Sin motivo"}</div>
               </div>
-              <div className="text-xs text-ink-400">{new Date(m.created_at).toLocaleString()}</div>
+              <div className="text-xs text-ink-400 dark:text-obsidian-500">{new Date(m.created_at).toLocaleString()}</div>
             </div>
           ))}
         </div>
@@ -88,9 +88,9 @@ function StockModal({ product, onClose, onSaved }) {
         </div>
 
         <div className="flex gap-2 mb-4">
-          <button onClick={() => setType("entry")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "entry" ? "bg-brand-500 text-white border-brand-500" : ""}`}>Entrada</button>
-          <button onClick={() => setType("exit")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "exit" ? "bg-brand-500 text-white border-brand-500" : ""}`}>Salida</button>
-          <button onClick={() => setType("adjust")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "adjust" ? "bg-brand-500 text-white border-brand-500" : ""}`}>Ajustar</button>
+          <button onClick={() => setType("entry")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "entry" ? "bg-brand-500 text-white border-brand-500" : "text-ink-700 dark:text-obsidian-300 dark:border-obsidian-700"}`}>Entrada</button>
+          <button onClick={() => setType("exit")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "exit" ? "bg-brand-500 text-white border-brand-500" : "text-ink-700 dark:text-obsidian-300 dark:border-obsidian-700"}`}>Salida</button>
+          <button onClick={() => setType("adjust")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "adjust" ? "bg-brand-500 text-white border-brand-500" : "text-ink-700 dark:text-obsidian-300 dark:border-obsidian-700"}`}>Ajustar</button>
         </div>
 
         {type === "adjust" ? (
@@ -170,13 +170,13 @@ export default function Inventory() {
 
       <div className="mb-4 flex items-center gap-2">
         <div className="relative flex-1 max-w-xs">
-          <Search size={14} className="absolute left-3 top-2.5 text-ink-400"/>
+          <Search size={14} className="absolute left-3 top-2.5 text-ink-400 dark:text-obsidian-500"/>
           <input className="input pl-8 text-sm" placeholder="Buscar producto…" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
 
       {loading ? (
-        <div className="text-sm text-ink-500">Cargando…</div>
+        <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
@@ -204,7 +204,7 @@ export default function Inventory() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-ink-400">Sin resultados</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">Sin resultados</td></tr>}
             </tbody>
           </table>
         </div>
