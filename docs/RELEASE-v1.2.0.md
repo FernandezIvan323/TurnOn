@@ -1,6 +1,6 @@
 # AppTurnos v1.2.0 — Completitud operativa
 
-**Fecha:** 2026-07-13  
+**Fecha:** 2026-07-13 (código) · **Publicado:** 2026-07-15  
 **Tag:** `v1.2.0`  
 **Commit:** `1092a7f`
 
@@ -53,12 +53,3 @@ Backup recomendado después de cada domingo:
 ```bash
 npm run db:backup
 ```
-
-## Publicar el Release en GitHub (si falta la página)
-
-```bash
-gh auth login
-gh release create v1.2.0 --title "v1.2.0 — Completitud operativa" --notes-file docs/RELEASE-v1.2.0.md
-```
-
-O desde la web: **Releases → Draft a new release → elegir tag `v1.2.0`**.
