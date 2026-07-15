@@ -16,9 +16,21 @@ const ORDER_COLUMNS = `
   d.name AS delivery_name, d.phone AS delivery_phone
 `;
 
+/**
+ * Descuenta stock una sola vez por pedido (flag stock_deducted).
+ * Registra movimientos tipo exit para el historial de inventario.
+ * Idempotente: si ya se descontó, no-op.
+ */
 async function deductStockForOrder(client, orderId) {
+  const { rows: ord } = await client.query(
+    "SELECT stock_deducted FROM orders WHERE id = $1 FOR UPDATE",
+    [orderId]
+  );
+  if (ord.length === 0) throw new HttpError(404, "No existe");
+  if (ord[0].stock_deducted) return false;
+
   const { rows: items } = await client.query(
-    "SELECT product_id, quantity FROM order_items WHERE order_id = $1",
+    "SELECT product_id, quantity FROM order_items WHERE order_id = $1 AND product_id IS NOT NULL",
     [orderId]
   );
   for (const item of items) {
@@ -26,12 +38,33 @@ async function deductStockForOrder(client, orderId) {
       "UPDATE products SET stock = GREATEST(stock - $2, 0) WHERE id = $1",
       [item.product_id, item.quantity]
     );
+    await client.query(
+      `INSERT INTO stock_movements (product_id, type, quantity, reason)
+       VALUES ($1, 'exit', $2, $3)`,
+      [item.product_id, item.quantity, `Pedido #${orderId}`]
+    );
   }
+  await client.query(
+    "UPDATE orders SET stock_deducted = TRUE WHERE id = $1",
+    [orderId]
+  );
+  return true;
 }
 
+/**
+ * Restaura stock solo si antes se descontó (flag stock_deducted).
+ * Idempotente: si no estaba descontado, no-op.
+ */
 async function restoreStockForOrder(client, orderId) {
+  const { rows: ord } = await client.query(
+    "SELECT stock_deducted FROM orders WHERE id = $1 FOR UPDATE",
+    [orderId]
+  );
+  if (ord.length === 0) throw new HttpError(404, "No existe");
+  if (!ord[0].stock_deducted) return false;
+
   const { rows: items } = await client.query(
-    "SELECT product_id, quantity FROM order_items WHERE order_id = $1",
+    "SELECT product_id, quantity FROM order_items WHERE order_id = $1 AND product_id IS NOT NULL",
     [orderId]
   );
   for (const item of items) {
@@ -39,7 +72,17 @@ async function restoreStockForOrder(client, orderId) {
       "UPDATE products SET stock = stock + $2 WHERE id = $1",
       [item.product_id, item.quantity]
     );
+    await client.query(
+      `INSERT INTO stock_movements (product_id, type, quantity, reason)
+       VALUES ($1, 'entry', $2, $3)`,
+      [item.product_id, item.quantity, `Reapertura pedido #${orderId}`]
+    );
   }
+  await client.query(
+    "UPDATE orders SET stock_deducted = FALSE WHERE id = $1",
+    [orderId]
+  );
+  return true;
 }
 
 async function recomputeOrderTotal(client, orderId) {
@@ -254,11 +297,15 @@ router.post("/:id/status", authRequired, requireRole("admin"), async (req, res) 
   try {
     await withTransaction(async (client) => {
       const { rows } = await client.query(
-        "SELECT delivery_person_id, type, status FROM orders WHERE id = $1 FOR UPDATE",
+        "SELECT delivery_person_id, type, status, payment_status FROM orders WHERE id = $1 FOR UPDATE",
         [req.params.id]
       );
       if (rows.length === 0) throw new HttpError(404, "No existe");
       const o = rows[0];
+      if (o.status === "cancelled") throw new HttpError(409, "El pedido está cancelado");
+      if (status === "cancelled" && o.payment_status === "paid") {
+        throw new HttpError(409, "No se puede cancelar un pedido ya cobrado");
+      }
       if (status === "cancelled" && o.delivery_person_id) {
         await client.query(
           "UPDATE delivery_persons SET status = 'available' WHERE id = $1",
@@ -290,14 +337,17 @@ router.post("/:id/close", authRequired, requireRole("admin"), async (req, res) =
   try {
     await withTransaction(async (client) => {
       const { rows } = await client.query(
-        "SELECT delivery_person_id FROM orders WHERE id = $1 FOR UPDATE",
+        "SELECT delivery_person_id, status, payment_status FROM orders WHERE id = $1 FOR UPDATE",
         [req.params.id]
       );
       if (rows.length === 0) throw new HttpError(404, "No existe");
-      if (rows[0].delivery_person_id) {
+      const o = rows[0];
+      if (o.status === "cancelled") throw new HttpError(409, "El pedido está cancelado");
+      if (o.payment_status === "paid") throw new HttpError(409, "El pedido ya está cobrado");
+      if (o.delivery_person_id) {
         await client.query(
           "UPDATE delivery_persons SET status = 'available' WHERE id = $1",
-          [rows[0].delivery_person_id]
+          [o.delivery_person_id]
         );
       }
       await deductStockForOrder(client, req.params.id);
@@ -348,14 +398,20 @@ router.post("/:id/mark-delivered", authRequired, requireRole("admin"), async (re
   try {
     await withTransaction(async (client) => {
       const { rows } = await client.query(
-        "SELECT delivery_person_id FROM orders WHERE id = $1 FOR UPDATE",
+        "SELECT delivery_person_id, status, payment_status FROM orders WHERE id = $1 FOR UPDATE",
         [req.params.id]
       );
       if (rows.length === 0) throw new HttpError(404, "No existe");
-      if (rows[0].delivery_person_id) {
+      const o = rows[0];
+      if (o.status === "cancelled") throw new HttpError(409, "El pedido está cancelado");
+      if (o.payment_status === "paid") throw new HttpError(409, "El pedido ya está cobrado");
+      if (o.payment_status === "debt" && o.status === "delivered") {
+        throw new HttpError(409, "El pedido ya está marcado como deuda");
+      }
+      if (o.delivery_person_id) {
         await client.query(
           "UPDATE delivery_persons SET status = 'available' WHERE id = $1",
-          [rows[0].delivery_person_id]
+          [o.delivery_person_id]
         );
       }
       await deductStockForOrder(client, req.params.id);
@@ -404,7 +460,7 @@ router.post("/:id/reopen", authRequired, requireRole("admin"), async (req, res) 
   try {
     const newStatus = await withTransaction(async (client) => {
       const { rows } = await client.query(
-        "SELECT type, status, delivery_person_id FROM orders WHERE id = $1 FOR UPDATE",
+        "SELECT type, status, delivery_person_id, stock_deducted FROM orders WHERE id = $1 FOR UPDATE",
         [req.params.id]
       );
       if (rows.length === 0) throw new HttpError(404, "No existe");
@@ -431,6 +487,7 @@ router.post("/:id/reopen", authRequired, requireRole("admin"), async (req, res) 
             SET status = $2,
                 payment_status = 'pending',
                 payment_method = NULL,
+                tip = 0,
                 closed_at = NULL
           WHERE id = $1`,
         [req.params.id, next]

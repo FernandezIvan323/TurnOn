@@ -6,10 +6,12 @@ import {
   money, formatTime, statusLabels, statusColors,
   assignTurns, waitMinutes, waitLabel,
 } from "../../lib/format";
+import { diffNewOrders, playBeep, isNotifyMuted, setNotifyMuted } from "../../lib/notify";
 import {
   ShoppingBag, Plus, X, Clock, CheckCircle2, ChefHat,
   ChevronRight, StickyNote, Trash2, ArrowRight, Timer,
   Banknote, CreditCard, Building2, Wallet, AlertTriangle, RotateCcw,
+  Volume2, VolumeX, Bell,
 } from "lucide-react";
 
 const COLUMNS = [
@@ -446,13 +448,36 @@ export default function PickupPage() {
   const [toCancel, setToCancel] = useState(null);
   const [cancelReason, setCancelReason] = useState("");
 
-  const load = async () => {
-    setLoading(true);
-    const { data } = await api.get("/orders", { params: { type: "pickup" } });
-    setOrders(data);
-    setLoading(false);
+  const [muted, setMuted] = useState(() => isNotifyMuted());
+  const [newFlash, setNewFlash] = useState(0);
+  const knownIdsRef = useRef(null);
+
+  const load = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
+    try {
+      const { data } = await api.get("/orders", { params: { type: "pickup" } });
+      if (knownIdsRef.current === null) {
+        knownIdsRef.current = new Set(data.map((o) => o.id));
+      } else {
+        const prev = Array.from(knownIdsRef.current).map((id) => ({ id }));
+        const { added, grew } = diffNewOrders(prev, data);
+        knownIdsRef.current = new Set(data.map((o) => o.id));
+        if (grew) {
+          playBeep({ frequency: 740 });
+          setNewFlash(added.length);
+          setTimeout(() => setNewFlash(0), 8000);
+        }
+      }
+      setOrders(data);
+    } finally {
+      if (!silent) setLoading(false);
+    }
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const t = setInterval(() => load({ silent: true }), 12_000);
+    return () => clearInterval(t);
+  }, []);
 
   // Ordenar FIFO (más viejo primero) y asignar turnos
   const sorted = useMemo(() => {
@@ -501,6 +526,23 @@ export default function PickupPage() {
         subtitle="Pedidos walk-in · Turnos y cola de atención"
         right={
           <div className="flex items-center gap-2">
+            {newFlash > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-rose-600 text-white animate-pulse">
+                <Bell size={12} /> +{newFlash} nuevo{newFlash !== 1 ? "s" : ""}
+              </span>
+            )}
+            <button
+              type="button"
+              title={muted ? "Activar sonido" : "Silenciar avisos"}
+              onClick={() => {
+                const next = !muted;
+                setMuted(next);
+                setNotifyMuted(next);
+              }}
+              className="btn-secondary h-9 px-2"
+            >
+              {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            </button>
             <select className="input h-9 text-sm" value={filter} onChange={(e) => setFilter(e.target.value)}>
               <option value="active">Activos</option>
               <option value="paid">Cobrados</option>

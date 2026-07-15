@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# DB backups (pueden contener datos del negocio)
+backups/
+
 # Environment files (CONTRASEÑAS - NUNCA subir)
 .env
 .env.*

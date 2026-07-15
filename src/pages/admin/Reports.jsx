@@ -1,14 +1,15 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import BarChart from "../../components/BarChart";
 import { money } from "../../lib/format";
+import { todayLocalISO } from "../../lib/date";
 import {
   DollarSign, TrendingUp, TrendingDown, ShoppingBag, Truck, Utensils,
   Clock, Users as UsersIcon, AlertCircle, Tag, Calendar, Printer,
   Receipt, Building2, CreditCard, Wallet, ShoppingBag as BagIcon,
-  History,
+  Coins, Bike,
 } from "lucide-react";
 
 const TABS = [
@@ -16,7 +17,49 @@ const TABS = [
   { key: "products", label: "Productos" },
   { key: "customers", label: "Clientes" },
   { key: "ops",      label: "Operación" },
+  { key: "drivers",  label: "Repartidores" },
   { key: "history",  label: "Historial" },
+];
+
+function closingDateKey(c) {
+  const raw = c?.closing_date;
+  if (!raw) return "";
+  if (typeof raw === "string") return raw.slice(0, 10);
+  try { return new Date(raw).toISOString().slice(0, 10); } catch { return ""; }
+}
+
+function StatSkeleton() {
+  return (
+    <div className="card p-4 animate-pulse">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-ink-200 dark:bg-obsidian-700" />
+        <div className="flex-1">
+          <div className="h-3 w-16 rounded bg-ink-200 dark:bg-obsidian-700 mb-2" />
+          <div className="h-5 w-20 rounded bg-ink-200 dark:bg-obsidian-700" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function daysAgoLocal(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function lastSundayLocal() {
+  const d = new Date();
+  const day = d.getDay(); // 0 = domingo
+  d.setDate(d.getDate() - day);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const RANGE_PRESETS = [
+  { key: "today", label: "Hoy", build: () => { const t = todayLocalISO(); return { from: t, to: t, label: "Hoy" }; } },
+  { key: "sunday", label: "Domingo", build: () => { const s = lastSundayLocal(); return { from: s, to: s, label: "Último domingo" }; } },
+  { key: "week", label: "7 días", build: () => ({ from: daysAgoLocal(6), to: todayLocalISO(), label: "Últimos 7 días" }) },
+  { key: "month", label: "30 días", build: () => ({ from: daysAgoLocal(29), to: todayLocalISO(), label: "Últimos 30 días" }) },
 ];
 
 const PAYMENT_ICONS = { cash: Wallet, card: CreditCard, transfer: Building2, mixed: Receipt };
@@ -61,9 +104,19 @@ export default function Reports() {
   const nav = useNavigate();
   const [tab, setTab] = useState("summary");
   const [historyPeriod, setHistoryPeriod] = useState("week");
+  const [rangeKey, setRangeKey] = useState("today");
+  const [customFrom, setCustomFrom] = useState(todayLocalISO());
+  const [customTo, setCustomTo] = useState(todayLocalISO());
 
-  const today = new Date().toISOString().slice(0, 10);
-  const range = useMemo(() => ({ from: today, to: today, label: "Hoy" }), [today]);
+  const range = useMemo(() => {
+    if (rangeKey === "custom") {
+      const from = customFrom <= customTo ? customFrom : customTo;
+      const to = customFrom <= customTo ? customTo : customFrom;
+      return { from, to, label: from === to ? from : `${from} → ${to}` };
+    }
+    const preset = RANGE_PRESETS.find((p) => p.key === rangeKey) || RANGE_PRESETS[0];
+    return preset.build();
+  }, [rangeKey, customFrom, customTo]);
 
   const [sales, setSales] = useState(null);
   const [topProducts, setTopProducts] = useState([]);
@@ -71,6 +124,8 @@ export default function Reports() {
   const [peakHours, setPeakHours] = useState([]);
   const [topCustomers, setTopCustomers] = useState([]);
   const [neverSold, setNeverSold] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [dayExpenses, setDayExpenses] = useState(null);
   const [loading, setLoading] = useState(true);
   const [topBy, setTopBy] = useState("qty");
 
@@ -81,26 +136,34 @@ export default function Reports() {
   const load = async () => {
     setLoading(true);
     try {
-      const [s, tp, bc, ph, tc, ns] = await Promise.all([
-        api.get("/reports/sales", { params: range }),
-        api.get("/reports/top-products", { params: { ...range, by: topBy, limit: 10 } }),
-        api.get("/reports/by-category", { params: range }),
-        api.get("/reports/peak-hours", { params: range }),
-        api.get("/reports/top-customers", { params: { ...range, limit: 10 } }),
+      const params = { from: range.from, to: range.to };
+      const reqs = [
+        api.get("/reports/sales", { params }),
+        api.get("/reports/top-products", { params: { ...params, by: topBy, limit: 10 } }),
+        api.get("/reports/by-category", { params }),
+        api.get("/reports/peak-hours", { params }),
+        api.get("/reports/top-customers", { params: { ...params, limit: 10 } }),
         api.get("/reports/never-sold"),
-      ]);
-      setSales(s.data);
-      setTopProducts(tp.data);
-      setByCategory(bc.data);
-      setPeakHours(ph.data);
-      setTopCustomers(tc.data);
-      setNeverSold(ns.data);
+        api.get("/reports/delivery-by-person", { params }),
+      ];
+      if (range.from === range.to) {
+        reqs.push(api.get("/expenses/summary", { params: { date: range.from } }).catch(() => ({ data: null })));
+      }
+      const results = await Promise.all(reqs);
+      setSales(results[0].data);
+      setTopProducts(results[1].data);
+      setByCategory(results[2].data);
+      setPeakHours(results[3].data);
+      setTopCustomers(results[4].data);
+      setNeverSold(results[5].data);
+      setDrivers(results[6].data || []);
+      setDayExpenses(range.from === range.to ? results[7]?.data : null);
     } finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, [range.from, range.to]);
   useEffect(() => {
-    api.get("/reports/top-products", { params: { ...range, by: topBy, limit: 10 } }).then((r) => setTopProducts(r.data));
+    api.get("/reports/top-products", { params: { from: range.from, to: range.to, by: topBy, limit: 10 } }).then((r) => setTopProducts(r.data));
   }, [topBy, range.from, range.to]);
 
   const loadHistory = async (period) => {
@@ -127,21 +190,32 @@ export default function Reports() {
   }, [tab, historyPeriod]);
 
   const peakActive = useMemo(() => peakHours.filter((h) => h.orders > 0), [peakHours]);
+  const hasSales = (sales?.current?.orders || 0) > 0;
+  const dayNet = dayExpenses
+    ? Number(sales?.current?.sales || 0) - Number(dayExpenses.total_expenses || 0)
+    : null;
 
   return (
     <div>
       <Header
         title="Reportes"
-        subtitle={tab === "history" ? "Historial de actividad" : "Hoy"}
+        subtitle={tab === "history" ? "Historial de actividad" : range.label}
         right={
-          <button onClick={() => nav("/reports/daily")} className="btn-primary text-sm">
-            <Printer size={14}/> Diario
-          </button>
+          <div className="flex gap-2 no-print">
+            {tab === "summary" && hasSales && (
+              <button type="button" onClick={() => window.print()} className="btn-secondary text-sm">
+                <Printer size={14}/> Imprimir resumen
+              </button>
+            )}
+            <button onClick={() => nav(`/reports/daily?date=${range.to}`)} className="btn-primary text-sm">
+              <Printer size={14}/> Diario
+            </button>
+          </div>
         }
       />
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-4 bg-paper-50 dark:bg-obsidian-900 border border-paper-300 dark:border-obsidian-700 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 mb-3 bg-paper-50 dark:bg-obsidian-900 border border-paper-300 dark:border-obsidian-700 rounded-xl p-1 w-fit flex-wrap no-print">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -155,14 +229,69 @@ export default function Reports() {
         ))}
       </div>
 
+      {/* Rango de fechas (tabs principales) */}
+      {tab !== "history" && (
+        <div className="flex flex-wrap items-center gap-2 mb-4 no-print">
+          <div className="flex gap-1 bg-paper-50 dark:bg-obsidian-900 border border-paper-300 dark:border-obsidian-700 rounded-xl p-1 w-fit flex-wrap">
+            {RANGE_PRESETS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setRangeKey(p.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                  rangeKey === p.key ? "bg-ink-800 text-white dark:bg-obsidian-100 dark:text-obsidian-900" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+            <button
+              onClick={() => setRangeKey("custom")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                rangeKey === "custom" ? "bg-ink-800 text-white dark:bg-obsidian-100 dark:text-obsidian-900" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
+              }`}
+            >
+              Personalizado
+            </button>
+          </div>
+          {rangeKey === "custom" && (
+            <div className="flex items-center gap-2 text-sm">
+              <input type="date" className="input h-9 text-sm" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
+              <span className="text-ink-400">→</span>
+              <input type="date" className="input h-9 text-sm" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
+            </div>
+          )}
+        </div>
+      )}
+
       {loading ? (
-        <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => <StatSkeleton key={i} />)}
+        </div>
       ) : (
         <>
           {/* ============ TAB: RESUMEN ============ */}
           {tab === "summary" && (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+              {!hasSales && (
+                <div className="card p-8 text-center mb-4 no-print">
+                  <Calendar size={32} className="mx-auto text-ink-300 dark:text-obsidian-500 mb-2" />
+                  <div className="font-medium text-ink-700 dark:text-obsidian-100">Sin ventas en este período</div>
+                  <p className="text-sm text-ink-500 dark:text-obsidian-400 mt-1 mb-4">
+                    Cuando cobres pedidos aparecerán aquí el resumen y los gráficos.
+                  </p>
+                  <div className="flex justify-center gap-2">
+                    <Link to="/cashier" className="btn-primary text-sm">Ir a Caja</Link>
+                    <Link to="/tables" className="btn-secondary text-sm">Mesas</Link>
+                  </div>
+                </div>
+              )}
+
+              <div id="reports-print">
+              <div className="hidden print:block text-center mb-4">
+                <h1 className="text-xl font-bold">Resumen de ventas</h1>
+                <p className="text-sm text-ink-500">{range.label}</p>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 mb-4">
                 <StatCard
                   icon={DollarSign}
                   label="Ventas"
@@ -183,30 +312,54 @@ export default function Reports() {
                   color="bg-indigo-50 text-indigo-700" darkColor="dark:bg-indigo-900/30 dark:text-indigo-300"
                 />
                 <StatCard
+                  icon={Coins}
+                  label="Propinas"
+                  value={money(sales?.current?.tips || 0)}
+                  color="bg-emerald-50 text-emerald-700" darkColor="dark:bg-emerald-900/30 dark:text-emerald-300"
+                />
+                {dayExpenses && (
+                  <>
+                    <StatCard
+                      icon={TrendingDown}
+                      label="Gastos"
+                      value={money(dayExpenses.total_expenses || 0)}
+                      sub={`${dayExpenses.expense_count || 0} registros`}
+                      color="bg-rose-50 text-rose-700" darkColor="dark:bg-rose-900/30 dark:text-rose-300"
+                    />
+                    <StatCard
+                      icon={TrendingUp}
+                      label="Neto del día"
+                      value={money(dayNet || 0)}
+                      sub="ventas − gastos"
+                      color="bg-emerald-50 text-emerald-700" darkColor="dark:bg-emerald-900/30 dark:text-emerald-300"
+                    />
+                  </>
+                )}
+                <StatCard
                   icon={Truck}
                   label="Domicilios"
-                  value={money(sales?.delivery_gains?.total || 0)}
-                  sub={`${sales?.delivery_gains?.count || 0} pedidos`}
+                  value={money(sales?.current?.delivery_sales ?? sales?.delivery_gains?.total ?? 0)}
+                  sub={`${sales?.current?.delivery_orders ?? sales?.delivery_gains?.count ?? 0} pedidos`}
                   color="bg-sky-50 text-sky-700" darkColor="dark:bg-sky-900/30 dark:text-sky-300"
                 />
                 <StatCard
                   icon={BagIcon}
                   label="Para llevar"
-                  value={sales?.current?.pickup_orders || 0}
-                  sub="pedidos pickup"
+                  value={money(sales?.current?.pickup_sales || 0)}
+                  sub={`${sales?.current?.pickup_orders || 0} pedidos`}
                   color="bg-amber-50 text-amber-700" darkColor="dark:bg-amber-900/30 dark:text-amber-300"
                 />
                 <StatCard
                   icon={Utensils}
                   label="Mesas"
-                  value={sales?.current?.table_orders || 0}
-                  sub="pedidos en mesa"
+                  value={money(sales?.current?.table_sales || 0)}
+                  sub={`${sales?.current?.table_orders || 0} pedidos`}
                   color="bg-sky-50 text-sky-700" darkColor="dark:bg-sky-900/30 dark:text-sky-300"
                 />
               </div>
 
-              {/* Métodos de pago */}
-              {sales?.days?.length > 0 && (
+              {/* Métodos de pago (período completo; fallback suma por día) */}
+              {sales && (sales.current?.orders > 0 || sales.days?.length > 0) && (
                 <div className="card p-4 mb-4">
                   <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-3 flex items-center gap-2">
                     <Receipt size={16}/> Ingresos por método de pago
@@ -214,10 +367,10 @@ export default function Reports() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {["cash", "card", "transfer", "mixed"].map((m) => {
                       const Icon = PAYMENT_ICONS[m];
-                      const total = sales.days.reduce((s, d) => {
-                        const methodData = d.payment_methods || {};
-                        return s + Number(methodData[m] || 0);
-                      }, 0);
+                      const fromCurrent = sales.current?.payment_methods?.[m];
+                      const total = fromCurrent != null
+                        ? Number(fromCurrent)
+                        : (sales.days || []).reduce((s, d) => s + Number(d.payment_methods?.[m] || 0), 0);
                       return (
                         <div key={m} className="flex items-center gap-2 p-3 rounded-xl bg-paper-100 dark:bg-obsidian-800">
                           <Icon size={16} className={PAYMENT_COLORS[m]} />
@@ -269,6 +422,21 @@ export default function Reports() {
                   </div>
                 </div>
               )}
+
+              {topProducts.length > 0 && (
+                <div className="card p-4 mt-4 print:block">
+                  <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-2">Top productos (resumen)</h3>
+                  <div className="space-y-1 text-sm">
+                    {topProducts.slice(0, 5).map((p, i) => (
+                      <div key={i} className="flex justify-between border-b border-paper-200 dark:border-obsidian-800 py-1">
+                        <span>{i + 1}. {p.name} <span className="text-ink-400">×{p.qty}</span></span>
+                        <span className="font-medium">{money(p.revenue)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              </div>{/* #reports-print */}
             </>
           )}
 
@@ -279,7 +447,7 @@ export default function Reports() {
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100">Top productos</h3>
                   <div className="flex gap-1">
-                    {[{ v: "qty", l: "Cantidad" }, { v: "revenue", l: "Ganancia" }].map((t) => (
+                    {[{ v: "qty", l: "Cantidad" }, { v: "revenue", l: "Ingresos" }].map((t) => (
                       <button
                         key={t.v}
                         onClick={() => setTopBy(t.v)}
@@ -351,9 +519,12 @@ export default function Reports() {
           {/* ============ TAB: CLIENTES ============ */}
           {tab === "customers" && (
             <div className="card p-4">
-              <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-1 flex items-center gap-2">
                 <UsersIcon size={16}/> Clientes más frecuentes
               </h3>
+              <p className="text-[11px] text-ink-500 dark:text-obsidian-400 mb-3">
+                Solo pedidos a domicilio (mesas y para llevar no tienen cliente registrado).
+              </p>
               {topCustomers.length === 0 ? (
                 <div className="text-sm text-ink-400 dark:text-obsidian-500 text-center py-6">Sin clientes en el período.</div>
               ) : (
@@ -403,6 +574,15 @@ export default function Reports() {
                     barColor="bg-amber-500 dark:bg-amber-400"
                   />
                 )}
+                {peakActive.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-ink-500 dark:text-obsidian-400">
+                    {peakActive.slice(0, 8).map((h) => (
+                      <span key={h.hour} className="px-1.5 py-0.5 rounded bg-paper-100 dark:bg-obsidian-800" title={`${h.orders} pedidos`}>
+                        {String(h.hour).padStart(2, "0")}h · {money(h.sales)}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Ventas por categoría */}
@@ -422,26 +602,77 @@ export default function Reports() {
             </div>
           )}
 
+          {/* ============ TAB: REPARTIDORES ============ */}
+          {tab === "drivers" && (
+            <div className="card p-4">
+              <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-1 flex items-center gap-2">
+                <Bike size={16}/> Entregas por repartidor
+              </h3>
+              <p className="text-[11px] text-ink-500 dark:text-obsidian-400 mb-3">
+                Pedidos a domicilio pagados en el período seleccionado ({range.label}).
+              </p>
+              {drivers.length === 0 ? (
+                <div className="text-sm text-ink-400 dark:text-obsidian-500 text-center py-8">
+                  Sin entregas registradas en este período.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="text-left text-ink-500 dark:text-obsidian-400 border-b border-paper-300 dark:border-obsidian-800">
+                      <tr>
+                        <th className="py-2 pr-3 font-medium">#</th>
+                        <th className="py-2 pr-3 font-medium">Repartidor</th>
+                        <th className="py-2 pr-3 font-medium">Teléfono</th>
+                        <th className="py-2 pr-3 font-medium text-right">Entregas</th>
+                        <th className="py-2 pl-3 font-medium text-right">Ingresos</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {drivers.map((d, i) => (
+                        <tr key={d.id} className="border-b border-paper-200 dark:border-obsidian-800">
+                          <td className="py-2 pr-3 text-ink-400">{i + 1}</td>
+                          <td className="py-2 pr-3 font-medium text-ink-800 dark:text-obsidian-50">{d.name}</td>
+                          <td className="py-2 pr-3 text-ink-500 dark:text-obsidian-400">{d.phone || "—"}</td>
+                          <td className="py-2 pr-3 text-right font-semibold">{d.deliveries}</td>
+                          <td className="py-2 pl-3 text-right font-semibold text-brand-700 dark:text-wine-300">{money(d.revenue)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ============ TAB: HISTORIAL ============ */}
           {tab === "history" && (
             <>
               {/* Selector de período */}
-              <div className="flex gap-1 mb-4 bg-paper-50 dark:bg-obsidian-900 border border-paper-300 dark:border-obsidian-700 rounded-xl p-1 w-fit">
-                {[
-                  { v: "week",  l: "Semana" },
-                  { v: "month", l: "Mes" },
-                  { v: "year",  l: "Año" },
-                ].map((t) => (
-                  <button
-                    key={t.v}
-                    onClick={() => setHistoryPeriod(t.v)}
-                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-                      historyPeriod === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
-                    }`}
-                  >
-                    {t.l}
-                  </button>
-                ))}
+              <div className="flex flex-wrap items-center gap-2 mb-4 no-print">
+                <div className="flex gap-1 bg-paper-50 dark:bg-obsidian-900 border border-paper-300 dark:border-obsidian-700 rounded-xl p-1 w-fit">
+                  {[
+                    { v: "week",  l: "Semana" },
+                    { v: "month", l: "Mes" },
+                    { v: "year",  l: "Año" },
+                  ].map((t) => (
+                    <button
+                      key={t.v}
+                      onClick={() => setHistoryPeriod(t.v)}
+                      className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
+                        historyPeriod === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
+                      }`}
+                    >
+                      {t.l}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => nav(`/reports/daily?date=${todayLocalISO()}`)}
+                  className="btn-secondary text-sm"
+                >
+                  <Printer size={14}/> Diario de hoy
+                </button>
               </div>
 
               {historyLoading ? (
@@ -510,7 +741,7 @@ export default function Reports() {
                         </thead>
                         <tbody>
                           {history.map((h) => {
-                            const hasClosing = cashClosings.some((c) => c.closing_date === h.date);
+                            const hasClosing = cashClosings.some((c) => closingDateKey(c) === h.date);
                             return (
                               <tr key={h.date} className="border-t border-paper-200 dark:border-obsidian-800 hover:bg-paper-50 dark:hover:bg-obsidian-900/50 cursor-pointer" onClick={() => nav(`/reports/daily?date=${h.date}`)}>
                                 <td className="px-4 py-3">
@@ -522,15 +753,17 @@ export default function Reports() {
                                 <td className={`px-4 py-3 text-right font-bold ${Number(h.net) >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}`}>
                                   {money(h.net)}
                                 </td>
-                                <td className="px-4 py-3 text-center text-xs text-ink-500 dark:text-obsidian-400">
-                                  <span title="Mesas">🪑{h.table_count}</span>{" · "}
-                                  <span title="Domicilios">🛵{h.delivery_count}</span>{" · "}
-                                  <span title="Pickup">📦{h.pickup_count}</span>
+                                <td className="px-4 py-3 text-center">
+                                  <div className="inline-flex flex-wrap items-center justify-center gap-1 text-[10px] font-semibold">
+                                    <span className="px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300" title="Mesas">M {h.table_count}</span>
+                                    <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" title="Domicilios">D {h.delivery_count}</span>
+                                    <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" title="Para llevar">P {h.pickup_count}</span>
+                                  </div>
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   {hasClosing ? (
-                                    <span className="inline-flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-300">
-                                      ✅ Cerrado
+                                    <span className="inline-flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-300 font-medium">
+                                      Cerrado
                                     </span>
                                   ) : (
                                     <button

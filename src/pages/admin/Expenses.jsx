@@ -361,7 +361,7 @@ export default function Expenses() {
             {money(summary?.net || 0)}
           </div>
           <div className="text-[11px] text-ink-400 dark:text-obsidian-500 mt-1">
-            Ventas {money(summary?.total_sales || 0)} âˆ’ Gastos {money(summary?.total_expenses || 0)}
+            Ventas {money(summary?.total_sales || 0)} − Gastos {money(summary?.total_expenses || 0)}
           </div>
         </div>
       </div>

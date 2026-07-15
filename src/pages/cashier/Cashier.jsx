@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { money, formatTime, typeLabels, statusLabels, statusColors, typeColors, assignTurns } from "../../lib/format";
-import { CheckCircle2, Receipt, X, Calculator, CreditCard, Wallet, Banknote, Building2, Truck, Utensils, ShoppingBag, ScrollText, Users } from "lucide-react";
+import ReceiptTicket from "../../components/ReceiptTicket";
+import { CheckCircle2, Receipt, X, Calculator, CreditCard, Wallet, Banknote, Building2, Truck, Utensils, ShoppingBag, ScrollText, Users, AlertTriangle, Printer } from "lucide-react";
 
 const TIP_PRESETS = [0, 10, 15, 20];
 
@@ -27,10 +28,12 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
     try {
       if (isPrepay) {
         await api.post(`/orders/${order.id}/prepay`, { payment_method: method });
+        onClosed?.({ prepay: true, payment_method: method });
       } else {
         await api.post(`/orders/${order.id}/close`, { payment_method: method, tip: tipAmount });
+        onClosed?.({ payment_method: method, tip: tipAmount });
       }
-      onClosed(); onClose();
+      onClose();
     } catch (e) {
       setErr(e.response?.data?.error || e.message);
     } finally { setBusy(false); }
@@ -131,7 +134,12 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
             </button>
           ))}
         </div>
-        {err && <div className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 mb-3 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{err}</div>}
+        {err && (
+          <div className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2.5 mb-3 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800 flex items-start gap-2">
+            <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+            <span>{err}</span>
+          </div>
+        )}
         <div className="flex gap-2">
           <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1">
@@ -143,7 +151,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
   );
 }
 
-function OrderRow({ order, turn, onClose, onPrepay }) {
+function OrderRow({ order, turn, onClose, onPrepay, onTicket }) {
   const TypeIcon = order.type === "delivery" ? Truck : order.type === "pickup" ? ShoppingBag : Utensils;
   return (
     <div className="card p-4 flex items-center justify-between gap-4">
@@ -171,7 +179,7 @@ function OrderRow({ order, turn, onClose, onPrepay }) {
         {order.notes && <div className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">Nota: {order.notes}</div>}
         {order.payment_status === "paid" && (
           <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">
-            âœ“ Pagado ({order.payment_method}){Number(order.tip) > 0 ? ` + ${money(order.tip)} propina` : ""}
+            ✓ Pagado ({order.payment_method}){Number(order.tip) > 0 ? ` + ${money(order.tip)} propina` : ""}
           </div>
         )}
       </div>
@@ -193,7 +201,14 @@ function OrderRow({ order, turn, onClose, onPrepay }) {
               <CheckCircle2 size={14}/> Cobrar
             </button>
           ) : (
-            <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 mt-1">Pagado</span>
+            <div className="flex flex-col items-end gap-1 mt-1">
+              <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Pagado</span>
+              {onTicket && (
+                <button onClick={() => onTicket(order)} className="btn-secondary text-xs">
+                  <Printer size={12}/> Ticket
+                </button>
+              )}
+            </div>
           )
         )}
       </div>
@@ -208,18 +223,26 @@ export default function Cashier() {
   const [loading, setLoading] = useState(true);
   const [toClose, setToClose] = useState(null);
   const [toPrepay, setToPrepay] = useState(null);
+  const [ticketOrder, setTicketOrder] = useState(null);
 
-  const load = async () => {
-    setLoading(true);
-    const params = { payment: tab === "paid" ? "paid" : "pending" };
-    if (typeFilter !== "all") params.type = typeFilter;
-    const { data } = await api.get("/orders", { params });
-    // Ordenar por antigüedad (FIFO) y asignar turnos
-    data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    setOrders(assignTurns(data));
-    setLoading(false);
+  const load = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
+    try {
+      const params = { payment: tab === "paid" ? "paid" : "pending" };
+      if (typeFilter !== "all") params.type = typeFilter;
+      const { data } = await api.get("/orders", { params });
+      // Ordenar por antigüedad (FIFO) y asignar turnos
+      data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      setOrders(assignTurns(data));
+    } finally {
+      if (!silent) setLoading(false);
+    }
   };
-  useEffect(() => { load(); }, [tab, typeFilter]);
+  useEffect(() => {
+    load();
+    const t = setInterval(() => load({ silent: true }), 12_000);
+    return () => clearInterval(t);
+  }, [tab, typeFilter]);
 
   const summary = useMemo(() => {
     const tables = orders.filter((o) => o.type === "table");
@@ -330,12 +353,50 @@ export default function Cashier() {
         </div>
       ) : (
         <div className="space-y-2">
-          {orders.map((o) => <OrderRow key={o.id} order={o} turn={o.turn_number} onClose={setToClose} onPrepay={setToPrepay} />)}
+          {orders.map((o) => (
+            <OrderRow
+              key={o.id}
+              order={o}
+              turn={o.turn_number}
+              onClose={setToClose}
+              onPrepay={setToPrepay}
+              onTicket={tab === "paid" ? setTicketOrder : undefined}
+            />
+          ))}
         </div>
       )}
 
-      {toClose && <CloseModal order={toClose} mode="close" onClose={() => setToClose(null)} onClosed={load} />}
-      {toPrepay && <CloseModal order={toPrepay} mode="prepay" onClose={() => setToPrepay(null)} onClosed={load} />}
+      {toClose && (
+        <CloseModal
+          order={toClose}
+          mode="close"
+          onClose={() => setToClose(null)}
+          onClosed={(info) => {
+            setTicketOrder({
+              ...toClose,
+              payment_status: "paid",
+              payment_method: info?.payment_method || "cash",
+              tip: info?.tip ?? 0,
+              closed_at: new Date().toISOString(),
+            });
+            load();
+          }}
+        />
+      )}
+      {toPrepay && (
+        <CloseModal
+          order={toPrepay}
+          mode="prepay"
+          onClose={() => setToPrepay(null)}
+          onClosed={() => load()}
+        />
+      )}
+      {ticketOrder && (
+        <ReceiptTicket
+          order={ticketOrder}
+          onClose={() => setTicketOrder(null)}
+        />
+      )}
     </div>
   );
 }

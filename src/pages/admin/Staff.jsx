@@ -2,7 +2,7 @@
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
-import { Plus, Edit2, Trash2, X, Bike, Utensils, UserCog, Check, PlusCircle, XCircle, UserPlus, Clock } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Bike, Utensils, UserCog, Check, PlusCircle, XCircle, UserPlus, Clock, KeyRound } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 
 function Tabs({ value, onChange }) {
@@ -255,6 +255,69 @@ function WaiterModal({ onClose, onSaved }) {
   );
 }
 
+function ChangePinModal({ user, onClose, onSaved }) {
+  const [pin, setPin] = useState("");
+  const [pin2, setPin2] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState(null);
+  const save = async () => {
+    setSaving(true); setErr(null);
+    try {
+      if (pin !== pin2) throw new Error("Los PIN no coinciden");
+      await api.put(`/auth/users/${user.id}/pin`, { pin });
+      onSaved(); onClose();
+    } catch (e) {
+      setErr(e.response?.data?.error || e.message);
+    } finally { setSaving(false); }
+  };
+  return (
+    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+      <div className="card w-full max-w-md p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Cambiar PIN</h2>
+          <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
+        </div>
+        <p className="text-sm text-ink-500 dark:text-obsidian-400 mb-3">
+          Usuario <span className="font-mono font-medium text-ink-700 dark:text-obsidian-100">@{user.username}</span>
+          {" · "}{user.name}
+        </p>
+        <label className="label">Nuevo PIN (4 dígitos)</label>
+        <input
+          className="input"
+          type="password"
+          maxLength={4}
+          inputMode="numeric"
+          value={pin}
+          onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+          autoFocus
+          autoComplete="new-password"
+        />
+        <label className="label mt-3">Confirmar PIN</label>
+        <input
+          className="input"
+          type="password"
+          maxLength={4}
+          inputMode="numeric"
+          value={pin2}
+          onChange={(e) => setPin2(e.target.value.replace(/\D/g, "").slice(0, 4))}
+          autoComplete="new-password"
+        />
+        {err && (
+          <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
+            {err}
+          </div>
+        )}
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="btn-secondary">Cancelar</button>
+          <button onClick={save} disabled={saving || pin.length !== 4 || pin2.length !== 4} className="btn-primary">
+            {saving ? "Guardando…" : "Actualizar PIN"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AssignmentsTab() {
   const [assignments, setAssignments] = useState([]);
   const [tables, setTables] = useState([]);
@@ -427,6 +490,7 @@ export default function Staff() {
   const [creating, setCreating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [historyWaiter, setHistoryWaiter] = useState(null);
+  const [pinUser, setPinUser] = useState(null);
 
   const load = async () => {
     const [d, w, t] = await Promise.all([api.get("/delivery"), api.get("/auth/users"), api.get("/tables")]);
@@ -500,7 +564,7 @@ export default function Staff() {
                 <th className="px-4 py-2 font-medium">Usuario</th>
                 <th className="px-4 py-2 font-medium">Nombre</th>
                 <th className="px-4 py-2 font-medium">Estado</th>
-                <th className="px-4 py-2 font-medium w-24 text-right">Acciones</th>
+                <th className="px-4 py-2 font-medium w-32 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -513,7 +577,8 @@ export default function Staff() {
                       {w.active ? "Activo" : "Inactivo"}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-right">
+                  <td className="px-4 py-2 text-right space-x-1">
+                    <button onClick={() => setPinUser(w)} className="btn-ghost text-xs" title="Cambiar PIN"><KeyRound size={14}/></button>
                     <button onClick={() => setHistoryWaiter(w)} className="btn-ghost text-xs" title="Ver historial"><Clock size={14}/></button>
                   </td>
                 </tr>
@@ -573,6 +638,13 @@ export default function Staff() {
       {creating && tab === "tables" && <TableModal onClose={() => setCreating(false)} onSaved={load} />}
       {editing?.type === "delivery" && <DeliveryModal person={editing.value} onClose={() => setEditing(null)} onSaved={load} />}
       {editing?.type === "table" && <TableModal table={editing.value} onClose={() => setEditing(null)} onSaved={load} />}
+      {pinUser && (
+        <ChangePinModal
+          user={pinUser}
+          onClose={() => setPinUser(null)}
+          onSaved={() => { setPinUser(null); }}
+        />
+      )}
 
       {confirmDelete?.type === "delivery" && (
         <ConfirmModal

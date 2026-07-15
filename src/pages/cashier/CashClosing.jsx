@@ -191,12 +191,13 @@ function ClosingForm({ preview, date, onSuccess }) {
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  const [submitPending, setSubmitPending] = useState([]);
 
   const expected = Number(initialCash) + Number(preview.cash_sales);
   const diff = Number(countedCash) - expected;
 
   const submit = async () => {
-    setBusy(true); setErr(null);
+    setBusy(true); setErr(null); setSubmitPending([]);
     try {
       await api.post("/cash-closings", {
         closing_date: date,
@@ -206,7 +207,11 @@ function ClosingForm({ preview, date, onSuccess }) {
       });
       onSuccess();
     } catch (e) {
-      setErr(e.response?.data?.error || e.message);
+      const data = e.response?.data;
+      setErr(data?.error || e.message || "No se pudo cerrar la caja");
+      if (Array.isArray(data?.pending_orders) && data.pending_orders.length) {
+        setSubmitPending(data.pending_orders);
+      }
     } finally { setBusy(false); }
   };
 
@@ -245,7 +250,7 @@ function ClosingForm({ preview, date, onSuccess }) {
             <div className="grid grid-cols-3 gap-2 text-sm">
               <div>
                 <div className="text-ink-500 dark:text-obsidian-400 text-xs">Gastos</div>
-                <div className="font-bold text-rose-700 dark:text-rose-400">âˆ’{money(preview.expense_summary.total_expenses)}</div>
+                <div className="font-bold text-rose-700 dark:text-rose-400">−{money(preview.expense_summary.total_expenses)}</div>
               </div>
               <div>
                 <div className="text-ink-500 dark:text-obsidian-400 text-xs">Neto del día</div>
@@ -330,8 +335,29 @@ function ClosingForm({ preview, date, onSuccess }) {
       </div>
 
       {err && (
-        <div className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
-          {err}
+        <div className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800 space-y-2">
+          <div className="font-medium flex items-center gap-1.5">
+            <XCircle size={16} className="shrink-0" />
+            {err}
+          </div>
+          {submitPending.length > 0 && (
+            <ul className="text-xs space-y-1 max-h-28 overflow-y-auto pl-1">
+              {submitPending.map((o) => (
+                <li key={o.id} className="flex justify-between gap-2">
+                  <span>
+                    #{o.id} · {typeLabels[o.type] || o.type}
+                    {o.table_number ? ` · Mesa ${o.table_number}` : o.customer_name ? ` · ${o.customer_name}` : ""}
+                  </span>
+                  <span className="font-semibold shrink-0">{money(o.total)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {submitPending.length > 0 && (
+            <Link to="/cashier" className="inline-flex items-center gap-1 text-xs font-medium underline">
+              Ir a Caja <ArrowRight size={12} />
+            </Link>
+          )}
         </div>
       )}
 

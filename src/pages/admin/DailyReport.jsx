@@ -1,30 +1,39 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../lib/api";
 import { useAuth } from "../../store/auth";
 import { todayLocalISO } from "../../lib/date";
 import { money } from "../../lib/format";
 import { Printer, ArrowLeft, Wallet, CreditCard, Building2, Receipt } from "lucide-react";
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 export default function DailyReport() {
   const { user } = useAuth();
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
+  const reportDate = useMemo(() => {
+    const q = searchParams.get("date");
+    return q && DATE_RE.test(q) ? q : todayLocalISO();
+  }, [searchParams]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const printRef = useRef(null);
 
-  const load = async () => {
+  const load = async (date) => {
     setLoading(true);
     try {
       const { data } = await api.get("/reports/daily-complete", {
-        params: { date: todayLocalISO() },
+        params: { date },
       });
       setData(data);
+    } catch {
+      setData(null);
     } finally {
       setLoading(false);
     }
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(reportDate); }, [reportDate]);
 
   if (user?.role !== "admin") {
     return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Solo administradores.</div>;

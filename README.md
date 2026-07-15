@@ -1,5 +1,5 @@
 ![Build](https://img.shields.io/badge/build-passing-brightgreen?logo=github)
-![Version](https://img.shields.io/badge/version-1.1.4-blue?logo=react)
+![Version](https://img.shields.io/badge/version-1.2.0-blue?logo=react)
 ![Node](https://img.shields.io/badge/node-18%2B-339933?logo=nodedotjs)
 ![React](https://img.shields.io/badge/react-19-61DAFB?logo=react)
 ![PostgreSQL](https://img.shields.io/badge/postgresql-18%2B-4169E1?logo=postgresql)
@@ -23,6 +23,8 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 - Tokens JWT con expiración de 12 horas.
 - Logout con confirmación modal.
 - Creación de meseros desde la interfaz (Personal → Meseros).
+- **Cambio de PIN** desde Personal (admin) sin tocar la base de datos.
+- **Guard de rutas por rol**: un mesero no puede abrir caja/reportes por URL.
 
 ### 📊 Dashboard
 - **Admin**: ventas del día, comparativa % vs ayer, ticket promedio, gastos del día.
@@ -72,8 +74,11 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 - Pedidos pendientes agrupados por antigüedad.
 - Filtros: todos / solo mesas / solo domicilios / solo para llevar.
 - Métodos de pago: efectivo, tarjeta, transferencia, mixto.
-- Corte de caja diario (1 por día, bloquea si hay pendientes, inmutable).
+- **Ticket de cobro imprimible** al cerrar (y reimpresión en pedidos cobrados).
+- Corte de caja diario (1 por día; **deudas no bloquean** el corte; inmutable).
+- Mensajes de error claros (pedido ya cobrado, pendientes al cortar).
 - Vista de histórico de cortes.
+- Auto-refresco de Caja, Domicilios y Para llevar (~12 s).
 
 ### 👥 Clientes
 - Búsqueda por nombre o teléfono con debounce.
@@ -88,33 +93,38 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 ### 📦 Inventario / Stock
 - Control de existencias por producto.
 - Stock mínimo con alerta visual.
-- **Auto-deducción**: al cerrar un pedido, el stock se descuenta automáticamente.
-- Movimientos de entrada, salida y ajuste con historial.
+- **Auto-deducción idempotente**: el stock se descuenta **una sola vez** por pedido (flag `stock_deducted`).
+- Movimientos de inventario automáticos al vender/reabrir + entradas/salidas/ajustes manuales.
 - Tarjeta de "Stock bajo" en el Dashboard.
 
 ### 👨‍🍳 Personal
 - Gestión de **repartidores** (nombre, teléfono, órdenes activas).
 - Gestión de **mesas** (número, etiqueta, capacidad, activa).
-- Gestión de **meseros** (creación con usuario y PIN).
+- Gestión de **meseros** (creación con usuario y PIN; **cambiar PIN**).
 - **Asignación de mesas** a meseros: pre-selecciona mesas ya asignadas, muestra mesero en tabla de mesas.
 - **Historial de mesero**: modal con todos los pedidos, items, totales y propinas.
 - **Confirmaciones**: eliminar repartidores y mesas con modal personalizado (sin `confirm()` nativo).
 
 ### 📈 Reportes
-- **5 tabs**: Resumen, Productos, Clientes, Operación, Historial.
-- **Resumen**: ventas del día, comparativa vs período anterior, ticket promedio, domicilios, pickup, mesas.
-- **Métodos de pago**: desglose de ingresos por efectivo, tarjeta, transferencia y mixto.
-- **Top 10 productos** por cantidad o por ganancia.
+- **6 tabs**: Resumen, Productos, Clientes, Operación, **Repartidores**, Historial.
+- **Rangos**: Hoy, Domingo, 7 días, 30 días o **fechas personalizadas**.
+- **Resumen**: ventas, pedidos, ticket promedio, **propinas**, canales con $ + cantidad, gastos/neto (día único).
+- **Métodos de pago**: desglose real por efectivo, tarjeta, transferencia y mixto.
+- **Top 10 productos** por cantidad o por ingresos.
 - **Productos nunca vendidos** (candidatos a retirar).
-- **Clientes más frecuentes** con gasto total.
-- **Operación**: horarios pico (gráfico vertical) y ventas por categoría.
-- **Historial**: tabla de días con ventas, gastos, neto, tipo de pedidos y estado del corte de caja.
-- **Reporte diario completo**: ventas, propinas, gastos, neto, métodos de pago, top productos, categorías — en formato imprimible / PDF.
+- **Clientes más frecuentes** (solo domicilio) con gasto total.
+- **Operación**: horarios pico (con $) y ventas por categoría.
+- **Repartidores**: entregas e ingresos por persona.
+- **Historial**: tabla de días con ventas, gastos, neto, tipos (M/D/P) y estado del corte.
+- **Imprimir resumen** del período y **reporte diario** (soporta `?date=` desde el historial).
+- Día contable alineado con caja: `closed_at` (zona `DB_TZ`).
 
 ### 🎨 UI/UX
+- **Landing** de presentación + login rediseñado.
 - **Modo claro / oscuro** con toggle en el Header (persiste en localStorage, detecta preferencia del SO).
 - **Obsidian Wine** en modo oscuro: paleta `#0b090a` → `#ffffff` con acentos vino tinto `#660708` y rojos vívidos `#BA181B` / `#E5383B`.
 - **Calcite** en modo claro: grises cálidos, naranja vibrante `#FD7B41` y durazno suave `#EDBF9B` sobre fondo `#DDDCDB`.
+- **Aviso sonoro** de pedido nuevo en Domicilios / Para llevar (silenciable).
 - Diseño responsive optimizado para laptop y tablet.
 - Modales de confirmación personalizados (reemplazan `confirm()` nativo).
 - Componentes con Tailwind CSS y lucide-react.
@@ -145,7 +155,11 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 AppTurnos/
 ├── scripts/
 │   ├── start-detached.ps1        # Arranque en 2ndo plano (Vite + API independientes)
-│   └── stop-server.ps1           # Detiene ambos procesos por PID + puerto
+│   ├── stop-server.ps1           # Detiene ambos procesos por PID + puerto
+│   └── backup-db.ps1             # Backup PostgreSQL (pg_dump → backups/)
+│
+├── docs/
+│   └── PLAN-COMPLETITUD.md       # Plan bugs → UX → features
 │
 ├── server/                       # API Node + Express + PostgreSQL
 │   ├── .env.example              # Plantilla de variables de entorno
@@ -176,7 +190,8 @@ AppTurnos/
 │   ├── lib/
 │   │   ├── api.js                # Axios con interceptors, retry, eventos network
 │   │   ├── date.js               # Helpers de fecha (todayLocalISO, dateOnlyUTC)
-│   │   └── format.js             # money, formatTime, statusLabels, assignTurns, waitMinutes
+│   │   ├── format.js             # money, formatTime, statusLabels, assignTurns, waitMinutes
+│   │   └── notify.js             # Beep + mute de pedidos nuevos
 │   ├── store/                    # Zustand stores
 │   │   ├── auth.js
 │   │   ├── theme.js              # Persistente en localStorage
@@ -185,6 +200,9 @@ AppTurnos/
 │   │   └── resources.js
 │   ├── components/
 │   │   ├── Layout.jsx            # Layout principal + ServerStatus
+│   │   ├── RequireRole.jsx       # Guard de rutas por rol
+│   │   ├── ReceiptTicket.jsx     # Ticket de cobro imprimible
+│   │   ├── Brand.jsx / HeroPreview.jsx
 │   │   ├── Sidebar.jsx           # Menú lateral con "Para llevar" y dark mode
 │   │   ├── Header.jsx            # Header de página + ThemeToggle
 │   │   ├── ThemeToggle.jsx       # Botón ☀/🌙
@@ -192,6 +210,7 @@ AppTurnos/
 │   │   ├── LogoutConfirm.jsx     # Modal de confirmación de cierre
 │   │   └── BarChart.jsx          # Gráfico de barras sin dependencias
 │   └── pages/
+│       ├── Landing.jsx           # Portada pública
 │       ├── Login.jsx             # Login con teclado numérico
 │       ├── Dashboard.jsx         # Admin + Waiter dashboard
 │       ├── Debts.jsx             # Control de deudas pendientes
@@ -296,13 +315,24 @@ CORS_ORIGINS=http://localhost:5180,http://127.0.0.1:5180
 | **Solo backend** | `npm run dev:api` | API en :3001 |
 | **Build prod** | `npm run build` | Compila a `dist/` |
 | **Preview** | `npm run preview` | Sirve la build |
+| **Backup BD** | `npm run db:backup` | Dump SQL en `backups/` (requiere `pg_dump`) |
 
 ### 4. Primer arranque
 - La BD se crea automáticamente si no existe.
 - Migraciones idempotentes al arrancar.
-- Seed: 5 categorías, 14 productos, 9 mesas, 3 repartidores, 3 usuarios.
+- Seed: **menú vacío** (categorías/productos los cargas tú en la app), 9 mesas de ejemplo, 3 repartidores, 3 usuarios y categorías de gastos.
 
-### 5. Acceder
+### 5. Backup de la base de datos
+Con PostgreSQL client tools (`pg_dump`) en el PATH:
+
+```bash
+npm run db:backup
+```
+
+Genera `backups/appturnos-YYYYMMDD-HHmm.sql` usando las credenciales de `server/.env`.  
+Hazlo al menos **después de cada domingo** de trabajo.
+
+### 6. Acceder
 Abre `http://localhost:5180`
 
 | Usuario | PIN | Rol |
@@ -310,6 +340,8 @@ Abre `http://localhost:5180`
 | `admin` | `7482` | Cajero / Administrador |
 | `ivan` | `3197` | Mesero |
 | `maria` | `3197` | Mesera |
+
+Cambia los PIN por defecto en **Personal → Meseros → icono de llave** (o crea usuarios nuevos).
 
 ---
 
@@ -506,6 +538,7 @@ npm run dev:web        # Solo Vite
 npm run dev:api        # Solo API
 npm run build          # Compila a dist/
 npm run preview        # Sirve build de producción
+npm run db:backup      # Backup PostgreSQL → backups/
 ```
 
 ---
@@ -526,6 +559,42 @@ npm run preview        # Sirve build de producción
 ---
 
 ## 📋 Changelog
+
+### v1.2.0 (2026-07-13) — Completitud operativa (bugs, UX, features)
+
+Listo para el **primer domingo real** en el local: dinero e inventario confiables, reportes correctos y flujos del día a día.
+
+#### Correcciones críticas (caja e inventario)
+- **Stock idempotente**: flag `orders.stock_deducted`; no se descuenta dos veces al cerrar/entregar.
+- **Movimientos de inventario** automáticos al vender y al reabrir pedidos.
+- **Cobro y deuda defensivos**: 409 si el pedido ya está pagado/cancelado/en deuda.
+- **Corte de caja**: las **deudas no bloquean** el cierre (alineado con el preview).
+- **Encoding UI**: símbolos `✓` y `−` corregidos en Caja, Domicilios, Gastos y Corte.
+- **`package.json`**: dependencias de runtime (`express`, `pg`, JWT, etc.) en `dependencies`; eliminado `@heroicons/vue`.
+
+#### Reportes (funcional + UX)
+- Métodos de pago en Resumen con montos **reales** (API `/sales`).
+- Ticket promedio = ventas ÷ pedidos del período (no promedio de promedios).
+- **Reporte diario** respeta `?date=` desde el Historial.
+- Día contable con `COALESCE(closed_at, created_at)` y timezone `DB_TZ`.
+- Tabs: Resumen, Productos, Clientes, Operación, **Repartidores**, Historial.
+- Rangos: Hoy / Domingo / 7d / 30d / **personalizado**.
+- StatCards unificados (canales con $ + cantidad), propinas, gastos/neto del día.
+- Imprimir resumen del período; empty states y skeletons de carga.
+- Labels “Ingresos” (no “Ganancia”); badges M/D/P en historial.
+
+#### UX operativa
+- Auto-refresh ~12 s en Domicilios, Para llevar y Caja.
+- `RequireRole`: mesero redirigido fuera de rutas de admin.
+- Errores de cobro/corte más claros (lista de pendientes al fallar el corte).
+- Aviso sonoro + badge de pedidos nuevos (silenciable).
+
+#### Features
+- **Ticket de cobro imprimible** (`ReceiptTicket`) tras cobrar y en pedidos cobrados.
+- **Cambiar PIN** desde Personal (`PUT /auth/users/:id/pin`, `PUT /auth/me/pin`).
+- **Backup** `npm run db:backup` → `scripts/backup-db.ps1`.
+- Landing / Brand / HeroPreview y login actualizado (marca del producto).
+- Documentación: seed con menú vacío, plan en `docs/PLAN-COMPLETITUD.md`.
 
 ### v1.1.4 (2026-06-23) — Pedidos pickup, turnos FIFO, historial mesero
 - **Pedidos "Para llevar" (pickup)**: nueva página completa `/pickup` con:

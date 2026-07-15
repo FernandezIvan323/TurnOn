@@ -3,11 +3,12 @@ import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
 import { money, formatTime, statusLabels, statusColors, typeLabels, assignTurns } from "../../lib/format";
+import { diffNewOrders, playBeep, isNotifyMuted, setNotifyMuted } from "../../lib/notify";
 import {
   Phone, MapPin, Plus, ChevronRight, X, User as UserIcon,
   CheckCircle2, Truck, XCircle, StickyNote, Search,
   ChefHat, ArrowLeft, RotateCcw, AlertTriangle, Package,
-  Clock,
+  Clock, Volume2, VolumeX, Bell,
 } from "lucide-react";
 
 const COLUMNS = [
@@ -47,7 +48,7 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
           <div className="font-semibold text-ink-800 dark:text-obsidian-50">{money(order.total)}</div>
           {isPaid && (
             <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 mt-0.5">
-              âœ“ Pagado {order.payment_method ? `(${order.payment_method})` : ""}
+              ✓ Pagado {order.payment_method ? `(${order.payment_method})` : ""}
             </div>
           )}
           {order.delivery_name && (
@@ -656,14 +657,38 @@ export default function Delivery() {
   const [cancelReason, setCancelReason] = useState("");
   const [toReopen, setToReopen] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [muted, setMuted] = useState(() => isNotifyMuted());
+  const [newFlash, setNewFlash] = useState(0);
+  const knownIdsRef = useRef(null);
 
-  const load = async () => {
-    setLoading(true);
-    const { data } = await api.get("/orders", { params: { type: "delivery" } });
-    setOrders(data);
-    setLoading(false);
+  const load = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
+    try {
+      const { data } = await api.get("/orders", { params: { type: "delivery" } });
+      if (knownIdsRef.current === null) {
+        knownIdsRef.current = new Set(data.map((o) => o.id));
+      } else {
+        const prev = Array.from(knownIdsRef.current).map((id) => ({ id }));
+        const { added, grew } = diffNewOrders(prev, data);
+        if (grew) {
+          knownIdsRef.current = new Set(data.map((o) => o.id));
+          playBeep();
+          setNewFlash(added.length);
+          setTimeout(() => setNewFlash(0), 8000);
+        } else {
+          knownIdsRef.current = new Set(data.map((o) => o.id));
+        }
+      }
+      setOrders(data);
+    } finally {
+      if (!silent) setLoading(false);
+    }
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const t = setInterval(() => load({ silent: true }), 12_000);
+    return () => clearInterval(t);
+  }, []);
 
   const filtered = useMemo(() => {
     let result;
@@ -711,6 +736,23 @@ export default function Delivery() {
         subtitle="Tablero Kanban de pedidos a domicilio"
         right={
           <div className="flex items-center gap-2">
+            {newFlash > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-rose-600 text-white animate-pulse">
+                <Bell size={12} /> +{newFlash} nuevo{newFlash !== 1 ? "s" : ""}
+              </span>
+            )}
+            <button
+              type="button"
+              title={muted ? "Activar sonido" : "Silenciar avisos"}
+              onClick={() => {
+                const next = !muted;
+                setMuted(next);
+                setNotifyMuted(next);
+              }}
+              className="btn-secondary h-9 px-2"
+            >
+              {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            </button>
             <select className="input h-9 text-sm" value={filter} onChange={(e) => setFilter(e.target.value)}>
               <option value="active">Activos</option>
               <option value="delivered">Entregados</option>

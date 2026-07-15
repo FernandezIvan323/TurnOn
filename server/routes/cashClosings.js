@@ -151,7 +151,7 @@ router.post("/", async (req, res) => {
         throw err;
       }
 
-      // 2) Verificar que no haya pedidos pendientes
+      // 2) Verificar que no haya pedidos pendientes (deudas se gestionan aparte)
       const { rows: pending } = await client.query(
         `SELECT o.id, o.type, o.status, o.payment_status, o.total, o.created_at,
                 t.number AS table_number, c.name AS customer_name
@@ -161,6 +161,7 @@ router.post("/", async (req, res) => {
           WHERE (o.status NOT IN ('delivered','paid','cancelled')
                  OR o.payment_status <> 'paid')
             AND o.status <> 'cancelled'
+            AND o.payment_status <> 'debt'
           LIMIT 50`
       );
       if (pending.length > 0) {

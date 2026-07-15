@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 const items = [
-  { to: "/",             label: "Inicio",         icon: Home,            roles: ["admin", "waiter"] },
+  { to: "/dashboard",    label: "Inicio",         icon: Home,            roles: ["admin", "waiter"] },
   { to: "/tables",       label: "Mesas",          icon: Utensils,        roles: ["admin", "waiter"] },
   { to: "/menu",         labelKey: "catalog",     icon: BookOpen,        roles: ["admin", "waiter"] },
   { to: "/delivery",     label: "Domicilios",     icon: Truck,           roles: ["admin"] },
@@ -70,7 +70,7 @@ export default function Sidebar() {
               <NavLink
                 key={it.to}
                 to={it.to}
-                end={it.to === "/"}
+                end={it.to === "/dashboard"}
                 className={({ isActive }) =>
                   `flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
                     isActive

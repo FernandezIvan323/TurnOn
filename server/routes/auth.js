@@ -96,6 +96,8 @@ router.post("/users", authRequired, requireRole("admin"), async (req, res) => {
   if (!username || !name || !pin) return res.status(400).json({ error: "Faltan datos" });
   if (!["admin", "waiter"].includes(role))
     return res.status(400).json({ error: "Rol inválido" });
+  if (!/^\d{4}$/.test(String(pin)))
+    return res.status(400).json({ error: "El PIN debe ser de 4 dígitos" });
   const hash = await bcrypt.hash(String(pin), 10);
   try {
     const { rows } = await query(
@@ -107,6 +109,41 @@ router.post("/users", authRequired, requireRole("admin"), async (req, res) => {
     if (e.code === "23505") return res.status(409).json({ error: "Usuario ya existe" });
     throw e;
   }
+});
+
+// Admin: cambiar PIN de cualquier usuario
+router.put("/users/:id/pin", authRequired, requireRole("admin"), async (req, res) => {
+  const { pin } = req.body || {};
+  if (!/^\d{4}$/.test(String(pin || "")))
+    return res.status(400).json({ error: "El PIN debe ser de 4 dígitos" });
+  const hash = await bcrypt.hash(String(pin), 10);
+  const { rows } = await query(
+    "UPDATE users SET pin = $2 WHERE id = $1 RETURNING id, username, name, role, active",
+    [req.params.id, hash]
+  );
+  if (rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
+  res.json({ ok: true, user: rows[0] });
+});
+
+// Usuario autenticado: cambiar su propio PIN (requiere PIN actual)
+router.put("/me/pin", authRequired, async (req, res) => {
+  const { current_pin, new_pin } = req.body || {};
+  if (!current_pin || !new_pin)
+    return res.status(400).json({ error: "PIN actual y nuevo son requeridos" });
+  if (!/^\d{4}$/.test(String(new_pin)))
+    return res.status(400).json({ error: "El PIN nuevo debe ser de 4 dígitos" });
+
+  const { rows } = await query(
+    "SELECT id, pin FROM users WHERE id = $1",
+    [req.user.id]
+  );
+  if (rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
+  const ok = await bcrypt.compare(String(current_pin), rows[0].pin);
+  if (!ok) return res.status(401).json({ error: "PIN actual incorrecto" });
+
+  const hash = await bcrypt.hash(String(new_pin), 10);
+  await query("UPDATE users SET pin = $2 WHERE id = $1", [req.user.id, hash]);
+  res.json({ ok: true });
 });
 
 export default router;

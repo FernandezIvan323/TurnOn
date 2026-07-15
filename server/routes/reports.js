@@ -6,63 +6,126 @@ const router = Router();
 
 router.use(authRequired, requireRole("admin"));
 
+/** Zona horaria del negocio (misma que DB_TZ / caja). */
+function reportTz() {
+  const tz = process.env.DB_TZ || "America/Mexico_City";
+  if (!/^[\w/]+$/.test(tz)) throw new Error(`Timezone inválido: ${tz}`);
+  return tz;
+}
+
+/**
+ * Día contable del pedido en zona local:
+ * usa closed_at (cobro) y, si no hay, created_at.
+ */
+function orderDaySql(alias = "o") {
+  const tz = reportTz();
+  const p = alias ? `${alias}.` : "";
+  return `DATE(COALESCE(${p}closed_at, ${p}created_at) AT TIME ZONE '${tz}')`;
+}
+
+function orderHourSql(alias = "o") {
+  const tz = reportTz();
+  const p = alias ? `${alias}.` : "";
+  return `EXTRACT(HOUR FROM COALESCE(${p}closed_at, ${p}created_at) AT TIME ZONE '${tz}')::int`;
+}
+
 // Resumen de ventas (con comparativa)
 router.get("/sales", async (req, res) => {
   const { from, to } = req.query;
   if (!from || !to) return res.status(400).json({ error: "from y to requeridos (YYYY-MM-DD)" });
 
-  // Días del período
+  const day = orderDaySql("");
   const days = (new Date(to) - new Date(from)) / 86400000 + 1;
   const prevFrom = new Date(new Date(from).getTime() - days * 86400000).toISOString().slice(0, 10);
   const prevTo = new Date(new Date(from).getTime() - 86400000).toISOString().slice(0, 10);
 
   const current = await query(
-    `SELECT DATE(created_at) AS date,
+    `SELECT ${day} AS date,
             COUNT(*)::int AS orders,
             COALESCE(SUM(total),0)::numeric AS sales,
+            COALESCE(SUM(tip),0)::numeric AS tips,
             COUNT(*) FILTER (WHERE type='delivery')::int AS delivery_orders,
             COUNT(*) FILTER (WHERE type='table')::int    AS table_orders,
             COUNT(*) FILTER (WHERE type='pickup')::int   AS pickup_orders,
-            COALESCE(AVG(total),0)::numeric AS avg_ticket
+            COALESCE(SUM(total) FILTER (WHERE type='delivery'),0)::numeric AS delivery_sales,
+            COALESCE(SUM(total) FILTER (WHERE type='table'),0)::numeric    AS table_sales,
+            COALESCE(SUM(total) FILTER (WHERE type='pickup'),0)::numeric   AS pickup_sales,
+            COALESCE(AVG(total),0)::numeric AS avg_ticket,
+            COALESCE(SUM(total) FILTER (WHERE payment_method='cash'),0)::numeric AS cash,
+            COALESCE(SUM(total) FILTER (WHERE payment_method='card'),0)::numeric AS card,
+            COALESCE(SUM(total) FILTER (WHERE payment_method='transfer'),0)::numeric AS transfer,
+            COALESCE(SUM(total) FILTER (WHERE payment_method='mixed'),0)::numeric AS mixed
        FROM orders
       WHERE payment_status='paid'
-        AND DATE(created_at) BETWEEN $1 AND $2
-      GROUP BY DATE(created_at)
+        AND ${day} BETWEEN $1 AND $2
+      GROUP BY ${day}
       ORDER BY date`,
     [from, to]
   );
 
   const previous = await query(
     `SELECT COALESCE(SUM(total),0)::numeric AS sales,
-            COUNT(*)::int AS orders
+            COUNT(*)::int AS orders,
+            COALESCE(SUM(tip),0)::numeric AS tips
        FROM orders
       WHERE payment_status='paid'
-        AND DATE(created_at) BETWEEN $1 AND $2`,
+        AND ${day} BETWEEN $1 AND $2`,
     [prevFrom, prevTo]
   );
 
-  // Ganancias de domicilios
   const deliveryGains = await query(
     `SELECT COALESCE(SUM(total),0)::numeric AS total,
             COUNT(*)::int AS count
        FROM orders
       WHERE payment_status='paid'
         AND type='delivery'
-        AND DATE(created_at) BETWEEN $1 AND $2`,
+        AND ${day} BETWEEN $1 AND $2`,
     [from, to]
   );
 
+  const daysRows = current.rows.map((r) => ({
+    date: r.date,
+    orders: r.orders,
+    sales: r.sales,
+    tips: Number(r.tips) || 0,
+    delivery_orders: r.delivery_orders,
+    table_orders: r.table_orders,
+    pickup_orders: r.pickup_orders,
+    delivery_sales: Number(r.delivery_sales) || 0,
+    table_sales: Number(r.table_sales) || 0,
+    pickup_sales: Number(r.pickup_sales) || 0,
+    avg_ticket: r.avg_ticket,
+    payment_methods: {
+      cash: Number(r.cash) || 0,
+      card: Number(r.card) || 0,
+      transfer: Number(r.transfer) || 0,
+      mixed: Number(r.mixed) || 0,
+    },
+  }));
+
+  const totalSales = daysRows.reduce((s, r) => s + Number(r.sales), 0);
+  const totalOrders = daysRows.reduce((s, r) => s + r.orders, 0);
+  const totalTips = daysRows.reduce((s, r) => s + r.tips, 0);
+
   res.json({
-    days: current.rows,
+    days: daysRows,
     current: {
-      sales: current.rows.reduce((s, r) => s + Number(r.sales), 0),
-      orders: current.rows.reduce((s, r) => s + r.orders, 0),
-      delivery_orders: current.rows.reduce((s, r) => s + r.delivery_orders, 0),
-      table_orders: current.rows.reduce((s, r) => s + r.table_orders, 0),
-      pickup_orders: current.rows.reduce((s, r) => s + r.pickup_orders, 0),
-      avg_ticket: current.rows.length
-        ? current.rows.reduce((s, r) => s + Number(r.avg_ticket), 0) / current.rows.length
-        : 0,
+      sales: totalSales,
+      orders: totalOrders,
+      tips: totalTips,
+      delivery_orders: daysRows.reduce((s, r) => s + r.delivery_orders, 0),
+      table_orders: daysRows.reduce((s, r) => s + r.table_orders, 0),
+      pickup_orders: daysRows.reduce((s, r) => s + r.pickup_orders, 0),
+      delivery_sales: daysRows.reduce((s, r) => s + r.delivery_sales, 0),
+      table_sales: daysRows.reduce((s, r) => s + r.table_sales, 0),
+      pickup_sales: daysRows.reduce((s, r) => s + r.pickup_sales, 0),
+      avg_ticket: totalOrders > 0 ? totalSales / totalOrders : 0,
+      payment_methods: {
+        cash: daysRows.reduce((s, r) => s + r.payment_methods.cash, 0),
+        card: daysRows.reduce((s, r) => s + r.payment_methods.card, 0),
+        transfer: daysRows.reduce((s, r) => s + r.payment_methods.transfer, 0),
+        mixed: daysRows.reduce((s, r) => s + r.payment_methods.mixed, 0),
+      },
     },
     previous: previous.rows[0],
     delivery_gains: deliveryGains.rows[0],
@@ -74,6 +137,7 @@ router.get("/top-products", async (req, res) => {
   const { from, to, limit = 10, by = "qty" } = req.query;
   if (!from || !to) return res.status(400).json({ error: "from y to requeridos" });
 
+  const day = orderDaySql("o");
   const orderCol = by === "revenue" ? "revenue DESC" : "qty DESC";
   const { rows } = await query(
     `SELECT oi.name_snapshot AS name,
@@ -86,7 +150,7 @@ router.get("/top-products", async (req, res) => {
        LEFT JOIN products p ON p.id = oi.product_id
        LEFT JOIN categories c ON c.id = p.category_id
       WHERE o.payment_status='paid'
-        AND DATE(o.created_at) BETWEEN $1 AND $2
+        AND ${day} BETWEEN $1 AND $2
       GROUP BY oi.name_snapshot, c.name
       ORDER BY ${orderCol}
       LIMIT $3`,
@@ -99,6 +163,7 @@ router.get("/top-products", async (req, res) => {
 router.get("/by-category", async (req, res) => {
   const { from, to } = req.query;
   if (!from || !to) return res.status(400).json({ error: "from y to requeridos" });
+  const day = orderDaySql("o");
   const { rows } = await query(
     `SELECT COALESCE(c.name, 'Sin categoría') AS category,
             COALESCE(SUM(oi.quantity * oi.unit_price),0)::numeric AS revenue,
@@ -108,7 +173,7 @@ router.get("/by-category", async (req, res) => {
        LEFT JOIN products p ON p.id = oi.product_id
        LEFT JOIN categories c ON c.id = p.category_id
       WHERE o.payment_status='paid'
-        AND DATE(o.created_at) BETWEEN $1 AND $2
+        AND ${day} BETWEEN $1 AND $2
       GROUP BY c.name
       ORDER BY revenue DESC`,
     [from, to]
@@ -116,22 +181,23 @@ router.get("/by-category", async (req, res) => {
   res.json(rows);
 });
 
-// Horarios pico (pedidos agrupados por hora)
+// Horarios pico (pedidos agrupados por hora local)
 router.get("/peak-hours", async (req, res) => {
   const { from, to } = req.query;
   if (!from || !to) return res.status(400).json({ error: "from y to requeridos" });
+  const day = orderDaySql("");
+  const hour = orderHourSql("");
   const { rows } = await query(
-    `SELECT EXTRACT(HOUR FROM created_at)::int AS hour,
+    `SELECT ${hour} AS hour,
             COUNT(*)::int AS orders,
             COALESCE(SUM(total),0)::numeric AS sales
        FROM orders
       WHERE payment_status='paid'
-        AND DATE(created_at) BETWEEN $1 AND $2
+        AND ${day} BETWEEN $1 AND $2
       GROUP BY hour
       ORDER BY hour`,
     [from, to]
   );
-  // Rellenar todas las horas
   const all = Array.from({ length: 24 }, (_, h) => {
     const found = rows.find((r) => r.hour === h);
     return { hour: h, orders: found?.orders || 0, sales: Number(found?.sales || 0) };
@@ -143,6 +209,7 @@ router.get("/peak-hours", async (req, res) => {
 router.get("/top-customers", async (req, res) => {
   const { from, to, limit = 10 } = req.query;
   if (!from || !to) return res.status(400).json({ error: "from y to requeridos" });
+  const day = orderDaySql("o");
   const { rows } = await query(
     `SELECT c.id, c.name, c.phone, c.neighborhood,
             COUNT(o.id)::int AS orders_count,
@@ -151,7 +218,7 @@ router.get("/top-customers", async (req, res) => {
        FROM customers c
        JOIN orders o ON o.customer_id = c.id
       WHERE o.payment_status='paid'
-        AND DATE(o.created_at) BETWEEN $1 AND $2
+        AND ${day} BETWEEN $1 AND $2
       GROUP BY c.id
       ORDER BY total_spent DESC
       LIMIT $3`,
@@ -177,9 +244,10 @@ router.get("/never-sold", async (_req, res) => {
 router.get("/daily-complete", async (req, res) => {
   const { date } = req.query;
   const d = date || new Date().toISOString().slice(0, 10);
+  const day = orderDaySql("");
+  const dayO = orderDaySql("o");
 
   const [sales, byCategory, topProducts, expenses, tipData, paymentMethods] = await Promise.all([
-    // Resumen de ventas del día
     query(
       `SELECT COUNT(*)::int AS orders,
               COALESCE(SUM(total),0)::numeric AS total_sales,
@@ -189,9 +257,8 @@ router.get("/daily-complete", async (req, res) => {
               COALESCE(AVG(total),0)::numeric AS avg_ticket
          FROM orders
         WHERE payment_status='paid'
-          AND DATE(created_at) = $1`, [d]
+          AND ${day} = $1`, [d]
     ),
-    // Ventas por categoría
     query(
       `SELECT COALESCE(c.name, 'Sin categoría') AS category,
               COALESCE(SUM(oi.quantity * oi.unit_price),0)::numeric AS revenue,
@@ -201,11 +268,10 @@ router.get("/daily-complete", async (req, res) => {
          LEFT JOIN products p ON p.id = oi.product_id
          LEFT JOIN categories c ON c.id = p.category_id
         WHERE o.payment_status='paid'
-          AND DATE(o.created_at) = $1
+          AND ${dayO} = $1
         GROUP BY c.name
         ORDER BY revenue DESC`, [d]
     ),
-    // Top 10 productos
     query(
       `SELECT oi.name_snapshot AS name,
               c.name AS category,
@@ -217,34 +283,31 @@ router.get("/daily-complete", async (req, res) => {
          LEFT JOIN products p ON p.id = oi.product_id
          LEFT JOIN categories c ON c.id = p.category_id
         WHERE o.payment_status='paid'
-          AND DATE(o.created_at) = $1
+          AND ${dayO} = $1
         GROUP BY oi.name_snapshot, c.name
         ORDER BY qty DESC LIMIT 10`, [d]
     ),
-    // Gastos del día
     query(
       `SELECT COUNT(*)::int AS count,
               COALESCE(SUM(amount),0)::numeric AS total_expenses
          FROM expenses
-        WHERE DATE(created_at) = $1`, [d]
+        WHERE expense_date = $1`, [d]
     ),
-    // Propinas del día
     query(
       `SELECT COUNT(*)::int AS tip_count,
               COALESCE(SUM(tip),0)::numeric AS total_tips
          FROM orders
         WHERE payment_status='paid'
           AND tip > 0
-          AND DATE(created_at) = $1`, [d]
+          AND ${day} = $1`, [d]
     ),
-    // Desglose por método de pago
     query(
       `SELECT payment_method,
               COUNT(*)::int AS count,
               COALESCE(SUM(total),0)::numeric AS total
          FROM orders
         WHERE payment_status='paid'
-          AND DATE(created_at) = $1
+          AND ${day} = $1
         GROUP BY payment_method
         ORDER BY total DESC`, [d]
     ),
@@ -274,6 +337,7 @@ router.get("/daily-complete", async (req, res) => {
 router.get("/delivery-by-person", async (req, res) => {
   const { from, to } = req.query;
   if (!from || !to) return res.status(400).json({ error: "from y to requeridos" });
+  const day = orderDaySql("o");
   const { rows } = await query(
     `SELECT dp.id, dp.name, dp.phone,
             COUNT(o.id)::int AS deliveries,
@@ -281,7 +345,7 @@ router.get("/delivery-by-person", async (req, res) => {
        FROM delivery_persons dp
        LEFT JOIN orders o ON o.delivery_person_id = dp.id
                          AND o.payment_status='paid'
-                         AND DATE(o.created_at) BETWEEN $1 AND $2
+                         AND ${day} BETWEEN $1 AND $2
       GROUP BY dp.id
       ORDER BY deliveries DESC`,
     [from, to]
@@ -289,11 +353,12 @@ router.get("/delivery-by-person", async (req, res) => {
   res.json(rows);
 });
 
-// Historial de días (resumen para pestaña Historial en Finanzas)
+// Historial de días
 router.get("/daily-history", async (req, res) => {
   const { from, to, limit = 30 } = req.query;
   const toDate = to || new Date().toISOString().slice(0, 10);
   const fromDate = from || new Date(new Date(toDate).getTime() - (Number(limit) - 1) * 86400000).toISOString().slice(0, 10);
+  const day = orderDaySql("");
 
   const { rows } = await query(
     `WITH days AS (
@@ -311,7 +376,7 @@ router.get("/daily-history", async (req, res) => {
        COALESCE(o.pickup_count, 0)::int AS pickup_count
      FROM days
      LEFT JOIN (
-       SELECT DATE(created_at) AS day,
+       SELECT ${day} AS day,
               COUNT(*)::int AS orders,
               COALESCE(SUM(total), 0)::numeric AS total_sales,
               COUNT(*) FILTER (WHERE type = 'table')::int AS table_count,
@@ -319,13 +384,13 @@ router.get("/daily-history", async (req, res) => {
               COUNT(*) FILTER (WHERE type = 'pickup')::int AS pickup_count
          FROM orders
         WHERE payment_status = 'paid'
-        GROUP BY DATE(created_at)
+        GROUP BY ${day}
      ) o ON o.day = days.day
      LEFT JOIN (
-       SELECT DATE(expense_date) AS day,
+       SELECT expense_date AS day,
               COALESCE(SUM(amount), 0)::numeric AS total_expenses
          FROM expenses
-        GROUP BY DATE(expense_date)
+        GROUP BY expense_date
      ) e ON e.day = days.day
      WHERE COALESCE(o.orders, 0) > 0 OR COALESCE(e.total_expenses, 0) > 0
      ORDER BY days.day DESC`,
@@ -335,7 +400,7 @@ router.get("/daily-history", async (req, res) => {
   res.json(rows);
 });
 
-// Historial de mesero (ventas, productos, clientes, cobros)
+// Historial de mesero
 router.get("/waiter-history", async (req, res) => {
   const { user_id, limit = 100 } = req.query;
   if (!user_id) return res.status(400).json({ error: "user_id requerido" });

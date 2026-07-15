@@ -12,7 +12,7 @@
     "gestion",
     "comedor"
   ],
-  "version": "1.1.4",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
     "dev": "concurrently -n web,api -c green,cyan \"npm:dev:web\" \"npm:dev:api\"",
@@ -22,16 +22,22 @@
     "dev:detached": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-detached.ps1",
     "dev:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-server.ps1",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:backup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/backup-db.ps1"
   },
   "dependencies": {
-    "@heroicons/vue": "^2.2.0",
     "axios": "^1.17.0",
+    "bcryptjs": "^3.0.2",
     "classnames": "^2.5.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "express-async-errors": "^3.1.1",
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.2.0",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.460.0",
+    "pg": "^8.13.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.0.0",
@@ -40,14 +46,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
-    "axios": "^1.17.0",
-    "bcryptjs": "^3.0.2",
     "concurrently": "^9.1.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2",
-    "pg": "^8.13.1",
     "postcss": "^8.4.49",
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.17",

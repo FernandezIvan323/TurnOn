@@ -148,6 +148,10 @@ export async function runMigrations() {
   await pool.query(`
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS estimate_minutes INT;
   `);
+  // Flag para descontar stock una sola vez (close / delivered / deuda)
+  await pool.query(`
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS stock_deducted BOOLEAN NOT NULL DEFAULT FALSE;
+  `);
   console.log("[db] Migraciones aplicadas.");
 }
 
