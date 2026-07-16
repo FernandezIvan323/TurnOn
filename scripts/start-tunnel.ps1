@@ -48,7 +48,8 @@ $bat = Join-Path $env:TEMP "turnon-tunnel.bat"
 @"
 @echo off
 cd /d "$root"
-start "TurnOn-Tunnel" /MIN "$($cf.Source)" tunnel --url $target --no-autoupdate --logfile "$tunnelLog" --loglevel info
+REM http2 suele ser mas estable que QUIC en redes moviles / Wi-Fi inestable
+start "TurnOn-Tunnel" /MIN "$($cf.Source)" tunnel --url $target --no-autoupdate --protocol http2 --logfile "$tunnelLog" --loglevel info
 "@ | Set-Content -LiteralPath $bat -Encoding ASCII
 cmd.exe /c "`"$bat`""
 

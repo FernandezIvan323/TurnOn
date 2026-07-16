@@ -38,14 +38,16 @@ api.interceptors.response.use(
     const is5xx = status >= 500 && status < 600;
     const canRetry = isNetwork || is5xx;
 
-    if (isNetwork || is5xx) {
-      serverEvents.emit(serverEvents.NETWORK_DOWN);
-    }
-
+    // Reintentar ANTES de avisar "sin servidor" — evita el banner rojo
+    // parpadeando cada 1–2s cuando el túnel o la red fallan un instante.
     if (config && canRetry && !config.__retried) {
       config.__retried = true;
       await sleep(RETRY_DELAY);
       return api.request(config);
+    }
+
+    if (isNetwork || is5xx) {
+      serverEvents.emit(serverEvents.NETWORK_DOWN);
     }
 
     if (err.response?.status === 401) {

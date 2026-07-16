@@ -1,6 +1,5 @@
-# Arranca TurnOn LAN como proceso Windows independiente.
-# NO redirigir stdout/stderr al mismo api.log (el server ya hace tee a disco;
-# redirigir al mismo archivo en Windows puede tumbar el proceso).
+# Arranca TurnOn con reinicio automatico si el proceso Node se cae.
+# Uso: npm run start:lan
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
@@ -39,7 +38,6 @@ if ($alive) {
   Write-Host "[lan] TurnOn ya esta corriendo (PID $alive)." -ForegroundColor Yellow
   Write-Host "[lan] Local:  http://localhost:$port"
   foreach ($ip in Get-LanIPs) { Write-Host "[lan] Meseros: http://${ip}:$port" -ForegroundColor Green }
-  Write-Host "[lan] Detener: npm run dev:stop"
   exit 0
 }
 
@@ -50,30 +48,31 @@ if (-not (Test-Path (Join-Path $root "dist\index.html"))) {
 }
 
 $nodeExe = (Get-Command node.exe).Source
-$env:HOST = "0.0.0.0"
-$env:LAN_MODE = "1"
-$env:TUNNEL_MODE = "1"
-$env:TRUST_PROXY = "1"
-$env:PORT = "$port"
 
-# cmd /c start con proceso separado del job tree de la terminal
-$bat = Join-Path $env:TEMP "turnon-lan-stable.bat"
+# Keeper: si node se cae, lo vuelve a levantar en 2s (loop infinito en ventana minimizada)
+$keeper = Join-Path $env:TEMP "turnon-keeper.bat"
 @"
 @echo off
+title TurnOn-Keeper
 cd /d "$root"
+:loop
 set HOST=0.0.0.0
 set LAN_MODE=1
 set TUNNEL_MODE=1
 set TRUST_PROXY=1
 set PORT=$port
-start "TurnOn-API" /MIN "$nodeExe" server\index.js
-"@ | Set-Content -LiteralPath $bat -Encoding ASCII
+"$nodeExe" server\index.js
+echo [%date% %time%] TurnOn se detuvo. Reinicio en 2s...
+timeout /t 2 /nobreak >nul
+goto loop
+"@ | Set-Content -LiteralPath $keeper -Encoding ASCII
 
-cmd.exe /c "`"$bat`""
+# Lanzar keeper desacoplado
+start "TurnOn-Keeper" /MIN cmd.exe /c "`"$keeper`""
 
 $ok = $false
 $found = $null
-for ($i = 0; $i -lt 40; $i++) {
+for ($i = 0; $i -lt 50; $i++) {
   Start-Sleep -Milliseconds 400
   $found = Get-NodeOnPort $port
   if ($found) { $ok = $true; break }
@@ -90,14 +89,12 @@ $found | Set-Content -LiteralPath $pidApi -Encoding ascii
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
-Write-Host "  TurnOn LAN OK (PID $found)" -ForegroundColor Green
+Write-Host "  TurnOn LAN OK (PID $found) + auto-restart" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
-Write-Host "  Cajero / PC:  http://localhost:$port"
+Write-Host "  Local:   http://localhost:$port"
 foreach ($ip in Get-LanIPs) {
-  Write-Host "  Meseros:       http://${ip}:$port" -ForegroundColor Cyan
+  Write-Host "  Meseros: http://${ip}:$port" -ForegroundColor Cyan
 }
-Write-Host ""
-Write-Host "  Internet celular: npm run start:tunnel  (o INICIAR-TODO.bat)"
-Write-Host "  admin / 7482   |   ivan o maria / 3197"
-Write-Host "  Detener: npm run dev:stop"
+Write-Host "  Si el API se cae, el keeper lo reinicia solo."
+Write-Host "  Detener: npm run dev:stop  (mata node en el puerto)"
 Write-Host ""

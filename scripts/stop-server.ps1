@@ -38,16 +38,31 @@ function Remove-PidFile([string]$Path) {
   }
 }
 
-# --- 1) Matar por puerto (primario): encuentra el node.exe real ---
+# --- 1) Matar keeper (loop de reinicio) y cloudflared del tunel ---
+Get-CimInstance Win32_Process -Filter "Name='cmd.exe'" -ErrorAction SilentlyContinue |
+  Where-Object { $_.CommandLine -like '*turnon-keeper*' -or $_.CommandLine -like '*TurnOn-Keeper*' } |
+  ForEach-Object {
+    Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+    Write-Host "[stop] Keeper (cmd PID $($_.ProcessId)) detenido."
+  }
+Get-Process cloudflared -ErrorAction SilentlyContinue | ForEach-Object {
+  Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+  Write-Host "[stop] cloudflared (PID $($_.Id)) detenido."
+}
+
+# --- 2) Matar por puerto (primario): encuentra el node.exe real ---
 Kill-Port 3001 "API"
 Kill-Port 5180 "Vite"
 
-# --- 2) Esperar que los procesos mueran ---
+# --- 3) Esperar que los procesos mueran ---
 Start-Sleep -Milliseconds 1000
 
-# --- 3) Limpiar PID files y logs ---
+# Si el keeper volvio a levantar node, matarlo de nuevo
+Kill-Port 3001 "API"
+
+# --- 4) Limpiar PID files y logs ---
 Remove-PidFile $pidVite
 Remove-PidFile $pidApi
-Remove-Item -LiteralPath "$root\vite.log", "$root\vite-error.log", "$root\api.log", "$root\api-error.log" -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath "$root\vite.log", "$root\vite-error.log", "$root\api.log", "$root\api-error.log", "$root\tunnel.pid" -Force -ErrorAction SilentlyContinue
 
-Write-Host "[stop] TurnOn detenido (puertos 3001 y 5180 liberados)." -ForegroundColor Green
+Write-Host "[stop] TurnOn detenido (API, keeper y tunel)." -ForegroundColor Green
