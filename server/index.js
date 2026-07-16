@@ -61,15 +61,10 @@ const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || "http://localhost:5180,http
   .filter(Boolean);
 
 const LAN_MODE = process.env.LAN_MODE !== "0" && process.env.LAN_MODE !== "false";
-const TUNNEL_MODE =
-  process.env.TUNNEL_MODE === "1" || process.env.TUNNEL_MODE === "true";
 const TRUST_PROXY =
-  process.env.TRUST_PROXY === "1" ||
-  process.env.TRUST_PROXY === "true" ||
-  TUNNEL_MODE;
+  process.env.TRUST_PROXY === "1" || process.env.TRUST_PROXY === "true";
 
 const app = express();
-// Cloudflare Tunnel / reverse proxy: IPs y rate-limit correctos
 if (TRUST_PROXY) {
   app.set("trust proxy", 1);
 }
@@ -166,16 +161,10 @@ function listenWithRetry(port, host, retries = 5, delay = 1000) {
         if (hasDist) {
           teeLog(`[api] UI de producción servida desde dist/`);
         } else {
-          teeLog(`[api] Sin dist/ — solo API. Ejecutá "npm run build" para meseros en LAN.`);
+          teeLog(`[api] Sin dist/ — solo API. Ejecutá "npm run build".`);
         }
         for (const ip of lanAddresses()) {
-          teeLog(`[api] LAN → http://${ip}:${port}  (meseros / otros dispositivos)`);
-        }
-        if (TUNNEL_MODE || TRUST_PROXY) {
-          teeLog(
-            `[api] Túnel/proxy: la URL pública la da cloudflared (npm run start:tunnel). ` +
-              `Sin internet en el PC, usá solo LAN/hotspot.`
-          );
+          teeLog(`[api] Red → http://${ip}:${port}`);
         }
         resolve(server);
       });

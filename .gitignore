@@ -46,7 +46,3 @@ api.pid
 testsprite_tests/tmp/
 tmp-*.json
 opencode.json
-tunnel-url.txt
-tunnel.log
-tunnel.pid
-tunnel-err.log
