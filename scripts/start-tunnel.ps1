@@ -1,5 +1,5 @@
-# Cloudflare Quick Tunnel. Deja cloudflared corriendo (ventana minimizada).
-# NO redirigir stdout (buffer deadlock).
+# Cloudflare Quick Tunnel con auto-reinicio si se cae.
+# Uso: npm run start:tunnel
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
@@ -40,28 +40,33 @@ if (-not $cf) {
 }
 
 Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+# Matar keepers viejos de tunel
+Get-CimInstance Win32_Process -Filter "Name='cmd.exe'" -ErrorAction SilentlyContinue |
+  Where-Object { $_.CommandLine -like '*turnon-tunnel-keeper*' -or $_.CommandLine -like '*TurnOn-Tunnel-Keeper*' } |
+  ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+
 Start-Sleep -Milliseconds 400
 Remove-Item $tunnelLog, $urlFile -Force -ErrorAction SilentlyContinue
 
-# Lanzar con cmd start para que sobreviva a la terminal
-$bat = Join-Path $env:TEMP "turnon-tunnel.bat"
+$cfPath = $cf.Source
+$keeper = Join-Path $env:TEMP "turnon-tunnel-keeper.bat"
 @"
 @echo off
+title TurnOn-Tunnel-Keeper
 cd /d "$root"
-REM http2 suele ser mas estable que QUIC en redes moviles / Wi-Fi inestable
-start "TurnOn-Tunnel" /MIN "$($cf.Source)" tunnel --url $target --no-autoupdate --protocol http2 --logfile "$tunnelLog" --loglevel info
-"@ | Set-Content -LiteralPath $bat -Encoding ASCII
-cmd.exe /c "`"$bat`""
+:loop
+if exist "$tunnelLog" del /q "$tunnelLog" >nul 2>&1
+"$cfPath" tunnel --url $target --no-autoupdate --protocol http2 --logfile "$tunnelLog" --loglevel info
+echo [%date% %time%] Tunel caido. Reinicio en 3s...
+timeout /t 3 /nobreak >nul
+goto loop
+"@ | Set-Content -LiteralPath $keeper -Encoding ASCII
+
+cmd.exe /c "start `"TurnOn-Tunnel-Keeper`" /MIN cmd.exe /c `"$keeper`""
 
 $url = $null
 for ($i = 0; $i -lt 60; $i++) {
   Start-Sleep -Milliseconds 500
-  $cfProc = Get-Process cloudflared -ErrorAction SilentlyContinue
-  if (-not $cfProc -and $i -gt 10) {
-    Write-Host "[tunnel] cloudflared no arranco. Mira tunnel.log" -ForegroundColor Red
-    if (Test-Path $tunnelLog) { Get-Content $tunnelLog -Tail 30 }
-    exit 1
-  }
   if (Test-Path $tunnelLog) {
     $m = Select-String -Path $tunnelLog -Pattern "https://[a-zA-Z0-9-]+\.trycloudflare\.com" -ErrorAction SilentlyContinue |
       Select-Object -Last 1
@@ -82,9 +87,8 @@ $cfId = (Get-Process cloudflared -ErrorAction SilentlyContinue | Select-Object -
 if ($cfId) { $cfId | Set-Content -LiteralPath $pidFile -Encoding ascii }
 $url | Set-Content -LiteralPath $urlFile -Encoding ascii
 
-# Esperar a que el tunel conteste
 $ok = $false
-for ($i = 1; $i -le 10; $i++) {
+for ($i = 1; $i -le 12; $i++) {
   Start-Sleep -Seconds 1
   try {
     $r = Invoke-WebRequest -Uri "$url/api/health" -UseBasicParsing -TimeoutSec 15
@@ -97,12 +101,9 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host "  LINK PUBLICO (celular + datos):" -ForegroundColor Green
 Write-Host "  $url" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
-if ($ok) {
-  Write-Host "  Health check: OK" -ForegroundColor Green
-} else {
-  Write-Host "  Health check: pendiente (proba en 10s en el celular)" -ForegroundColor Yellow
-}
+if ($ok) { Write-Host "  Health: OK" -ForegroundColor Green }
+else { Write-Host "  Health: esperando DNS (proba en 10s)" -ForegroundColor Yellow }
+Write-Host "  Auto-reinicio del tunel activo (keeper)."
+Write-Host "  Si el tunel se reinicia, la URL puede CAMBIAR — mira tunnel-url.txt"
 Write-Host "  Guardado en tunnel-url.txt"
-Write-Host "  Deja el PC despierto (cargador, sin suspender)."
-Write-Host "  Si 502 Host Error: start:lan + start:tunnel otra vez (link NUEVO)."
 Write-Host ""
