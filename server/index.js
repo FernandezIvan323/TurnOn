@@ -61,8 +61,13 @@ const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || "http://localhost:5180,http
   .filter(Boolean);
 
 const LAN_MODE = process.env.LAN_MODE !== "0" && process.env.LAN_MODE !== "false";
+// En PaaS (Render/Railway) siempre confiar en el proxy HTTPS
 const TRUST_PROXY =
-  process.env.TRUST_PROXY === "1" || process.env.TRUST_PROXY === "true";
+  process.env.TRUST_PROXY === "1" ||
+  process.env.TRUST_PROXY === "true" ||
+  process.env.NODE_ENV === "production" ||
+  !!process.env.RENDER ||
+  !!process.env.RAILWAY_ENVIRONMENT;
 
 const app = express();
 if (TRUST_PROXY) {

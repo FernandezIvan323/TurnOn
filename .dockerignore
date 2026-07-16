@@ -1,0 +1,16 @@
+node_modules
+dist
+.git
+.gitignore
+*.log
+*.pid
+.env
+server/.env
+backups
+docs
+testsprite_tests
+tmp-*.json
+opencode.json
+.vite
+*.md
+!package.json

@@ -13,30 +13,51 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 loadEnv({ path: path.join(__dirname, ".env") });
 
 const {
+  DATABASE_URL,
   DB_HOST = "localhost",
   DB_PORT = 5432,
   DB_USER = "postgres",
   DB_PASSWORD = "",
   DB_NAME = "appturnos",
   DB_TZ = "America/Mexico_City",
+  DB_SSL,
 } = process.env;
 
-// Pool "bootstrap" conectado a la base postgres para poder CREAR la DB si no existe.
-const bootstrap = new Pool({
-  host: DB_HOST,
-  port: Number(DB_PORT),
-  user: DB_USER,
-  password: DB_PASSWORD,
-  database: "postgres",
-});
+/** SSL para Postgres gestionado (Railway, Render, Neon, etc.). */
+function sslOption() {
+  if (DB_SSL === "0" || DB_SSL === "false") return false;
+  // Con DATABASE_URL o DB_SSL=1/require → SSL (común en PaaS)
+  if (DATABASE_URL || DB_SSL === "1" || DB_SSL === "true" || DB_SSL === "require") {
+    return { rejectUnauthorized: false };
+  }
+  return undefined;
+}
 
-const pool = new Pool({
-  host: DB_HOST,
-  port: Number(DB_PORT),
-  user: DB_USER,
-  password: DB_PASSWORD,
-  database: DB_NAME,
-});
+const ssl = sslOption();
+
+// Pool de la app: prioriza DATABASE_URL (PaaS)
+const pool = DATABASE_URL
+  ? new Pool({ connectionString: DATABASE_URL, ssl: ssl || undefined })
+  : new Pool({
+      host: DB_HOST,
+      port: Number(DB_PORT),
+      user: DB_USER,
+      password: DB_PASSWORD,
+      database: DB_NAME,
+      ssl,
+    });
+
+// Bootstrap solo en local (crear DB si no existe). En PaaS la DB ya viene creada.
+const bootstrap = DATABASE_URL
+  ? null
+  : new Pool({
+      host: DB_HOST,
+      port: Number(DB_PORT),
+      user: DB_USER,
+      password: DB_PASSWORD,
+      database: "postgres",
+      ssl,
+    });
 
 pool.on("error", (err) => {
   console.error("Error inesperado en el pool de PostgreSQL", err);
@@ -112,6 +133,11 @@ export async function withTransaction(fn) {
 }
 
 export async function ensureDatabase() {
+  if (DATABASE_URL) {
+    console.log("[db] Usando DATABASE_URL (Postgres gestionado).");
+    return;
+  }
+  if (!bootstrap) return;
   const { rows } = await bootstrap.query(
     "SELECT 1 FROM pg_database WHERE datname = $1",
     [DB_NAME]
