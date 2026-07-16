@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -151,7 +151,7 @@ function ReadOnlyCatalog() {
         {grouped.cats.map((c) => (
           <div key={c.id}>
             <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-3 flex items-center gap-2">
-              <Tag size={16} className="text-brand-600 dark:text-brand-400"/>
+              <Tag size={16} className="text-wine-600 dark:text-wine-400"/>
               {c.name}
               <span className="text-xs text-ink-400 dark:text-obsidian-500 font-normal">({c.products.length})</span>
             </h2>
@@ -164,7 +164,7 @@ function ReadOnlyCatalog() {
                     <div className="flex-1">
                       <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
                       {p.description && <div className="text-xs text-ink-500 dark:text-obsidian-400 mt-0.5">{p.description}</div>}
-                      <div className="text-brand-700 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
+                      <div className="text-wine-600 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
                     </div>
                     {p.available
                       ? <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
@@ -186,7 +186,7 @@ function ReadOnlyCatalog() {
                 <div key={p.id} className="card p-3 flex items-start justify-between gap-2">
                   <div className="flex-1">
                     <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
-                    <div className="text-brand-700 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
+                    <div className="text-wine-600 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
                   </div>
                   {p.available
                     ? <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
@@ -265,7 +265,7 @@ function AdminMenu() {
                     <div>
                       <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
                       {p.description && <div className="text-xs text-ink-500 dark:text-obsidian-400">{p.description}</div>}
-                      <div className="text-brand-700 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
+                      <div className="text-wine-600 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {!p.available && <span className="badge bg-slate-100 text-slate-500 dark:bg-obsidian-800 dark:text-obsidian-400">No disponible</span>}
@@ -288,7 +288,7 @@ function AdminMenu() {
                 <div key={p.id} className="card p-3 flex items-center justify-between">
                   <div>
                     <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
-                    <div className="text-brand-700 dark:text-wine-300 font-semibold">{money(p.price)}</div>
+                    <div className="text-wine-600 dark:text-wine-300 font-semibold">{money(p.price)}</div>
                   </div>
                 </div>
               ))}

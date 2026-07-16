@@ -8,8 +8,12 @@ router.use(authRequired, requireRole("admin"));
 
 router.get("/", async (_req, res) => {
   const { rows } = await query(
+    // Stock bajo solo si configuraron mínimo (> 0). Con stock=0 y min=0 (menú sin inventario) no alerta.
     `SELECT p.id, p.name, p.stock, p.min_stock, c.name AS category_name,
-       CASE WHEN p.stock <= p.min_stock THEN true ELSE false END AS low_stock
+       CASE
+         WHEN COALESCE(p.min_stock, 0) > 0 AND p.stock <= p.min_stock THEN true
+         ELSE false
+       END AS low_stock
      FROM products p
      LEFT JOIN categories c ON c.id = p.category_id
      ORDER BY p.name`

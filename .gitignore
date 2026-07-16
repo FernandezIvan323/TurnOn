@@ -43,4 +43,6 @@ api.pid
 *.sln
 *.sw?
 
-testsprite_tests\tmp\config.json
+testsprite_tests/tmp/
+tmp-*.json
+opencode.json

@@ -50,4 +50,4 @@ Remove-PidFile $pidVite
 Remove-PidFile $pidApi
 Remove-Item -LiteralPath "$root\vite.log", "$root\vite-error.log", "$root\api.log", "$root\api-error.log" -Force -ErrorAction SilentlyContinue
 
-Write-Host "[stop] AppTurnos detenido (puertos 3001 y 5180 liberados)." -ForegroundColor Green
+Write-Host "[stop] TurnOn detenido (puertos 3001 y 5180 liberados)." -ForegroundColor Green

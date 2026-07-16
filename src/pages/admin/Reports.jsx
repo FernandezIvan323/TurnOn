@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
@@ -71,7 +71,7 @@ const PAYMENT_COLORS = {
 };
 const PAYMENT_LABELS = { cash: "Efectivo", card: "Tarjeta", transfer: "Transferencia", mixed: "Mixto" };
 
-function StatCard({ icon: Icon, label, value, sub, color = "bg-brand-50 text-brand-700", darkColor = "dark:bg-wine-900/30 dark:text-wine-300" }) {
+function StatCard({ icon: Icon, label, value, sub, color = "bg-wine-50 text-wine-700", darkColor = "dark:bg-wine-900/30 dark:text-wine-300" }) {
   return (
     <div className="card p-4">
       <div className="flex items-center gap-3">
@@ -221,7 +221,7 @@ export default function Reports() {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-              tab === t.key ? "bg-brand-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
+              tab === t.key ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
             }`}
           >
             {t.label}
@@ -452,7 +452,7 @@ export default function Reports() {
                         key={t.v}
                         onClick={() => setTopBy(t.v)}
                         className={`px-3 py-1 rounded-lg text-xs font-medium ${
-                          topBy === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
+                          topBy === t.v ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
                         }`}
                       >
                         {t.l}
@@ -483,7 +483,7 @@ export default function Reports() {
                             <td className="py-2 pr-3 text-ink-500 dark:text-obsidian-400">{p.category || "—"}</td>
                             <td className="py-2 pr-3 text-right font-semibold">{p.qty}</td>
                             <td className="py-2 pr-3 text-right text-ink-500 dark:text-obsidian-400">{p.orders_count}</td>
-                            <td className="py-2 pl-3 text-right font-semibold text-brand-700 dark:text-wine-300">{money(p.revenue)}</td>
+                            <td className="py-2 pl-3 text-right font-semibold text-wine-600 dark:text-wine-300">{money(p.revenue)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -541,7 +541,7 @@ export default function Reports() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-brand-700 dark:text-wine-300">{money(c.total_spent)}</div>
+                        <div className="font-semibold text-wine-600 dark:text-wine-300">{money(c.total_spent)}</div>
                       </div>
                     </div>
                   ))}
@@ -634,7 +634,7 @@ export default function Reports() {
                           <td className="py-2 pr-3 font-medium text-ink-800 dark:text-obsidian-50">{d.name}</td>
                           <td className="py-2 pr-3 text-ink-500 dark:text-obsidian-400">{d.phone || "—"}</td>
                           <td className="py-2 pr-3 text-right font-semibold">{d.deliveries}</td>
-                          <td className="py-2 pl-3 text-right font-semibold text-brand-700 dark:text-wine-300">{money(d.revenue)}</td>
+                          <td className="py-2 pl-3 text-right font-semibold text-wine-600 dark:text-wine-300">{money(d.revenue)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -659,7 +659,7 @@ export default function Reports() {
                       key={t.v}
                       onClick={() => setHistoryPeriod(t.v)}
                       className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-                        historyPeriod === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
+                        historyPeriod === t.v ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
                       }`}
                     >
                       {t.l}

@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
@@ -88,9 +88,9 @@ function StockModal({ product, onClose, onSaved }) {
         </div>
 
         <div className="flex gap-2 mb-4">
-          <button onClick={() => setType("entry")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "entry" ? "bg-brand-500 text-white border-brand-500" : "text-ink-700 dark:text-obsidian-300 dark:border-obsidian-700"}`}>Entrada</button>
-          <button onClick={() => setType("exit")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "exit" ? "bg-brand-500 text-white border-brand-500" : "text-ink-700 dark:text-obsidian-300 dark:border-obsidian-700"}`}>Salida</button>
-          <button onClick={() => setType("adjust")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "adjust" ? "bg-brand-500 text-white border-brand-500" : "text-ink-700 dark:text-obsidian-300 dark:border-obsidian-700"}`}>Ajustar</button>
+          <button onClick={() => setType("entry")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "entry" ? "bg-wine-600 text-white border-wine-500" : "text-ink-700 dark:text-obsidian-300 dark:border-obsidian-700"}`}>Entrada</button>
+          <button onClick={() => setType("exit")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "exit" ? "bg-wine-600 text-white border-wine-500" : "text-ink-700 dark:text-obsidian-300 dark:border-obsidian-700"}`}>Salida</button>
+          <button onClick={() => setType("adjust")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "adjust" ? "bg-wine-600 text-white border-wine-500" : "text-ink-700 dark:text-obsidian-300 dark:border-obsidian-700"}`}>Ajustar</button>
         </div>
 
         {type === "adjust" ? (

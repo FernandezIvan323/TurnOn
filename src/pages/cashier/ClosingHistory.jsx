@@ -135,7 +135,7 @@ export default function ClosingHistory() {
 
             <div className="hidden print:block mb-3">
               <h1 className="text-xl font-bold">Corte de caja</h1>
-              <div className="text-sm">AppTurnos · {dateOnly(selected.closing_date)}</div>
+              <div className="text-sm">TurnOn · {dateOnly(selected.closing_date)}</div>
               <div className="text-sm">Cajero: {selected.closed_by_name || "—"}</div>
             </div>
 

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
@@ -19,7 +19,7 @@ function Tabs({ value, onChange }) {
           key={t.v}
           onClick={() => onChange(t.v)}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 ${
-            value === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
+            value === t.v ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
           }`}
         >
           <t.icon size={14}/> {t.l}
@@ -164,7 +164,7 @@ function AddTableModal({ waiter, availableTables, assignedTableIds, allTables, o
           Toca las mesas para marcar/desmarcar. Las ya asignadas aparecen marcadas.
         </p>
         <p className="text-xs text-ink-400 dark:text-obsidian-500 mb-3">
-          Mesas seleccionadas: <span className="font-semibold text-brand-600 dark:text-brand-400">{selected.size}</span>
+          Mesas seleccionadas: <span className="font-semibold text-wine-600 dark:text-wine-400">{selected.size}</span>
         </p>
         {allTables.length === 0 ? (
           <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
@@ -181,8 +181,8 @@ function AddTableModal({ waiter, availableTables, assignedTableIds, allTables, o
                   onClick={() => toggle(t.id)}
                   className={`p-3 rounded-xl border-2 text-left transition ${
                     on
-                      ? "border-brand-500 bg-brand-50 dark:bg-wine-900/30"
-                      : "border-paper-300 dark:border-obsidian-700 hover:border-brand-300"
+                      ? "border-wine-500 bg-wine-50 dark:bg-wine-900/30"
+                      : "border-paper-300 dark:border-obsidian-700 hover:border-wine-300"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -191,7 +191,7 @@ function AddTableModal({ waiter, availableTables, assignedTableIds, allTables, o
                       {t.label && <div className="text-xs text-ink-500 dark:text-obsidian-400">{t.label}</div>}
                     </div>
                     {on
-                      ? <Check size={16} className="text-brand-600 dark:text-brand-400"/>
+                      ? <Check size={16} className="text-wine-600 dark:text-wine-400"/>
                       : <PlusCircle size={16} className="text-ink-300 dark:text-obsidian-500"/>}
                   </div>
                 </button>
@@ -373,7 +373,7 @@ function AssignmentsTab() {
                 {w.tables.map((t) => (
                   <span
                     key={t.id}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-100 text-brand-800 text-sm font-medium dark:bg-wine-900/40 dark:text-wine-300"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-wine-100 text-wine-800 text-sm font-medium dark:bg-wine-900/40 dark:text-wine-300"
                   >
                     Mesa {t.number}{t.label ? ` · ${t.label}` : ""}
                   </span>
@@ -610,7 +610,7 @@ export default function Staff() {
                   <td className="px-4 py-2 text-ink-600 dark:text-obsidian-200">{t.capacity}</td>
                   <td className="px-4 py-2">
                     {t.assigned_user_name ? (
-                      <span className="text-sm font-medium text-brand-700 dark:text-brand-400">{t.assigned_user_name}</span>
+                      <span className="text-sm font-medium text-wine-700 dark:text-wine-400">{t.assigned_user_name}</span>
                     ) : (
                       <span className="text-xs text-ink-400 dark:text-obsidian-500 italic">Sin asignar</span>
                     )}

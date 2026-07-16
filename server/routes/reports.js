@@ -4,7 +4,7 @@ import { authRequired, requireRole } from "../middleware/auth.js";
 
 const router = Router();
 
-router.use(authRequired, requireRole("admin"));
+router.use(authRequired);
 
 /** Zona horaria del negocio (misma que DB_TZ / caja). */
 function reportTz() {
@@ -28,6 +28,125 @@ function orderHourSql(alias = "o") {
   const p = alias ? `${alias}.` : "";
   return `EXTRACT(HOUR FROM COALESCE(${p}closed_at, ${p}created_at) AT TIME ZONE '${tz}')::int`;
 }
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Días trabajados del mesero autenticado (self-scope). */
+router.get("/my-work-days", async (req, res) => {
+  if (req.user.role !== "waiter" && req.user.role !== "admin") {
+    return res.status(403).json({ error: "No autorizado" });
+  }
+  // Mesero solo ve lo suyo; admin puede pasar user_id (opcional)
+  let userId = req.user.id;
+  if (req.user.role === "admin" && req.query.user_id) {
+    userId = Number(req.query.user_id);
+    if (!Number.isFinite(userId)) return res.status(400).json({ error: "user_id inválido" });
+  } else if (req.user.role === "admin" && !req.query.user_id) {
+    return res.status(400).json({ error: "user_id requerido para admin" });
+  }
+
+  const toDate = (req.query.to && DATE_RE.test(req.query.to))
+    ? req.query.to
+    : new Date().toISOString().slice(0, 10);
+  const fromDate = (req.query.from && DATE_RE.test(req.query.from))
+    ? req.query.from
+    : new Date(new Date(toDate).getTime() - 89 * 86400000).toISOString().slice(0, 10);
+
+  const day = orderDaySql("o");
+  const { rows } = await query(
+    `SELECT TO_CHAR(${day}, 'YYYY-MM-DD') AS date,
+            COUNT(*)::int AS orders_count,
+            COUNT(*) FILTER (WHERE o.payment_status = 'paid')::int AS paid_count,
+            COALESCE(SUM(o.total) FILTER (WHERE o.payment_status = 'paid'), 0)::numeric AS total_sales,
+            COALESCE(SUM(o.tip) FILTER (WHERE o.payment_status = 'paid'), 0)::numeric AS total_tips,
+            COUNT(DISTINCT o.table_id) FILTER (WHERE o.table_id IS NOT NULL)::int AS tables_served,
+            COALESCE(
+              AVG(o.total) FILTER (WHERE o.payment_status = 'paid'),
+              0
+            )::numeric AS avg_ticket
+       FROM orders o
+      WHERE o.user_id = $1
+        AND ${day} BETWEEN $2::date AND $3::date
+        AND o.status <> 'cancelled'
+      GROUP BY ${day}
+      ORDER BY ${day} DESC`,
+    [userId, fromDate, toDate]
+  );
+  res.json(rows);
+});
+
+/** Detalle de un día trabajado (pedidos + items del mesero). */
+router.get("/my-work-days/:date", async (req, res) => {
+  if (req.user.role !== "waiter" && req.user.role !== "admin") {
+    return res.status(403).json({ error: "No autorizado" });
+  }
+  const date = req.params.date;
+  if (!DATE_RE.test(date)) return res.status(400).json({ error: "date debe ser YYYY-MM-DD" });
+
+  let userId = req.user.id;
+  if (req.user.role === "admin" && req.query.user_id) {
+    userId = Number(req.query.user_id);
+    if (!Number.isFinite(userId)) return res.status(400).json({ error: "user_id inválido" });
+  } else if (req.user.role === "admin" && !req.query.user_id) {
+    return res.status(400).json({ error: "user_id requerido para admin" });
+  }
+
+  const day = orderDaySql("o");
+  const orders = await query(
+    `SELECT o.id, o.type, o.status, o.total, o.tip, o.payment_method,
+            o.payment_status, o.created_at, o.closed_at,
+            t.number AS table_number, t.label AS table_label,
+            c.name AS customer_name, c.phone AS customer_phone
+       FROM orders o
+       LEFT JOIN tables t ON t.id = o.table_id
+       LEFT JOIN customers c ON c.id = o.customer_id
+      WHERE o.user_id = $1
+        AND ${day} = $2::date
+        AND o.status <> 'cancelled'
+      ORDER BY o.created_at DESC`,
+    [userId, date]
+  );
+
+  const orderIds = orders.rows.map((o) => o.id);
+  let itemsByOrder = {};
+  if (orderIds.length > 0) {
+    const items = await query(
+      `SELECT oi.order_id, oi.name_snapshot, oi.unit_price, oi.quantity, oi.notes
+         FROM order_items oi
+        WHERE oi.order_id = ANY($1::int[])
+        ORDER BY oi.order_id, oi.id`,
+      [orderIds]
+    );
+    items.rows.forEach((item) => {
+      if (!itemsByOrder[item.order_id]) itemsByOrder[item.order_id] = [];
+      itemsByOrder[item.order_id].push(item);
+    });
+  }
+
+  const paid = orders.rows.filter((o) => o.payment_status === "paid");
+  const total_sales = paid.reduce((s, o) => s + Number(o.total), 0);
+  const total_tips = paid.reduce((s, o) => s + Number(o.tip || 0), 0);
+  const tables = new Set(orders.rows.map((o) => o.table_number).filter((n) => n != null));
+
+  res.json({
+    date,
+    summary: {
+      orders_count: orders.rows.length,
+      paid_count: paid.length,
+      total_sales,
+      total_tips,
+      tables_served: tables.size,
+      avg_ticket: paid.length ? total_sales / paid.length : 0,
+    },
+    orders: orders.rows.map((o) => ({
+      ...o,
+      items: itemsByOrder[o.id] || [],
+    })),
+  });
+});
+
+// ── Admin-only reports below ──────────────────────────────────────────
+router.use(requireRole("admin"));
 
 // Resumen de ventas (con comparativa)
 router.get("/sales", async (req, res) => {
@@ -400,10 +519,11 @@ router.get("/daily-history", async (req, res) => {
   res.json(rows);
 });
 
-// Historial de mesero
+// Historial de mesero (admin — lista plana de pedidos)
 router.get("/waiter-history", async (req, res) => {
   const { user_id, limit = 100 } = req.query;
   if (!user_id) return res.status(400).json({ error: "user_id requerido" });
+  const lim = Math.min(Math.max(Number(limit) || 100, 1), 500);
 
   const orders = await query(
     `SELECT o.id, o.type, o.status, o.total, o.tip, o.payment_method,
@@ -416,23 +536,24 @@ router.get("/waiter-history", async (req, res) => {
       WHERE o.user_id = $1
       ORDER BY o.created_at DESC
       LIMIT $2`,
-    [user_id, limit]
+    [user_id, lim]
   );
 
-  const items = await query(
-    `SELECT oi.order_id, oi.name_snapshot, oi.unit_price, oi.quantity, oi.notes
-       FROM order_items oi
-       JOIN orders o ON o.id = oi.order_id
-      WHERE o.user_id = $1
-      ORDER BY oi.order_id, oi.id`,
-    [user_id, limit]
-  );
-
+  const orderIds = orders.rows.map((o) => o.id);
   const itemsByOrder = {};
-  items.rows.forEach((item) => {
-    if (!itemsByOrder[item.order_id]) itemsByOrder[item.order_id] = [];
-    itemsByOrder[item.order_id].push(item);
-  });
+  if (orderIds.length > 0) {
+    const items = await query(
+      `SELECT oi.order_id, oi.name_snapshot, oi.unit_price, oi.quantity, oi.notes
+         FROM order_items oi
+        WHERE oi.order_id = ANY($1::int[])
+        ORDER BY oi.order_id, oi.id`,
+      [orderIds]
+    );
+    items.rows.forEach((item) => {
+      if (!itemsByOrder[item.order_id]) itemsByOrder[item.order_id] = [];
+      itemsByOrder[item.order_id].push(item);
+    });
+  }
 
   const result = orders.rows.map((o) => ({
     ...o,

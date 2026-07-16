@@ -62,7 +62,7 @@ export default function ReceiptTicket({ order, onClose }) {
 
         <div id="receipt-ticket" className="p-5 text-ink-800 bg-white">
           <div className="text-center mb-3">
-            <div className="text-lg font-bold tracking-tight">AppTurnos</div>
+            <div className="text-lg font-bold tracking-tight">TurnOn</div>
             <div className="text-xs text-ink-500">Comprobante de cobro</div>
             <div className="text-xs text-ink-500 mt-1">
               {detail?.closed_at

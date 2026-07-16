@@ -1,4 +1,4 @@
-﻿export default function BarChart({
+export default function BarChart({
   data,
   valueKey = "value",
   labelKey = "label",
@@ -28,7 +28,7 @@
                 </span>
               )}
               <div
-                className={`w-full rounded-t-md transition-all ${barColor || "bg-brand-500 dark:bg-brand-400"}`}
+                className={`w-full rounded-t-md transition-all ${barColor || "bg-wine-500 dark:bg-wine-400"}`}
                 style={{ height: `${pct}%`, minHeight: val > 0 ? 4 : 0 }}
               />
               <span className="text-[9px] text-ink-500 dark:text-obsidian-400 leading-none truncate w-full text-center">
@@ -55,7 +55,7 @@
             </div>
             <div className="flex-1 bg-paper-200 dark:bg-obsidian-800 rounded-lg overflow-hidden h-5 relative">
               <div
-                className={`h-full transition-all ${barColor || "bg-brand-500 dark:bg-brand-400"}`}
+                className={`h-full transition-all ${barColor || "bg-wine-500 dark:bg-wine-400"}`}
                 style={{ width: `${pct}%` }}
               />
               {showValues && (

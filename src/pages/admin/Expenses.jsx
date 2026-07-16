@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
@@ -6,7 +6,7 @@ import { money, formatTime, dateOnlyUTC } from "../../lib/format";
 import { todayLocalISO } from "../../lib/date";
 import {
   TrendingDown, Plus, Pencil, Trash2, X, Wallet, ShoppingCart, Zap, Wrench, Package, Sparkles, Receipt,
-  Banknote, CreditCard, Building2, Filter, ArrowRight,
+  Banknote, CreditCard, Building2, Filter, ArrowRight, Search,
 } from "lucide-react";
 
 const ICON_MAP = {
@@ -138,7 +138,7 @@ function ExpenseModal({ open, onClose, onSaved, expense, categories }) {
                   onClick={() => setMethod(paymentMethod === k ? "" : k)}
                   className={`px-3 py-2 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5 ${
                     paymentMethod === k
-                      ? "bg-brand-600 text-white border-brand-600"
+                      ? "bg-wine-600 text-white border-wine-600"
                       : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-100 dark:border-obsidian-700 dark:hover:bg-obsidian-800"
                   }`}
                 >
@@ -197,6 +197,7 @@ export default function Expenses() {
   const [to, setTo]       = useState("");
   const [filterCat, setFilterCat] = useState("");
   const [filterMethod, setFilterMethod] = useState("");
+  const [search, setSearch] = useState("");
 
   const [expenses, setExpenses]   = useState([]);
   const [categories, setCategories] = useState([]);
@@ -241,9 +242,28 @@ export default function Expenses() {
 
   useEffect(() => { load(); }, [from, to, filterCat, filterMethod, initialDate]);
 
+  const filteredExpenses = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return expenses;
+    return expenses.filter((e) => {
+      const hay = [
+        e.description,
+        e.category_name,
+        e.user_name,
+        e.payment_method,
+        String(e.amount ?? ""),
+        money(e.amount),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [expenses, search]);
+
   const filteredTotal = useMemo(
-    () => expenses.reduce((s, e) => s + Number(e.amount), 0),
-    [expenses]
+    () => filteredExpenses.reduce((s, e) => s + Number(e.amount), 0),
+    [filteredExpenses]
   );
 
   const onSaved = () => {
@@ -297,43 +317,66 @@ export default function Expenses() {
         }
       />
 
-      {/* Filtros */}
-      <div className="card p-3 mb-4 flex flex-wrap items-end gap-2">
-        <div className="flex items-center gap-1.5 text-ink-500 dark:text-obsidian-400 text-sm">
-          <Filter size={14}/> Filtros:
+      {/* Filtros + búsqueda */}
+      <div className="card mb-4 space-y-3 p-3">
+        <div className="relative">
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-500 dark:text-white/70"
+          />
+          <input
+            type="search"
+            className="input py-2 pl-9 text-sm"
+            placeholder="Buscar por descripción, categoría, monto o quien registró…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            autoComplete="off"
+          />
         </div>
-        <div>
-          <label className="label text-xs">Desde</label>
-          <input type="date" className="input py-1.5 text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex items-center gap-1.5 text-sm text-ink-700 dark:text-white">
+            <Filter size={14} /> Filtros
+          </div>
+          <div>
+            <label className="label text-xs text-ink-600 dark:text-white">Desde</label>
+            <input type="date" className="input py-1.5 text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
+          </div>
+          <div>
+            <label className="label text-xs text-ink-600 dark:text-white">Hasta</label>
+            <input type="date" className="input py-1.5 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
+          </div>
+          <div>
+            <label className="label text-xs text-ink-600 dark:text-white">Categoría</label>
+            <select className="input py-1.5 text-sm" value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
+              <option value="">Todas</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="label text-xs text-ink-600 dark:text-white">Método</label>
+            <select className="input py-1.5 text-sm" value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)}>
+              <option value="">Todos</option>
+              <option value="cash">Efectivo</option>
+              <option value="card">Tarjeta</option>
+              <option value="transfer">Transferencia</option>
+            </select>
+          </div>
+          {(from || to || filterCat || filterMethod || search) && (
+            <button
+              onClick={() => {
+                setFrom("");
+                setTo("");
+                setFilterCat("");
+                setFilterMethod("");
+                setSearch("");
+              }}
+              className="btn-ghost text-sm"
+              type="button"
+            >
+              Limpiar
+            </button>
+          )}
         </div>
-        <div>
-          <label className="label text-xs">Hasta</label>
-          <input type="date" className="input py-1.5 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
-        </div>
-        <div>
-          <label className="label text-xs">Categoría</label>
-          <select className="input py-1.5 text-sm" value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
-            <option value="">Todas</option>
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="label text-xs">Método</label>
-          <select className="input py-1.5 text-sm" value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)}>
-            <option value="">Todos</option>
-            <option value="cash">Efectivo</option>
-            <option value="card">Tarjeta</option>
-            <option value="transfer">Transferencia</option>
-          </select>
-        </div>
-        {(from || to || filterCat || filterMethod) && (
-          <button
-            onClick={() => { setFrom(""); setTo(""); setFilterCat(""); setFilterMethod(""); }}
-            className="btn-ghost text-sm"
-          >
-            Limpiar
-          </button>
-        )}
       </div>
 
       {/* Resumen del día + lista */}
@@ -396,14 +439,25 @@ export default function Expenses() {
 
       {/* Tabla */}
       {loading ? (
-        <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Cargando…</div>
+        <div className="card p-8 text-center text-ink-600 dark:text-white">Cargando…</div>
       ) : expenses.length === 0 ? (
-        <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">
-          <TrendingDown size={32} className="mx-auto text-ink-300 dark:text-obsidian-300 mb-2"/>
+        <div className="card p-8 text-center text-ink-600 dark:text-white">
+          <TrendingDown size={32} className="mx-auto mb-2 text-ink-300 dark:text-white/40"/>
           No hay gastos registrados en este rango.
           <div className="mt-2">
-            <button onClick={() => { setEditTarget(null); setModalOpen(true); }} className="btn-primary text-sm">
+            <button onClick={() => { setEditTarget(null); setModalOpen(true); }} className="btn-primary text-sm" type="button">
               <Plus size={14}/> Registrar primer gasto
+            </button>
+          </div>
+        </div>
+      ) : filteredExpenses.length === 0 ? (
+        <div className="card p-8 text-center text-ink-600 dark:text-white">
+          <Search size={32} className="mx-auto mb-2 text-ink-300 dark:text-white/40"/>
+          Ningún gasto coincide con la búsqueda
+          {search.trim() ? ` “${search.trim()}”` : ""}.
+          <div className="mt-2">
+            <button onClick={() => setSearch("")} className="btn-secondary text-sm" type="button">
+              Limpiar búsqueda
             </button>
           </div>
         </div>
@@ -411,35 +465,36 @@ export default function Expenses() {
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-paper-100 dark:bg-obsidian-950 text-ink-600 dark:text-obsidian-200 text-xs uppercase">
+              <thead className="bg-paper-100 text-xs uppercase text-ink-700 dark:bg-obsidian-950 dark:text-white">
                 <tr>
-                  <th className="text-left  px-4 py-2.5">Fecha</th>
-                  <th className="text-left  px-4 py-2.5">Categoría</th>
-                  <th className="text-left  px-4 py-2.5">Descripción</th>
-                  <th className="text-right px-4 py-2.5">Monto</th>
-                  <th className="text-left  px-4 py-2.5">Método</th>
-                  <th className="text-left  px-4 py-2.5">Registrado por</th>
+                  <th className="px-4 py-2.5 text-left">Fecha</th>
+                  <th className="px-4 py-2.5 text-left">Categoría</th>
+                  <th className="px-4 py-2.5 text-left">Descripción</th>
+                  <th className="px-4 py-2.5 text-right">Monto</th>
+                  <th className="px-4 py-2.5 text-left">Método</th>
+                  <th className="px-4 py-2.5 text-left">Registrado por</th>
                   <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>
               <tbody>
-                {expenses.map((e) => (
+                {filteredExpenses.map((e) => (
                   <tr key={e.id} className="border-t border-paper-200 dark:border-obsidian-800">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-ink-800 dark:text-obsidian-50">{dateOnly(e.expense_date)}</div>
-                      <div className="text-xs text-ink-500 dark:text-obsidian-400">{formatTime(e.created_at)}</div>
+                      <div className="font-medium text-ink-900 dark:text-white">{dateOnly(e.expense_date)}</div>
+                      <div className="text-xs text-ink-600 dark:text-white">{formatTime(e.created_at)}</div>
                     </td>
                     <td className="px-4 py-3">{renderCat({ name: e.category_name, icon: e.category_icon })}</td>
-                    <td className="px-4 py-3 text-ink-600 dark:text-obsidian-200 max-w-xs truncate">{e.description || "—"}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-rose-700 dark:text-rose-400">{money(e.amount)}</td>
+                    <td className="max-w-xs truncate px-4 py-3 text-ink-700 dark:text-white">{e.description || "—"}</td>
+                    <td className="px-4 py-3 text-right font-semibold tabular-nums text-rose-700 dark:text-rose-300">{money(e.amount)}</td>
                     <td className="px-4 py-3">{renderMethod(e.payment_method)}</td>
-                    <td className="px-4 py-3 text-ink-600 dark:text-obsidian-200 text-xs">{e.user_name || "—"}</td>
+                    <td className="px-4 py-3 text-xs text-ink-700 dark:text-white">{e.user_name || "—"}</td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex gap-1 justify-end">
+                      <div className="flex justify-end gap-1">
                         <button
                           onClick={() => { setEditTarget(e); setModalOpen(true); }}
                           className="btn-ghost p-1.5"
                           title="Editar"
+                          type="button"
                         >
                           <Pencil size={14}/>
                         </button>
@@ -447,6 +502,7 @@ export default function Expenses() {
                           onClick={() => setDeleteTarget(e)}
                           className="btn-ghost p-1.5 text-rose-600 dark:text-rose-400"
                           title="Eliminar"
+                          type="button"
                         >
                           <Trash2 size={14}/>
                         </button>
@@ -456,11 +512,12 @@ export default function Expenses() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-paper-300 dark:border-obsidian-700 bg-paper-100 dark:bg-obsidian-950">
-                  <td colSpan={3} className="px-4 py-3 text-right text-sm font-semibold text-ink-700 dark:text-obsidian-100">
-                    Total ({expenses.length} gasto{expenses.length === 1 ? "" : "s"}):
+                <tr className="border-t-2 border-paper-300 bg-paper-100 dark:border-obsidian-700 dark:bg-obsidian-950">
+                  <td colSpan={3} className="px-4 py-3 text-right text-sm font-semibold text-ink-800 dark:text-white">
+                    Total ({filteredExpenses.length} gasto{filteredExpenses.length === 1 ? "" : "s"}
+                    {search.trim() ? " filtrados" : ""}):
                   </td>
-                  <td className="px-4 py-3 text-right text-base font-bold text-rose-700 dark:text-rose-400">{money(filteredTotal)}</td>
+                  <td className="px-4 py-3 text-right text-base font-bold tabular-nums text-rose-700 dark:text-rose-300">{money(filteredTotal)}</td>
                   <td colSpan={3}></td>
                 </tr>
               </tfoot>
@@ -471,7 +528,7 @@ export default function Expenses() {
 
       <div className="mt-4 text-xs text-ink-500 dark:text-obsidian-400 flex items-center gap-1">
         <ArrowRight size={12}/>
-        También podés ver estos datos en el <Link to="/cashier/closing" className="text-brand-600 hover:underline">Corte de caja</Link>.
+        También podés ver estos datos en el <Link to="/cashier/closing" className="text-wine-600 hover:underline">Corte de caja</Link>.
       </div>
 
       <ExpenseModal

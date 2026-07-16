@@ -42,20 +42,34 @@ async function computeDaySummary(closingDate) {
             COALESCE(SUM(total) FILTER (WHERE payment_method='cash'),0)::numeric     AS cash_sales,
             COALESCE(SUM(total) FILTER (WHERE payment_method='card'),0)::numeric     AS card_sales,
             COALESCE(SUM(total) FILTER (WHERE payment_method='transfer'),0)::numeric AS transfer_sales,
-            COALESCE(SUM(total) FILTER (WHERE payment_method='mixed'),0)::numeric    AS mixed_sales
+            COALESCE(SUM(total) FILTER (WHERE payment_method='mixed'),0)::numeric    AS mixed_sales,
+            COUNT(*) FILTER (WHERE payment_method='cash')::int     AS cash_count,
+            COUNT(*) FILTER (WHERE payment_method='card')::int     AS card_count,
+            COUNT(*) FILTER (WHERE payment_method='transfer')::int AS transfer_count,
+            COUNT(*) FILTER (WHERE payment_method='mixed')::int    AS mixed_count
        FROM orders
       WHERE DATE(closed_at AT TIME ZONE 'America/Mexico_City') = $1
         AND payment_status = 'paid'`,
     [closingDate]
   );
-  return sales[0] || {
+  const row = sales[0] || {
     total_orders: 0,
     total_sales: 0,
     cash_sales: 0,
     card_sales: 0,
     transfer_sales: 0,
     mixed_sales: 0,
+    cash_count: 0,
+    card_count: 0,
+    transfer_count: 0,
+    mixed_count: 0,
   };
+  // Dinero que no está en la caja física (cuenta / banco / datáfono)
+  const bank_sales =
+    Number(row.card_sales || 0) + Number(row.transfer_sales || 0);
+  const bank_count =
+    Number(row.card_count || 0) + Number(row.transfer_count || 0);
+  return { ...row, bank_sales, bank_count };
 }
 
 // --- routes --------------------------------------------------------------
@@ -123,7 +137,25 @@ router.get("/:id", async (req, res) => {
     [req.params.id]
   );
   if (rows.length === 0) return res.status(404).json({ error: "Cierre no encontrado" });
-  res.json(rows[0]);
+  const closing = rows[0];
+  // Conteos del día (no se guardan en cash_closings; se recalculan)
+  const rawDate = closing.closing_date;
+  const dayKey =
+    typeof rawDate === "string"
+      ? rawDate.slice(0, 10)
+      : rawDate instanceof Date
+        ? `${rawDate.getFullYear()}-${String(rawDate.getMonth() + 1).padStart(2, "0")}-${String(rawDate.getDate()).padStart(2, "0")}`
+        : ymd(rawDate);
+  const day = dayKey ? await computeDaySummary(dayKey) : null;
+  res.json({
+    ...closing,
+    cash_count: day?.cash_count ?? 0,
+    card_count: day?.card_count ?? 0,
+    transfer_count: day?.transfer_count ?? 0,
+    mixed_count: day?.mixed_count ?? 0,
+    bank_sales: day?.bank_sales ?? Number(closing.card_sales || 0) + Number(closing.transfer_sales || 0),
+    bank_count: day?.bank_count ?? 0,
+  });
 });
 
 // POST /api/cash-closings -> crea el cierre
@@ -173,7 +205,7 @@ router.post("/", async (req, res) => {
         throw err;
       }
 
-      // 3) Calcular resumen del día
+      // 3) Calcular resumen del día (montos; conteos no se persisten)
       const { rows: sales } = await client.query(
         `SELECT COUNT(*)::int                     AS total_orders,
                 COALESCE(SUM(total),0)::numeric    AS total_sales,

@@ -1,15 +1,22 @@
-﻿import ThemeToggle from "./ThemeToggle";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Header({ title, subtitle, right }) {
   return (
-    <header className="flex items-center justify-between mb-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-ink-800 dark:text-obsidian-50">{title}</h1>
-        {subtitle && <p className="text-sm text-ink-500 dark:text-obsidian-400 mt-0.5">{subtitle}</p>}
+    <header className="mb-4 flex flex-wrap items-start justify-between gap-2 sm:mb-6">
+      <div className="min-w-0 flex-1">
+        <h1 className="text-xl font-semibold text-ink-900 dark:text-white sm:text-2xl">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="mt-0.5 text-sm text-ink-600 dark:text-white">{subtitle}</p>
+        )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         {right}
-        <ThemeToggle />
+        {/* En móvil el toggle va en la topbar del Layout */}
+        <div className="hidden lg:block">
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

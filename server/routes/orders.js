@@ -97,7 +97,7 @@ async function recomputeOrderTotal(client, orderId) {
 }
 
 router.get("/", authRequired, async (req, res) => {
-  const { type, status, payment, from, to } = req.query;
+  const { type, status, payment, from, to, collectible } = req.query;
   const filters = [];
   const params = [];
   if (type)    { params.push(type);    filters.push(`o.type = $${params.length}`); }
@@ -105,6 +105,11 @@ router.get("/", authRequired, async (req, res) => {
   if (payment) { params.push(payment); filters.push(`o.payment_status = $${params.length}`); }
   if (from)    { params.push(from);    filters.push(`o.created_at >= $${params.length}`); }
   if (to)      { params.push(to);      filters.push(`o.created_at <= $${params.length}`); }
+  // Caja "Por cobrar": todas las cuentas abiertas sin pagar (no solo ready_to_pay)
+  if (collectible === "1" || collectible === "true") {
+    filters.push(`o.payment_status = 'pending'`);
+    filters.push(`o.status NOT IN ('paid','cancelled','delivered')`);
+  }
   const where = filters.length ? "WHERE " + filters.join(" AND ") : "";
 
   const { rows } = await query(
@@ -115,7 +120,15 @@ router.get("/", authRequired, async (req, res) => {
        LEFT JOIN users u     ON u.id = o.user_id
        LEFT JOIN delivery_persons d ON d.id = o.delivery_person_id
        ${where}
-      ORDER BY o.created_at DESC
+      ORDER BY
+        CASE o.status
+          WHEN 'ready_to_pay' THEN 0
+          WHEN 'preparing'    THEN 1
+          WHEN 'pending'      THEN 2
+          WHEN 'on_the_way'   THEN 3
+          ELSE 4
+        END,
+        o.created_at ASC
       LIMIT 200`,
     params
   );
@@ -134,12 +147,9 @@ router.get("/:id", authRequired, async (req, res) => {
     [req.params.id]
   );
   if (rows.length === 0) return res.status(404).json({ error: "No encontrado" });
-  const items = await query(
-    `SELECT id, product_id, name_snapshot, unit_price, quantity, notes, status
-       FROM order_items WHERE order_id = $1 ORDER BY id`,
-    [req.params.id]
-  );
-  res.json({ ...rows[0], items: items.rows });
+  // Consolidar líneas duplicadas del mismo producto (muestra 2x en vez de 1x + 1x)
+  const items = await fetchConsolidatedItems(query, req.params.id);
+  res.json({ ...rows[0], items });
 });
 
 router.post("/", authRequired, async (req, res) => {
@@ -156,6 +166,10 @@ router.post("/", authRequired, async (req, res) => {
     return res.status(400).json({ error: "Cliente requerido" });
   if (req.user.role === "waiter" && type !== "table")
     return res.status(403).json({ error: "Los meseros solo pueden crear pedidos de mesa" });
+  if (req.user.role === "admin" && type === "table")
+    return res.status(403).json({
+      error: "Solo el mesero abre mesas. El cajero cobra desde Caja.",
+    });
   if (!Array.isArray(items) || items.length === 0)
     return res.status(400).json({ error: "El pedido debe tener al menos un producto" });
 
@@ -189,11 +203,7 @@ router.post("/", authRequired, async (req, res) => {
           [it.product_id]
         );
         if (p.length === 0) throw new HttpError(400, `Producto ${it.product_id} no existe`);
-        await client.query(
-          `INSERT INTO order_items (order_id, product_id, name_snapshot, unit_price, quantity, notes)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [orderId, p[0].id, p[0].name, p[0].price, it.quantity || 1, it.notes || null]
-        );
+        await upsertOrderItemLine(client, orderId, p[0], it.quantity || 1, it.notes || null);
       }
 
       const total = await recomputeOrderTotal(client, orderId);
@@ -207,23 +217,96 @@ router.post("/", authRequired, async (req, res) => {
   }
 });
 
+/** Líneas del pedido consolidadas (misma clave = 1 fila con cantidad sumada). */
+async function fetchConsolidatedItems(clientOrQuery, orderId) {
+  const run = clientOrQuery.query ? clientOrQuery.query.bind(clientOrQuery) : clientOrQuery;
+  const { rows } = await run(
+    `SELECT MIN(id) AS id,
+            product_id,
+            name_snapshot,
+            unit_price,
+            SUM(quantity)::int AS quantity,
+            NULLIF(MAX(COALESCE(notes, '')), '') AS notes,
+            MIN(status) AS status
+       FROM order_items
+      WHERE order_id = $1
+      GROUP BY product_id, name_snapshot, unit_price, COALESCE(notes, '')
+      ORDER BY MIN(id)`,
+    [orderId]
+  );
+  return rows;
+}
+
+/**
+ * Suma cantidad si ya existe la misma línea (mismo producto + misma nota);
+ * si no, inserta. Bloquea el pedido (FOR UPDATE) para clics concurrentes.
+ * Usa notes_key generado en DB + UNIQUE para que sea imposible 1x+1x.
+ */
+async function upsertOrderItemLine(client, orderId, product, qty, note) {
+  const q = Number(qty) || 1;
+  const n = note == null || note === "" ? null : String(note);
+  const noteKey = n || "";
+  // Serializa clics concurrentes sobre el mismo pedido
+  await client.query(`SELECT id FROM orders WHERE id = $1 FOR UPDATE`, [orderId]);
+
+  // Intento atómico: si hay índice único, ON CONFLICT suma
+  try {
+    const { rows: ins } = await client.query(
+      `INSERT INTO order_items (order_id, product_id, name_snapshot, unit_price, quantity, notes)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (order_id, product_id, notes_key) WHERE (product_id IS NOT NULL)
+       DO UPDATE SET quantity = order_items.quantity + EXCLUDED.quantity
+       RETURNING id, quantity`,
+      [orderId, product.id, product.name, product.price, q, n]
+    );
+    return ins[0].id;
+  } catch (e) {
+    // Si aún no existe la columna/índice notes_key, fallback SELECT+UPDATE
+    if (e && (e.code === "42703" || e.code === "42P10" || e.code === "42P01")) {
+      const { rows: ex } = await client.query(
+        `SELECT id FROM order_items
+          WHERE order_id = $1
+            AND product_id = $2
+            AND COALESCE(notes, '') = $3
+          ORDER BY id
+          LIMIT 1
+          FOR UPDATE`,
+        [orderId, product.id, noteKey]
+      );
+      if (ex.length > 0) {
+        await client.query(
+          `UPDATE order_items SET quantity = quantity + $2 WHERE id = $1`,
+          [ex[0].id, q]
+        );
+        return ex[0].id;
+      }
+      const { rows: ins } = await client.query(
+        `INSERT INTO order_items (order_id, product_id, name_snapshot, unit_price, quantity, notes)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [orderId, product.id, product.name, product.price, q, n]
+      );
+      return ins[0].id;
+    }
+    throw e;
+  }
+}
+
 router.post("/:id/items", authRequired, async (req, res) => {
   const { product_id, quantity = 1, notes = null } = req.body;
   try {
-    await withTransaction(async (client) => {
+    const result = await withTransaction(async (client) => {
       const { rows: p } = await client.query(
         "SELECT id, name, price FROM products WHERE id = $1",
         [product_id]
       );
       if (p.length === 0) throw new HttpError(400, "Producto no existe");
-      await client.query(
-        `INSERT INTO order_items (order_id, product_id, name_snapshot, unit_price, quantity, notes)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [req.params.id, p[0].id, p[0].name, p[0].price, quantity, notes]
-      );
-      await recomputeOrderTotal(client, req.params.id);
+      const orderId = Number(req.params.id);
+      await upsertOrderItemLine(client, orderId, p[0], quantity, notes);
+      const total = await recomputeOrderTotal(client, orderId);
+      const items = await fetchConsolidatedItems(client, orderId);
+      return { total, items };
     });
-    res.status(201).json({ ok: true });
+    res.status(201).json({ ok: true, ...result });
   } catch (e) {
     const status = e.status || 500;
     if (status === 500) console.error(`[orders:POST /:id/items]`, e);
@@ -231,13 +314,26 @@ router.post("/:id/items", authRequired, async (req, res) => {
   }
 });
 
+// Quitar 1 unidad; si queda 0, elimina la línea
 router.delete("/:id/items/:itemId", authRequired, async (req, res) => {
   try {
     await withTransaction(async (client) => {
-      await client.query("DELETE FROM order_items WHERE id = $1 AND order_id = $2", [
-        req.params.itemId,
-        req.params.id,
-      ]);
+      const { rows } = await client.query(
+        `SELECT id, quantity FROM order_items WHERE id = $1 AND order_id = $2 FOR UPDATE`,
+        [req.params.itemId, req.params.id]
+      );
+      if (rows.length === 0) throw new HttpError(404, "Ítem no encontrado");
+      if (Number(rows[0].quantity) > 1) {
+        await client.query(
+          `UPDATE order_items SET quantity = quantity - 1 WHERE id = $1`,
+          [rows[0].id]
+        );
+      } else {
+        await client.query("DELETE FROM order_items WHERE id = $1 AND order_id = $2", [
+          req.params.itemId,
+          req.params.id,
+        ]);
+      }
       await recomputeOrderTotal(client, req.params.id);
     });
     res.json({ ok: true });
@@ -288,20 +384,55 @@ router.post("/:id/assign-delivery", authRequired, requireRole("admin"), async (r
   }
 });
 
-// Cambiar estado manualmente (admin)
-router.post("/:id/status", authRequired, requireRole("admin"), async (req, res) => {
+// Cambiar estado:
+// - admin: todos los estados
+// - mesero: solo pedidos de mesa asignada → pending | preparing | ready_to_pay
+router.post("/:id/status", authRequired, async (req, res) => {
   const { status, cancel_reason = null } = req.body;
   const valid = ["pending", "preparing", "on_the_way", "delivered", "ready_to_pay", "cancelled"];
   if (!valid.includes(status)) return res.status(400).json({ error: "Estado inválido" });
 
+  const role = req.user.role;
+  const isAdmin = role === "admin";
+  const isWaiter = role === "waiter";
+
+  if (!isAdmin && !isWaiter) {
+    return res.status(403).json({ error: "Sin permisos" });
+  }
+
+  // Mesero: flujo de mesa (cocina / listo para cobrar), no cobro ni domicilio
+  if (isWaiter) {
+    const waiterOk = ["pending", "preparing", "ready_to_pay"];
+    if (!waiterOk.includes(status)) {
+      return res.status(403).json({
+        error: "El mesero solo puede enviar a cocina o marcar listo para cobrar",
+      });
+    }
+  }
+
   try {
     await withTransaction(async (client) => {
       const { rows } = await client.query(
-        "SELECT delivery_person_id, type, status, payment_status FROM orders WHERE id = $1 FOR UPDATE",
+        "SELECT delivery_person_id, type, status, payment_status, table_id FROM orders WHERE id = $1 FOR UPDATE",
         [req.params.id]
       );
       if (rows.length === 0) throw new HttpError(404, "No existe");
       const o = rows[0];
+
+      if (isWaiter) {
+        if (o.type !== "table") {
+          throw new HttpError(403, "Los meseros solo gestionan pedidos de mesa");
+        }
+        if (!o.table_id) throw new HttpError(403, "Pedido sin mesa");
+        const { rows: own } = await client.query(
+          "SELECT 1 FROM waiter_tables WHERE user_id = $1 AND table_id = $2 LIMIT 1",
+          [req.user.id, o.table_id]
+        );
+        if (own.length === 0) {
+          throw new HttpError(403, "Esta mesa no está asignada a ti");
+        }
+      }
+
       if (o.status === "cancelled") throw new HttpError(409, "El pedido está cancelado");
       if (status === "cancelled" && o.payment_status === "paid") {
         throw new HttpError(409, "No se puede cancelar un pedido ya cobrado");
@@ -325,9 +456,9 @@ router.post("/:id/status", authRequired, requireRole("admin"), async (req, res) 
     });
     res.json({ ok: true });
   } catch (e) {
-    const status = e.status || 500;
-    if (status === 500) console.error(`[orders:POST /:id/status]`, e);
-    res.status(status).json({ error: e.message || "Error interno" });
+    const statusCode = e.status || 500;
+    if (statusCode === 500) console.error(`[orders:POST /:id/status]`, e);
+    res.status(statusCode).json({ error: e.message || "Error interno" });
   }
 });
 

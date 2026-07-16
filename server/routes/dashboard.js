@@ -61,11 +61,31 @@ router.get("/summary", authRequired, async (req, res) => {
 
   const op = await query(
     `SELECT
-        COUNT(*) FILTER (WHERE type='delivery' AND status='pending')::int    AS pending_to_assign,
-        COUNT(*) FILTER (WHERE type='delivery' AND status='preparing')::int  AS preparing,
+        -- Sin asignar: domicilio YA en cocina/listo, sin mensajero (no el recién creado en pending)
+        COUNT(*) FILTER (
+          WHERE type = 'delivery'
+            AND status = 'preparing'
+            AND delivery_person_id IS NULL
+        )::int                                                               AS pending_to_assign,
+        -- Cocina por canal
+        COUNT(*) FILTER (WHERE status='preparing')::int                      AS preparing,
+        COUNT(*) FILTER (WHERE type='delivery' AND status='preparing')::int  AS preparing_delivery,
+        COUNT(*) FILTER (WHERE type='table'    AND status='preparing')::int  AS preparing_tables,
+        COUNT(*) FILTER (WHERE type='pickup'   AND status='preparing')::int  AS preparing_pickup,
         COUNT(*) FILTER (WHERE type='delivery' AND status='on_the_way')::int AS on_the_way,
         COUNT(*) FILTER (WHERE type='table'    AND status NOT IN ('paid','cancelled','delivered'))::int AS active_tables,
+        -- Solo marcadas "lista para cobrar" (mesero listo)
         COUNT(*) FILTER (WHERE status='ready_to_pay')::int                   AS ready_to_pay,
+        -- Caja: todas las cuentas abiertas sin pagar (mesas + llevar + domicilio)
+        COUNT(*) FILTER (
+          WHERE payment_status = 'pending'
+            AND status NOT IN ('paid','cancelled','delivered')
+        )::int                                                               AS to_collect,
+        COUNT(*) FILTER (
+          WHERE type = 'table'
+            AND payment_status = 'pending'
+            AND status NOT IN ('paid','cancelled','delivered')
+        )::int                                                               AS to_collect_tables,
         COUNT(*) FILTER (WHERE status NOT IN ('paid','cancelled','delivered'))::int AS active_orders
        FROM orders`
   );

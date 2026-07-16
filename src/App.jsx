@@ -18,9 +18,14 @@ import Expenses from "./pages/admin/Expenses";
 import Inventory from "./pages/admin/Inventory";
 import DailyReport from "./pages/admin/DailyReport";
 import PickupPage from "./pages/pickup/PickupPage";
+import MyWorkHistory from "./pages/waiter/MyWorkHistory";
 
 function AdminOnly({ children }) {
   return <RequireRole roles={["admin"]}>{children}</RequireRole>;
+}
+
+function WaiterOnly({ children }) {
+  return <RequireRole roles={["waiter"]}>{children}</RequireRole>;
 }
 
 export default function App() {
@@ -33,6 +38,9 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/tables" element={<TablesPage />} />
         <Route path="/menu" element={<Menu />} />
+
+        {/* Solo mesero */}
+        <Route path="/my-history" element={<WaiterOnly><MyWorkHistory /></WaiterOnly>} />
 
         {/* Solo admin / cajero */}
         <Route path="/delivery" element={<AdminOnly><Delivery /></AdminOnly>} />

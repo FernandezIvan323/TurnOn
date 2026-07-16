@@ -6,6 +6,7 @@ import {
   money, formatTime, statusLabels, statusColors,
   assignTurns, waitMinutes, waitLabel,
 } from "../../lib/format";
+import { kanbanColumnClass, KANBAN_COUNT_PILL } from "../../lib/kanbanTones";
 import { diffNewOrders, playBeep, isNotifyMuted, setNotifyMuted } from "../../lib/notify";
 import {
   ShoppingBag, Plus, X, Clock, CheckCircle2, ChefHat,
@@ -15,9 +16,9 @@ import {
 } from "lucide-react";
 
 const COLUMNS = [
-  { key: "pending",    title: "Pendientes",       tone: "bg-amber-50 border-amber-200 dark:bg-amber-900/60 dark:border-amber-700",   icon: Clock },
-  { key: "preparing",  title: "En preparación",   tone: "bg-blue-50 border-blue-200 dark:bg-blue-900/60 dark:border-blue-700",     icon: ChefHat },
-  { key: "ready_to_pay", title: "Listo para recoger", tone: "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/60 dark:border-emerald-700", icon: CheckCircle2 },
+  { key: "pending",      title: "Pendientes",         icon: Clock },
+  { key: "preparing",    title: "En preparación",     icon: ChefHat },
+  { key: "ready_to_pay", title: "Listo para recoger", icon: CheckCircle2 },
 ];
 
 const METHOD_LABELS = {
@@ -33,8 +34,8 @@ function TurnBadge({ turn, isNext }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${
       isNext
-        ? "bg-brand-600 text-white dark:bg-wine-500"
-        : "bg-paper-200 text-ink-700 dark:bg-obsidian-800 dark:text-obsidian-200"
+        ? "bg-wine-600 text-white dark:bg-wine-500"
+        : "bg-paper-200 text-ink-700 dark:bg-obsidian-800 dark:text-white"
     }`}>
       #{turn}
       {isNext && <span className="ml-0.5 text-[10px] font-normal opacity-80">SIGUIENTE</span>}
@@ -54,13 +55,13 @@ function WaitTimeBadge({ createdAt, estimateMin }) {
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-300 font-medium">
+      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-800 dark:text-amber-200">
         <Timer size={11}/> Tiempo cumplido
       </span>
     );
   }
   return (
-    <span className="text-[11px] text-ink-400 dark:text-obsidian-500">
+    <span className="text-[11px] text-ink-600 dark:text-white">
       Esperando {waitLabel(createdAt)}
     </span>
   );
@@ -73,26 +74,26 @@ function OrderCard({ order, turn, isNext, onClick, onPreparing, onReady, onPay, 
   return (
     <div
       onClick={onClick}
-      className={`card p-3 cursor-pointer hover:shadow-pop transition ${
-        isNext ? "ring-2 ring-brand-500 dark:ring-wine-400" : ""
-      } ${overEstimate ? "ring-2 ring-amber-400 dark:ring-amber-500" : ""}`}
+      className={`card p-3 cursor-pointer transition hover:border-wine-400 hover:shadow-pop dark:hover:border-wine-500/40 ${
+        isNext ? "ring-2 ring-wine-500 dark:ring-wine-400" : ""
+      } ${overEstimate ? "ring-2 ring-amber-400/80 dark:ring-amber-500/60" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <TurnBadge turn={turn} isNext={isNext} />
           <div>
-            <div className="text-xs text-ink-400 dark:text-obsidian-500">
+            <div className="text-xs text-ink-600 dark:text-white">
               #{order.id} · {formatTime(order.created_at)}
             </div>
-            <div className="font-semibold text-ink-800 dark:text-obsidian-50">
+            <div className="font-semibold text-ink-900 dark:text-white">
               Pedido #{order.id}
             </div>
           </div>
         </div>
         <div className="text-right">
-          <div className="font-semibold text-ink-800 dark:text-obsidian-50">{money(order.total)}</div>
+          <div className="font-semibold tabular-nums text-ink-900 dark:text-white">{money(order.total)}</div>
           {order.payment_status === "paid" && (
-            <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 mt-0.5">
+            <div className="mt-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
               Pagado
             </div>
           )}
@@ -104,13 +105,13 @@ function OrderCard({ order, turn, isNext, onClick, onPreparing, onReady, onPay, 
       </div>
 
       {order.estimate_minutes > 0 && (
-        <div className="mt-1 text-[11px] text-ink-400 dark:text-obsidian-500">
+        <div className="mt-1 text-[11px] text-ink-600 dark:text-white">
           Estimado: {order.estimate_minutes}min
         </div>
       )}
 
       {order.notes && (
-        <div className="mt-1.5 text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1">
+        <div className="mt-1.5 flex items-center gap-1 text-xs text-amber-800 dark:text-amber-200">
           <StickyNote size={11}/> {order.notes}
         </div>
       )}
@@ -152,7 +153,7 @@ function OrderCard({ order, turn, isNext, onClick, onPreparing, onReady, onPay, 
         {order.status === "ready_to_pay" && (
           <button
             onClick={(e) => { e.stopPropagation(); onPay(order); }}
-            className="flex-1 h-8 px-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium flex items-center justify-center gap-1 transition dark:bg-wine-600 dark:hover:bg-wine-700"
+            className="flex-1 h-8 px-2 rounded-lg bg-wine-600 hover:bg-wine-700 text-white text-xs font-medium flex items-center justify-center gap-1 transition dark:bg-wine-600 dark:hover:bg-wine-700"
           >
             <CheckCircle2 size={14}/> Cobrar
           </button>
@@ -240,7 +241,7 @@ function NewPickupModal({ onClose, onCreated }) {
                 <button
                   onClick={() => setSelectedCat(null)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition ${
-                    !selectedCat ? "bg-brand-600 text-white" : "bg-paper-200 text-ink-600 hover:bg-paper-300 dark:bg-obsidian-800 dark:text-obsidian-200 dark:hover:bg-obsidian-700"
+                    !selectedCat ? "bg-wine-600 text-white" : "bg-paper-200 text-ink-600 hover:bg-paper-300 dark:bg-obsidian-800 dark:text-obsidian-200 dark:hover:bg-obsidian-700"
                   }`}
                 >
                   Todos
@@ -250,7 +251,7 @@ function NewPickupModal({ onClose, onCreated }) {
                     key={c.id}
                     onClick={() => setSelectedCat(c.id === selectedCat ? null : c.id)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-medium transition ${
-                      selectedCat === c.id ? "bg-brand-600 text-white" : "bg-paper-200 text-ink-600 hover:bg-paper-300 dark:bg-obsidian-800 dark:text-obsidian-200 dark:hover:bg-obsidian-700"
+                      selectedCat === c.id ? "bg-wine-600 text-white" : "bg-paper-200 text-ink-600 hover:bg-paper-300 dark:bg-obsidian-800 dark:text-obsidian-200 dark:hover:bg-obsidian-700"
                     }`}
                   >
                     {c.name}
@@ -264,9 +265,9 @@ function NewPickupModal({ onClose, onCreated }) {
                 <button
                   key={p.id}
                   onClick={() => addToCart(p)}
-                  className="card p-3 text-left hover:border-brand-400 dark:hover:border-brand-600 transition group"
+                  className="card p-3 text-left hover:border-wine-400 dark:hover:border-wine-500 transition group"
                 >
-                  <div className="font-medium text-sm text-ink-800 dark:text-obsidian-50 group-hover:text-brand-700 dark:group-hover:text-wine-300 truncate">
+                  <div className="font-medium text-sm text-ink-800 dark:text-obsidian-50 group-hover:text-wine-600 dark:group-hover:text-wine-300 truncate">
                     {p.name}
                   </div>
                   <div className="text-xs text-ink-500 dark:text-obsidian-400 mt-0.5">{money(p.price)}</div>
@@ -335,7 +336,7 @@ function NewPickupModal({ onClose, onCreated }) {
                       onClick={() => setEstimateMin(m)}
                       className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition border ${
                         estimateMin === m
-                          ? "bg-brand-600 text-white border-brand-600"
+                          ? "bg-wine-600 text-white border-wine-600"
                           : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-100 dark:border-obsidian-700 dark:hover:bg-obsidian-800"
                       }`}
                     >
@@ -417,7 +418,7 @@ function PayModal({ order, onClose, onPaid }) {
                 onClick={() => setMethod(k)}
                 className={`px-3 py-2.5 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5 ${
                   method === k
-                    ? "bg-brand-600 text-white border-brand-600"
+                    ? "bg-wine-600 text-white border-wine-600"
                     : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-100 dark:border-obsidian-700 dark:hover:bg-obsidian-800"
                 }`}
               >
@@ -557,14 +558,14 @@ export default function PickupPage() {
       />
 
       {activeCount > 0 && filter === "active" && (
-        <div className="mb-4 card p-3 bg-brand-50 border-brand-200 dark:bg-wine-900/20 dark:border-wine-800 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-brand-800 dark:text-wine-200">
+        <div className="mb-4 card flex items-center justify-between border-paper-300 p-3 dark:border-obsidian-700">
+          <div className="flex items-center gap-2 text-sm text-ink-700 dark:text-white">
             <ShoppingBag size={16}/>
             <span><b>{activeCount}</b> pedido{activeCount !== 1 ? "s" : ""} activo{activeCount !== 1 ? "s" : ""} en cola</span>
           </div>
           {nextOrder && (
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-700 dark:text-wine-300">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-600 text-white dark:bg-wine-500">
+            <div className="flex items-center gap-1.5 text-xs font-semibold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-wine-600 px-2 py-0.5 text-white dark:bg-wine-500">
                 #{nextOrder.turn_number} SIGUIENTE
               </span>
             </div>
@@ -573,19 +574,19 @@ export default function PickupPage() {
       )}
 
       {loading ? (
-        <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Cargando…</div>
+        <div className="card p-8 text-center text-ink-600 dark:text-white">Cargando…</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {COLUMNS.map((col) => {
             const ColIcon = col.icon;
             const colOrders = byStatus(col.key);
             return (
-              <div key={col.key} className={`rounded-2xl border ${col.tone} p-3 min-h-[200px]`}>
-                <div className="flex items-center justify-between mb-3 px-1">
-                  <h3 className="font-semibold text-ink-800 dark:text-white flex items-center gap-2">
+              <div key={col.key} className={kanbanColumnClass(col.key)}>
+                <div className="mb-3 flex items-center justify-between px-1">
+                  <h3 className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
                     <ColIcon size={16}/> {col.title}
                   </h3>
-                  <span className="text-xs text-ink-600 dark:text-obsidian-300 bg-paper-50 dark:bg-obsidian-800 px-2 py-0.5 rounded-full border border-paper-300 dark:border-obsidian-600">
+                  <span className={KANBAN_COUNT_PILL}>
                     {colOrders.length}
                   </span>
                 </div>
@@ -605,7 +606,7 @@ export default function PickupPage() {
                     />
                   ))}
                   {colOrders.length === 0 && (
-                    <div className="text-center text-xs text-ink-400 dark:text-obsidian-500 py-6">Sin pedidos</div>
+                    <div className="py-6 text-center text-xs text-ink-500 dark:text-white/70">Sin pedidos</div>
                   )}
                 </div>
               </div>

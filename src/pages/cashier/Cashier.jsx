@@ -1,8 +1,9 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { money, formatTime, typeLabels, statusLabels, statusColors, typeColors, assignTurns } from "../../lib/format";
+import { useLiveRefresh } from "../../lib/useLiveRefresh";
 import ReceiptTicket from "../../components/ReceiptTicket";
 import { CheckCircle2, Receipt, X, Calculator, CreditCard, Wallet, Banknote, Building2, Truck, Utensils, ShoppingBag, ScrollText, Users, AlertTriangle, Printer } from "lucide-react";
 
@@ -18,6 +19,22 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
   const [showSplit, setShowSplit] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  const [items, setItems] = useState(order.items || []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await api.get(`/orders/${order.id}`);
+        if (!cancelled) setItems(data.items || []);
+      } catch {
+        /* lista sin detalle: se muestra vacío */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [order.id]);
 
   const totalNum = Number(order.total);
   const tipAmount = isPrepay ? 0 : Math.round(totalNum * tipPct) / 100;
@@ -75,6 +92,40 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
             </div>
           )}
         </div>
+
+        {/* Detalle de productos (entre total y propina) */}
+        <div className="mb-4 rounded-xl border border-paper-300 bg-white p-3 dark:border-obsidian-700 dark:bg-obsidian-900">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-600 dark:text-white">
+            Productos
+          </div>
+          {items.length === 0 ? (
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Cargando detalle…</div>
+          ) : (
+            <ul className="max-h-40 space-y-1.5 overflow-y-auto">
+              {items.map((it) => (
+                <li
+                  key={it.id}
+                  className="flex items-start justify-between gap-2 border-b border-paper-200 py-1.5 text-sm last:border-0 dark:border-obsidian-800"
+                >
+                  <div className="min-w-0">
+                    <span className="font-medium text-ink-900 dark:text-white">
+                      {it.quantity}× {it.name_snapshot}
+                    </span>
+                    {it.notes && (
+                      <div className="text-[11px] text-ink-500 dark:text-obsidian-400">
+                        {it.notes}
+                      </div>
+                    )}
+                  </div>
+                  <span className="shrink-0 font-semibold tabular-nums text-ink-800 dark:text-white">
+                    {money(Number(it.unit_price) * Number(it.quantity))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         {isPrepay && (
           <div className="mb-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
             El pedido se marcará como pagado y seguirá en camino. El cierre final se hará al entregar.
@@ -90,7 +141,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
                   onClick={() => setTipPct(pct)}
                   className={`flex-1 px-3 py-2 rounded-xl border text-sm font-medium transition ${
                     tipPct === pct
-                      ? "bg-brand-600 text-white border-brand-600"
+                      ? "bg-wine-600 text-white border-wine-600"
                       : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-100 dark:border-obsidian-700 dark:hover:bg-obsidian-800"
                   }`}
                 >
@@ -104,7 +155,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
           <div className="mb-4">
             <button
               onClick={() => setShowSplit((s) => !s)}
-              className={`flex items-center gap-2 text-sm font-medium ${showSplit ? "text-brand-600 dark:text-wine-300" : "text-ink-500 dark:text-obsidian-400"}`}
+              className={`flex items-center gap-2 text-sm font-medium ${showSplit ? "text-wine-600 dark:text-wine-300" : "text-ink-500 dark:text-obsidian-400"}`}
             >
               <Users size={14}/> {showSplit ? "Ocultar división" : "Dividir cuenta"}
             </button>
@@ -126,7 +177,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
               onClick={() => setMethod(m.v)}
               className={`px-3 py-2.5 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5 ${
                 method === m.v
-                  ? "bg-brand-600 text-white border-brand-600"
+                  ? "bg-wine-600 text-white border-wine-600"
                   : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-100 dark:border-obsidian-700 dark:hover:bg-obsidian-800"
               }`}
             >
@@ -151,14 +202,20 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
   );
 }
 
-function OrderRow({ order, turn, onClose, onPrepay, onTicket }) {
+function OrderRow({ order, turn, onClose, onPrepay, onTicket, highlight = false }) {
   const TypeIcon = order.type === "delivery" ? Truck : order.type === "pickup" ? ShoppingBag : Utensils;
   return (
-    <div className="card p-4 flex items-center justify-between gap-4">
+    <div
+      className={`card p-4 flex items-center justify-between gap-4 ${
+        highlight
+          ? "border-sky-400 bg-sky-50/70 ring-1 ring-sky-200 dark:border-sky-600 dark:bg-sky-900/20 dark:ring-sky-800"
+          : ""
+      }`}
+    >
       <div className="flex-1">
         <div className="flex items-center gap-2 text-xs text-ink-500 dark:text-obsidian-400">
           {turn && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-600 text-white dark:bg-wine-500">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-wine-600 text-white dark:bg-wine-500">
               #{turn}
             </span>
           )}
@@ -225,31 +282,40 @@ export default function Cashier() {
   const [toPrepay, setToPrepay] = useState(null);
   const [ticketOrder, setTicketOrder] = useState(null);
 
-  const load = async ({ silent = false } = {}) => {
+  const load = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
     try {
-      const params = { payment: tab === "paid" ? "paid" : "pending" };
+      // Por cobrar = solo listas para cobrar (ready_to_pay), no las que siguen en cocina
+      const params =
+        tab === "paid"
+          ? { payment: "paid" }
+          : { payment: "pending", status: "ready_to_pay" };
       if (typeFilter !== "all") params.type = typeFilter;
       const { data } = await api.get("/orders", { params });
-      // Ordenar por antigüedad (FIFO) y asignar turnos
-      data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      setOrders(assignTurns(data));
+      const list = Array.isArray(data) ? data : [];
+      list.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      setOrders(assignTurns(list));
     } finally {
       if (!silent) setLoading(false);
     }
-  };
+  }, [tab, typeFilter]);
+
   useEffect(() => {
     load();
-    const t = setInterval(() => load({ silent: true }), 12_000);
-    return () => clearInterval(t);
-  }, [tab, typeFilter]);
+  }, [load]);
+  useLiveRefresh(load, { intervalMs: 3500 });
 
   const summary = useMemo(() => {
     const tables = orders.filter((o) => o.type === "table");
     const deliveries = orders.filter((o) => o.type === "delivery");
     const pickups = orders.filter((o) => o.type === "pickup");
     const total = orders.reduce((s, o) => s + Number(o.total), 0);
-    return { tables: tables.length, deliveries: deliveries.length, pickups: pickups.length, total };
+    return {
+      tables: tables.length,
+      deliveries: deliveries.length,
+      pickups: pickups.length,
+      total,
+    };
   }, [orders]);
 
   return (
@@ -268,7 +334,7 @@ export default function Cashier() {
                   key={t.v}
                   onClick={() => setTab(t.v)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                    tab === t.v ? "bg-brand-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
+                    tab === t.v ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
                   }`}
                 >
                   {t.l}
@@ -286,7 +352,7 @@ export default function Cashier() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
         <div className="card p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 flex items-center justify-center">
-            <Calculator size={18}/>
+            <Utensils size={18}/>
           </div>
           <div>
             <div className="text-xs text-ink-500 dark:text-obsidian-400">Mesas</div>
@@ -295,7 +361,7 @@ export default function Cashier() {
         </div>
         <div className="card p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 flex items-center justify-center">
-            <Calculator size={18}/>
+            <Truck size={18}/>
           </div>
           <div>
             <div className="text-xs text-ink-500 dark:text-obsidian-400">Domicilios</div>
@@ -304,7 +370,7 @@ export default function Cashier() {
         </div>
         <div className="card p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 flex items-center justify-center">
-            <Receipt size={18}/>
+            <ShoppingBag size={18}/>
           </div>
           <div>
             <div className="text-xs text-ink-500 dark:text-obsidian-400">Para llevar</div>
@@ -312,7 +378,7 @@ export default function Cashier() {
           </div>
         </div>
         <div className="card p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-brand-50 text-brand-700 dark:bg-wine-900/30 dark:text-wine-300 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-wine-50 text-wine-700 dark:bg-wine-900/30 dark:text-wine-300 flex items-center justify-center">
             <Receipt size={18}/>
           </div>
           <div>
@@ -323,7 +389,7 @@ export default function Cashier() {
       </div>
 
       {/* Filtro por tipo */}
-      <div className="flex gap-1 mb-3">
+      <div className="flex flex-wrap gap-1 mb-3">
         {[
           { v: "all",      l: "Todos" },
           { v: "table",    l: "Solo mesas" },
@@ -344,12 +410,18 @@ export default function Cashier() {
         ))}
       </div>
 
+      {tab === "pending" && !loading && (
+        <p className="mb-3 text-xs text-ink-600 dark:text-white">
+          Solo pedidos marcados <b>lista para cobrar</b>. Las mesas en preparación no aparecen acá.
+        </p>
+      )}
+
       {loading ? (
         <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
       ) : orders.length === 0 ? (
         <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">
           <Calculator size={32} className="mx-auto text-ink-300 dark:text-obsidian-300 mb-2"/>
-          No hay pedidos {tab === "pending" ? "pendientes de cobro" : "cobrados"}.
+          No hay pedidos {tab === "pending" ? "listos para cobrar" : "cobrados"}.
         </div>
       ) : (
         <div className="space-y-2">
@@ -361,6 +433,7 @@ export default function Cashier() {
               onClose={setToClose}
               onPrepay={setToPrepay}
               onTicket={tab === "paid" ? setTicketOrder : undefined}
+              highlight={tab === "pending"}
             />
           ))}
         </div>

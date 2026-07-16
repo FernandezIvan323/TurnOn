@@ -83,9 +83,9 @@ export default function DailyReport() {
               <div className="text-xs text-ink-400 dark:text-obsidian-500">Gastos</div>
               <div className="text-xl font-bold text-rose-700 dark:text-rose-300">{money(e?.total_expenses || 0)}</div>
             </div>
-            <div className="card p-4 text-center border-2 border-brand-400">
+            <div className="card p-4 text-center border-2 border-wine-400">
               <div className="text-xs text-ink-400 dark:text-obsidian-500">Neto del día</div>
-              <div className="text-xl font-bold text-brand-700 dark:text-wine-300">{money(net)}</div>
+              <div className="text-xl font-bold text-wine-600 dark:text-wine-300">{money(net)}</div>
             </div>
           </div>
 
@@ -198,8 +198,8 @@ export default function DailyReport() {
           </div>
 
           {/* Resumen final */}
-          <div className="card p-4 border-2 border-brand-400 bg-brand-50 dark:bg-obsidian-800">
-            <h2 className="font-semibold text-brand-800 dark:text-wine-200 mb-2">Resumen final</h2>
+          <div className="card p-4 border-2 border-wine-400 bg-wine-50 dark:bg-obsidian-800">
+            <h2 className="font-semibold text-wine-800 dark:text-wine-200 mb-2">Resumen final</h2>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span>Ventas brutas</span>
@@ -213,15 +213,15 @@ export default function DailyReport() {
                 <span>− Gastos</span>
                 <span className="font-semibold text-rose-700 dark:text-rose-300">−{money(e?.total_expenses || 0)}</span>
               </div>
-              <div className="flex justify-between pt-2 border-t border-brand-300 dark:border-wine-700 font-bold text-base">
+              <div className="flex justify-between pt-2 border-t border-wine-300 dark:border-wine-700 font-bold text-base">
                 <span>Neto del día</span>
-                <span className="text-brand-800 dark:text-wine-200">{money(net)}</span>
+                <span className="text-wine-800 dark:text-wine-200">{money(net)}</span>
               </div>
             </div>
           </div>
 
           <div className="text-center text-xs text-ink-400 dark:text-obsidian-500 pb-8">
-            Generado el {new Date().toLocaleString("es-MX")} · AppTurnos
+            Generado el {new Date().toLocaleString("es-MX")} · TurnOn
           </div>
         </div>
       )}

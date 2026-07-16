@@ -1,0 +1,2096 @@
+[
+  {
+    "id": "TC001",
+    "title": "Close a table order after payment",
+    "description": "This verifies that a waiter can complete a table order through payment and close it successfully.",
+    "category": "Table Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid waiter username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the table management section"
+      },
+      {
+        "type": "action",
+        "description": "Open a table order"
+      },
+      {
+        "type": "action",
+        "description": "Add a menu item to the order"
+      },
+      {
+        "type": "action",
+        "description": "Update the order status"
+      },
+      {
+        "type": "action",
+        "description": "Close the order and complete payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order is closed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the paid state is shown"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Log in and reach the role-aware home view",
+    "description": "This verifies that a staff member can sign in with a valid 4-digit PIN and land on the correct authenticated home screen.",
+    "category": "User Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid staff username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify role-relevant operations content is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Add items to an open table order",
+    "description": "This verifies that a waiter can add menu items to an open table order and see the order total update.",
+    "category": "Table Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid waiter username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the table management section"
+      },
+      {
+        "type": "action",
+        "description": "Open a table order"
+      },
+      {
+        "type": "action",
+        "description": "Add a menu item to the order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the added item appears in the order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order total is updated"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Process a pending order in the cashier view",
+    "description": "This verifies that a cashier can review a pending order, choose a payment method, add a tip or split the bill, and move it to paid.",
+    "category": "Cashier Payment Closeout",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid cashier username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the cashier section"
+      },
+      {
+        "type": "action",
+        "description": "Select a pending order"
+      },
+      {
+        "type": "action",
+        "description": "Choose a payment method"
+      },
+      {
+        "type": "action",
+        "description": "Set a tip or split the bill option"
+      },
+      {
+        "type": "action",
+        "description": "Complete the payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order appears in the paid list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the payment is marked as completed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Open a table from the table grid",
+    "description": "This verifies that a staff member can view the table grid and open an existing table order from it.",
+    "category": "Table Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid waiter username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the table management section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the table grid is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an occupied table order can be opened"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Review and create the daily cash closing",
+    "description": "A manager or cashier can preview today’s cash closing, enter counted amounts and notes, and create the closing record.",
+    "category": "Cash Closing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the cash closing link"
+      },
+      {
+        "type": "action",
+        "description": "Review the closing preview"
+      },
+      {
+        "type": "action",
+        "description": "Enter an initial cash amount"
+      },
+      {
+        "type": "action",
+        "description": "Enter a counted cash amount"
+      },
+      {
+        "type": "action",
+        "description": "Add closing notes"
+      },
+      {
+        "type": "action",
+        "description": "Create the cash closing"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a closing confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the closing record is created for today"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Process a pending order with a payment method and tip",
+    "description": "A cashier can select a pending order, choose a payment method, add a tip, and close it as paid.",
+    "category": "Cashier Payment",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the cashier payment link"
+      },
+      {
+        "type": "action",
+        "description": "Open a pending order for payment"
+      },
+      {
+        "type": "action",
+        "description": "Select a payment method"
+      },
+      {
+        "type": "action",
+        "description": "Select a tip percentage"
+      },
+      {
+        "type": "action",
+        "description": "Close the order with payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order appears in the paid list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify payment details are reflected for the completed order"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Create a cash closing and review its history",
+    "description": "This verifies that a manager or cashier can create a daily cash closing and then see it recorded in closing history.",
+    "category": "Cash Closing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid manager username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the cash closing section"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the counted cash amounts and notes"
+      },
+      {
+        "type": "action",
+        "description": "Create the cash closing"
+      },
+      {
+        "type": "action",
+        "description": "Open closing history"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new cash closing is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify closing history content is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Mark a delivery order as delivered and closed",
+    "description": "A delivery staff member can complete an order by marking it delivered and closing it.",
+    "category": "Delivery Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the delivery management link"
+      },
+      {
+        "type": "action",
+        "description": "Open an order's details"
+      },
+      {
+        "type": "action",
+        "description": "Mark the order as delivered"
+      },
+      {
+        "type": "action",
+        "description": "Close the order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order is shown as delivered"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order is removed from active workflow columns"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Remove an added item from a table order",
+    "description": "This verifies that a waiter can remove an item from an in-progress table order and see the updated total.",
+    "category": "Table Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid waiter username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the table management section"
+      },
+      {
+        "type": "action",
+        "description": "Open a table order"
+      },
+      {
+        "type": "action",
+        "description": "Add a menu item to the order"
+      },
+      {
+        "type": "action",
+        "description": "Remove the added item from the order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the item is removed from the order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order total reflects the removal"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Close a split bill payment",
+    "description": "A cashier can split an order total into multiple parts and close the payment successfully.",
+    "category": "Cashier Payment",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the cashier payment link"
+      },
+      {
+        "type": "action",
+        "description": "Open a pending order for payment"
+      },
+      {
+        "type": "action",
+        "description": "Calculate a split bill"
+      },
+      {
+        "type": "action",
+        "description": "Close the order with payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order appears in the paid list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the split payment is accepted"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Advance a delivery order through status stages",
+    "description": "A delivery staff member can move an order across the delivery workflow until it reaches the delivered state.",
+    "category": "Delivery Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the delivery management link"
+      },
+      {
+        "type": "action",
+        "description": "Open an order's details"
+      },
+      {
+        "type": "action",
+        "description": "Change the order status to preparing"
+      },
+      {
+        "type": "action",
+        "description": "Change the order status to on the way"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order appears in the updated status column"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the delivery workflow reflects the latest status"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "View dashboard metrics and operations shortcuts",
+    "description": "This verifies that an authenticated user can open the home dashboard and see sales metrics, operational status, and navigation options.",
+    "category": "Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid staff username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify today's sales metrics are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify operational status and top products content is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Review operational dashboard KPIs",
+    "description": "A logged-in user can view the dashboard and see the operational KPIs and top products relevant to their role.",
+    "category": "Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify operational KPI metrics are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify top products or assigned tables are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Move a delivery order through the kanban workflow",
+    "description": "This verifies that a delivery staff member can assign a driver, advance an order across statuses, and mark it delivered and closed.",
+    "category": "Delivery",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid delivery staff username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the delivery board"
+      },
+      {
+        "type": "action",
+        "description": "Assign a delivery person to an order"
+      },
+      {
+        "type": "action",
+        "description": "Move the order to the next status"
+      },
+      {
+        "type": "action",
+        "description": "Mark the order as delivered"
+      },
+      {
+        "type": "action",
+        "description": "Close the order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order appears in the delivered or closed state"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the kanban board reflects the updated workflow"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "Assign a delivery person to an order",
+    "description": "A delivery staff member can open an order and assign a delivery person to it.",
+    "category": "Delivery Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the delivery management link"
+      },
+      {
+        "type": "action",
+        "description": "Open an order's details"
+      },
+      {
+        "type": "action",
+        "description": "Assign a delivery person to the order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order shows an assigned delivery person"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order remains visible on the board"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "Update a product stock level",
+    "description": "An administrator can change a product's stock level and see the updated value in the inventory list.",
+    "category": "Inventory Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/inventory"
+      },
+      {
+        "type": "action",
+        "description": "Update a product's stock level"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated stock level is displayed in the inventory list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC018",
+    "title": "Show an error for an invalid PIN",
+    "description": "This verifies that entering an invalid 4-digit PIN prevents access and shows an error message.",
+    "category": "User Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid staff username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with an invalid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an invalid credentials error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard is not displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC019",
+    "title": "Search for a customer and open their history",
+    "description": "A staff member can search for an existing customer, open the matching record, and view that customer's order history.",
+    "category": "Customer Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /customers"
+      },
+      {
+        "type": "action",
+        "description": "Search for an existing customer by name or phone"
+      },
+      {
+        "type": "action",
+        "description": "Open the matching customer record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the customer profile and order history are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC020",
+    "title": "View cash closing history after creating a closing",
+    "description": "A manager or cashier can open closing history and see previously created cash closings listed.",
+    "category": "Cash Closing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the cash closing link"
+      },
+      {
+        "type": "action",
+        "description": "Create the cash closing if needed"
+      },
+      {
+        "type": "action",
+        "description": "Open the closing history view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify historical cash closings are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the newly created closing appears in history"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC021",
+    "title": "Record a stock movement and review history",
+    "description": "An administrator can register a stock entry, exit, or adjustment and confirm the movement appears in history.",
+    "category": "Inventory Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/inventory"
+      },
+      {
+        "type": "action",
+        "description": "Record a stock movement"
+      },
+      {
+        "type": "action",
+        "description": "Open the movement history"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new stock movement is listed in the movement history"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC022",
+    "title": "Search for a customer and create a new customer record",
+    "description": "This verifies that an administrator can search customers and create a new customer when no match exists.",
+    "category": "Customers",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid administrator username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the customers section"
+      },
+      {
+        "type": "action",
+        "description": "Search for a customer by name or phone"
+      },
+      {
+        "type": "action",
+        "description": "Create a new customer record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the customer record is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the customer can be found in search results"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC023",
+    "title": "Review delivery orders by status",
+    "description": "A delivery staff member can open the delivery board and see orders organized by status.",
+    "category": "Delivery Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the delivery management link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify delivery orders are displayed in status columns"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order cards are visible on the board"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC024",
+    "title": "Update an existing customer record",
+    "description": "This verifies that an administrator can open an existing customer and save updated contact details.",
+    "category": "Customers",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid administrator username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the customers section"
+      },
+      {
+        "type": "action",
+        "description": "Search for an existing customer"
+      },
+      {
+        "type": "action",
+        "description": "Open the customer record"
+      },
+      {
+        "type": "action",
+        "description": "Update the customer details"
+      },
+      {
+        "type": "action",
+        "description": "Save the customer record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated customer record is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the change is reflected in the customer details"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC025",
+    "title": "Update an existing customer profile",
+    "description": "A staff member can edit a customer record and see the updated details reflected in the profile view.",
+    "category": "Customer Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /customers"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing customer record"
+      },
+      {
+        "type": "action",
+        "description": "Update the customer details"
+      },
+      {
+        "type": "action",
+        "description": "Save the changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated customer profile is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC026",
+    "title": "Review paid orders after closing payments",
+    "description": "A cashier can switch to the paid list and confirm completed orders are visible there.",
+    "category": "Cashier Payment",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the cashier payment link"
+      },
+      {
+        "type": "action",
+        "description": "View the paid orders list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify completed orders are displayed in the paid list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify closed payment records are visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC027",
+    "title": "Generate a printable daily report",
+    "description": "An administrator can generate the daily report and view the printable breakdown page.",
+    "category": "Reports",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /reports"
+      },
+      {
+        "type": "action",
+        "description": "Open the daily report view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the daily report breakdown is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the report is presented in a printable layout"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC028",
+    "title": "View product stock levels and low stock alerts",
+    "description": "An administrator can open inventory and see current stock levels along with any low stock indicators.",
+    "category": "Inventory Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/inventory"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify product stock levels are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify low stock alerts are displayed when applicable"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC029",
+    "title": "Review sales dashboard and reports",
+    "description": "An administrator can view sales KPIs, rankings, peak hours, and daily history from the reporting area.",
+    "category": "Reports",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /reports"
+      },
+      {
+        "type": "action",
+        "description": "Review the sales summary section"
+      },
+      {
+        "type": "action",
+        "description": "Review the top products and peak hours sections"
+      },
+      {
+        "type": "action",
+        "description": "Open the daily history section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify report summary metrics are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify daily history entries are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC030",
+    "title": "Maintain a customer's order history after profile changes",
+    "description": "A staff member can open a customer profile after updates and still review that customer's order history from the same record.",
+    "category": "Customer Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /customers"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing customer record"
+      },
+      {
+        "type": "action",
+        "description": "Update the customer details"
+      },
+      {
+        "type": "action",
+        "description": "Save the changes"
+      },
+      {
+        "type": "action",
+        "description": "Open the customer's order history"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the customer's order history remains visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC031",
+    "title": "Close a delivery order without assignment changes",
+    "description": "A delivery staff member can view an order, keep the current assignment, and close it from the final state.",
+    "category": "Delivery Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the delivery management link"
+      },
+      {
+        "type": "action",
+        "description": "Open an order's details"
+      },
+      {
+        "type": "action",
+        "description": "Close the order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order is shown in the delivered or closed state"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order no longer requires active handling"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC032",
+    "title": "Assign tables to a waiter",
+    "description": "An administrator can assign tables to a waiter and confirm the assignment list reflects the change.",
+    "category": "Staff Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /staff"
+      },
+      {
+        "type": "action",
+        "description": "Open table assignments"
+      },
+      {
+        "type": "action",
+        "description": "Assign one or more tables to a waiter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated table assignment appears in the list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC033",
+    "title": "Adjust inventory stock and review movement history",
+    "description": "This verifies that an administrator can update inventory stock and see the corresponding movement history entry.",
+    "category": "Inventory",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid administrator username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the inventory section"
+      },
+      {
+        "type": "action",
+        "description": "Adjust stock for an item"
+      },
+      {
+        "type": "action",
+        "description": "Save the inventory change"
+      },
+      {
+        "type": "action",
+        "description": "Open movement history"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the inventory update is reflected"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the movement history entry is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC034",
+    "title": "Search for an existing customer",
+    "description": "An administrator can search customers by name or phone and see matching results.",
+    "category": "Customer Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the customers management link"
+      },
+      {
+        "type": "action",
+        "description": "Search for an existing customer"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify matching customers are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the customer list filters to relevant results"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC035",
+    "title": "Adjust inventory stock and record movement history",
+    "description": "An administrator can update inventory quantities and confirm the movement is logged in history.",
+    "category": "Inventory Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the inventory management link"
+      },
+      {
+        "type": "action",
+        "description": "Select an inventory item"
+      },
+      {
+        "type": "action",
+        "description": "Update the stock quantity"
+      },
+      {
+        "type": "action",
+        "description": "Save the inventory change"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated stock level is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the movement history shows the change"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC036",
+    "title": "Create an expense",
+    "description": "An administrator can add a new expense and see it reflected in the expense list and summary.",
+    "category": "Expense Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/expenses"
+      },
+      {
+        "type": "action",
+        "description": "Create a new expense with a category, amount, and description"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new expense appears in the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the expense summary is updated"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC037",
+    "title": "Create and review an expense entry",
+    "description": "This verifies that an administrator can record a new expense and see it included in the expense summary.",
+    "category": "Expenses",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid administrator username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the expenses section"
+      },
+      {
+        "type": "action",
+        "description": "Create a new expense entry"
+      },
+      {
+        "type": "action",
+        "description": "Save the expense"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the expense appears in the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the expense summary is updated"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC038",
+    "title": "Review customer order history",
+    "description": "An administrator can open a customer record and view that customer’s order history.",
+    "category": "Customer Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the customers management link"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing customer record"
+      },
+      {
+        "type": "action",
+        "description": "Open the order history section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify customer order history is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify past orders are associated with the customer"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC039",
+    "title": "Keep the inventory list after a movement update",
+    "description": "An administrator can make a stock movement and still view the refreshed inventory list afterward.",
+    "category": "Inventory Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/inventory"
+      },
+      {
+        "type": "action",
+        "description": "Record a stock movement"
+      },
+      {
+        "type": "action",
+        "description": "Return to the inventory list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the inventory list is displayed with updated stock values"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC040",
+    "title": "Create a delivery person",
+    "description": "An administrator can add a delivery person and see the delivery staff list refresh with the new record.",
+    "category": "Staff Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /staff"
+      },
+      {
+        "type": "action",
+        "description": "Create a new delivery person"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new delivery person appears in the delivery staff list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC041",
+    "title": "Record an inventory movement entry",
+    "description": "An administrator can register an inventory entry or exit movement and see it reflected in the log.",
+    "category": "Inventory Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the inventory management link"
+      },
+      {
+        "type": "action",
+        "description": "Create a new inventory movement"
+      },
+      {
+        "type": "action",
+        "description": "Save the movement entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new movement is listed in history"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the inventory movement was recorded"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC042",
+    "title": "Create a waiter",
+    "description": "An administrator can add a waiter and see the waiter list update with the new record.",
+    "category": "Staff Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /staff"
+      },
+      {
+        "type": "action",
+        "description": "Create a new waiter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new waiter appears in the waiter list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC043",
+    "title": "Create an expense and review summaries",
+    "description": "An administrator can add an expense and see the expense summary and net income update in the expenses view.",
+    "category": "Expense Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the expenses management link"
+      },
+      {
+        "type": "action",
+        "description": "Create a new expense"
+      },
+      {
+        "type": "action",
+        "description": "Save the expense"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the expense appears in the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify expense summaries are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC044",
+    "title": "Edit an expense",
+    "description": "An administrator can filter expenses, update an existing expense, and see the updated details persist in the list.",
+    "category": "Expense Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/expenses"
+      },
+      {
+        "type": "action",
+        "description": "Filter the expense list to find an existing expense"
+      },
+      {
+        "type": "action",
+        "description": "Open an expense for editing"
+      },
+      {
+        "type": "action",
+        "description": "Update the expense details"
+      },
+      {
+        "type": "action",
+        "description": "Save the changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated expense appears in the list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC045",
+    "title": "View reports and open the printable daily report",
+    "description": "This verifies that an administrator can review reporting dashboards and open the daily report output.",
+    "category": "Reports",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid administrator username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the reports section"
+      },
+      {
+        "type": "action",
+        "description": "Open the daily report view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify report summary content is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the daily report breakdown is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC046",
+    "title": "Manage staff assignments for tables and delivery roles",
+    "description": "This verifies that an administrator can create or update assignments that support waiter and delivery operations.",
+    "category": "Staff",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the username field with a valid administrator username"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with a valid 4-digit PIN"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the staff management section"
+      },
+      {
+        "type": "action",
+        "description": "Create or update a staff assignment"
+      },
+      {
+        "type": "action",
+        "description": "Save the assignment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the staff assignment is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the assigned role or table mapping is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC047",
+    "title": "Edit an existing expense",
+    "description": "An administrator can update an existing expense and see the revised details saved.",
+    "category": "Expense Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the expenses management link"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing expense"
+      },
+      {
+        "type": "action",
+        "description": "Update the expense details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated expense is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the expense remains in the list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC048",
+    "title": "Display no results for an unmatched customer search",
+    "description": "A staff member can search for a name or phone number with no match and see an empty state instead of customer records.",
+    "category": "Customer Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the PIN field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /customers"
+      },
+      {
+        "type": "action",
+        "description": "Search for a customer using unmatched details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an empty state is displayed for customer search results"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC049",
+    "title": "Delete an expense",
+    "description": "An administrator can remove an expense and confirm it no longer appears in the refreshed list.",
+    "category": "Expense Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/expenses"
+      },
+      {
+        "type": "action",
+        "description": "Create a new expense with a unique description"
+      },
+      {
+        "type": "action",
+        "description": "Open the expense for removal"
+      },
+      {
+        "type": "action",
+        "description": "Delete the expense"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the expense no longer appears in the list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC050",
+    "title": "Review waiter history",
+    "description": "An administrator can open a waiter history record and review past activity and assignments.",
+    "category": "Staff Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /staff"
+      },
+      {
+        "type": "action",
+        "description": "Open a waiter history record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the waiter history details are displayed"
+      }
+    ],
+    "priority": "Low"
+  }
+]

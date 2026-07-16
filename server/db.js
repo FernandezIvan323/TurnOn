@@ -152,6 +152,47 @@ export async function runMigrations() {
   await pool.query(`
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS stock_deducted BOOLEAN NOT NULL DEFAULT FALSE;
   `);
+
+  // Fusionar líneas duplicadas 1x+1x → 2x (misma mesa/pedido, mismo producto y nota)
+  await pool.query(`
+    WITH dups AS (
+      SELECT order_id,
+             product_id,
+             COALESCE(notes, '') AS note_key,
+             MIN(id) AS keep_id,
+             SUM(quantity)::int AS total_qty
+        FROM order_items
+       WHERE product_id IS NOT NULL
+       GROUP BY order_id, product_id, COALESCE(notes, '')
+      HAVING COUNT(*) > 1
+    ),
+    upd AS (
+      UPDATE order_items oi
+         SET quantity = d.total_qty
+        FROM dups d
+       WHERE oi.id = d.keep_id
+      RETURNING oi.id
+    )
+    DELETE FROM order_items oi
+     USING dups d
+     WHERE oi.order_id = d.order_id
+       AND oi.product_id = d.product_id
+       AND COALESCE(oi.notes, '') = d.note_key
+       AND oi.id <> d.keep_id
+  `);
+
+  // Clave estable de nota + índice único: impide 1x+1x a nivel de BD
+  await pool.query(`
+    ALTER TABLE order_items
+      ADD COLUMN IF NOT EXISTS notes_key TEXT
+      GENERATED ALWAYS AS (COALESCE(notes, '')) STORED
+  `);
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_order_items_line
+      ON order_items (order_id, product_id, notes_key)
+      WHERE product_id IS NOT NULL
+  `);
+
   console.log("[db] Migraciones aplicadas.");
 }
 

@@ -1,8 +1,9 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
 import { money, formatTime, statusLabels, statusColors, typeLabels, assignTurns } from "../../lib/format";
+import { kanbanColumnClass, KANBAN_COUNT_PILL } from "../../lib/kanbanTones";
 import { diffNewOrders, playBeep, isNotifyMuted, setNotifyMuted } from "../../lib/notify";
 import {
   Phone, MapPin, Plus, ChevronRight, X, User as UserIcon,
@@ -12,10 +13,10 @@ import {
 } from "lucide-react";
 
 const COLUMNS = [
-  { key: "pending",   title: "Pendientes",     tone: "bg-amber-50 border-amber-200 dark:bg-amber-900/60 dark:border-amber-700" },
-  { key: "preparing", title: "En preparación", tone: "bg-blue-50 border-blue-200 dark:bg-blue-900/60 dark:border-blue-700" },
-  { key: "on_the_way",title: "En camino",      tone: "bg-indigo-50 border-indigo-200 dark:bg-indigo-900/60 dark:border-indigo-700" },
-  { key: "delivered", title: "Entregados",     tone: "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/60 dark:border-emerald-700" },
+  { key: "pending",   title: "Pendientes" },
+  { key: "preparing", title: "En preparación" },
+  { key: "on_the_way",title: "En camino" },
+  { key: "delivered", title: "Entregados" },
 ];
 
 function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPreparing, onBackPending, onReopen }) {
@@ -23,7 +24,7 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
   return (
     <div
       onClick={onClick}
-      className={`card p-3 cursor-pointer hover:shadow-pop transition ${isNext ? "ring-2 ring-brand-500 dark:ring-wine-400" : ""}`}
+      className={`card p-3 cursor-pointer transition hover:border-wine-400 hover:shadow-pop dark:hover:border-wine-500/40 ${isNext ? "ring-2 ring-wine-500 dark:ring-wine-400" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -31,34 +32,34 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
             {turn && (
               <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                 isNext
-                  ? "bg-brand-600 text-white dark:bg-wine-500"
-                  : "bg-paper-200 text-ink-700 dark:bg-obsidian-800 dark:text-obsidian-200"
+                  ? "bg-wine-600 text-white dark:bg-wine-500"
+                  : "bg-paper-200 text-ink-700 dark:bg-obsidian-800 dark:text-white"
               }`}>
                 #{turn}
               </span>
             )}
-            <div className="text-xs text-ink-400 dark:text-obsidian-500">#{order.id} · {formatTime(order.created_at)}</div>
+            <div className="text-xs text-ink-600 dark:text-white">#{order.id} · {formatTime(order.created_at)}</div>
           </div>
-          <div className="font-semibold text-ink-800 dark:text-obsidian-50 flex items-center gap-1.5">
-            <UserIcon size={14} className="text-ink-400 dark:text-obsidian-500" />
+          <div className="font-semibold text-ink-900 dark:text-white flex items-center gap-1.5">
+            <UserIcon size={14} className="text-ink-500 dark:text-white/80" />
             {order.customer_name || "—"}
           </div>
         </div>
         <div className="text-right">
-          <div className="font-semibold text-ink-800 dark:text-obsidian-50">{money(order.total)}</div>
+          <div className="font-semibold tabular-nums text-ink-900 dark:text-white">{money(order.total)}</div>
           {isPaid && (
             <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 mt-0.5">
               ✓ Pagado {order.payment_method ? `(${order.payment_method})` : ""}
             </div>
           )}
           {order.delivery_name && (
-            <div className="text-[10px] text-ink-500 dark:text-obsidian-400 mt-0.5">
+            <div className="text-[10px] text-ink-600 dark:text-white mt-0.5">
               <Truck size={10} className="inline" /> {order.delivery_name}
             </div>
           )}
         </div>
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-500 dark:text-obsidian-400">
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-600 dark:text-white">
         {order.customer_phone && (
           <span className="inline-flex items-center gap-1"><Phone size={12}/>{order.customer_phone}</span>
         )}
@@ -66,7 +67,7 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
           <span className="inline-flex items-center gap-1"><MapPin size={12}/>{order.customer_neighborhood}</span>
         )}
         {order.notes && (
-          <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400"><StickyNote size={12}/>nota</span>
+          <span className="inline-flex items-center gap-1 text-amber-800 dark:text-amber-200"><StickyNote size={12}/>nota</span>
         )}
       </div>
       <div className="mt-3 flex gap-1.5 flex-wrap">
@@ -113,14 +114,14 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
           </>
         )}
         {order.status === "on_the_way" && (
-          <span className="badge bg-emerald-100 text-emerald-800 w-full justify-center py-1 dark:bg-emerald-900/80 dark:text-emerald-200">
+          <span className="badge w-full justify-center py-1 bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-white">
             <CheckCircle2 size={12} className="mr-1" /> {isPaid ? "Pagado · listo para cerrar al entregar" : "Listo para cerrar al entregar"}
           </span>
         )}
         {order.status === "delivered" && (
           <button
             onClick={(e) => { e.stopPropagation(); onReopen(order); }}
-            className="w-full h-8 px-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-900/80 dark:hover:bg-amber-900 dark:text-amber-200 text-xs font-medium flex items-center justify-center gap-1 transition"
+            className="w-full h-8 px-2 rounded-lg bg-paper-200 hover:bg-paper-300 text-ink-800 dark:bg-obsidian-800 dark:hover:bg-obsidian-700 dark:text-white text-xs font-medium flex items-center justify-center gap-1 transition"
             title="Reabrir este pedido (corrige errores de cierre)"
           >
             <RotateCcw size={14}/> Reabrir
@@ -250,7 +251,7 @@ function NewOrderModal({ onClose, onCreated }) {
                   />
                 </div>
                 {showSugg && suggestions.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full card border-brand-300 dark:border-brand-700 max-h-64 overflow-y-auto shadow-pop">
+                  <div className="absolute z-10 mt-1 w-full card border-wine-300 dark:border-wine-700 max-h-64 overflow-y-auto shadow-pop">
                     {suggestions.map((s) => (
                       <button
                         key={s.id}
@@ -276,10 +277,10 @@ function NewOrderModal({ onClose, onCreated }) {
             )}
 
             {customer && (
-              <div className="mb-3 card p-3 border-brand-300 bg-brand-50/40 dark:bg-wine-900/20 dark:border-brand-800">
+              <div className="mb-3 card p-3 border-wine-300 bg-wine-50/40 dark:bg-wine-900/20 dark:border-wine-800">
                 <div className="flex items-start justify-between">
                   <div>
-                    <div className="text-xs text-brand-700 dark:text-wine-300 font-medium">Cliente seleccionado</div>
+                    <div className="text-xs text-wine-600 dark:text-wine-300 font-medium">Cliente seleccionado</div>
                     <div className="font-semibold text-ink-800 dark:text-obsidian-50">{customer.name}</div>
                     <div className="text-xs text-ink-500 dark:text-obsidian-400 flex items-center gap-2">
                       <Phone size={10}/> {customer.phone}
@@ -361,11 +362,11 @@ function NewOrderModal({ onClose, onCreated }) {
                 <button
                   key={p.id}
                   onClick={() => addToCart(p)}
-                  className="card p-3 text-left hover:border-brand-400 dark:hover:border-brand-600 transition"
+                  className="card p-3 text-left hover:border-wine-400 dark:hover:border-wine-500 transition"
                 >
                   <div className="text-xs text-ink-400 dark:text-obsidian-500">{p.category_name || "Sin categoría"}</div>
                   <div className="font-medium text-ink-800 dark:text-obsidian-50 text-sm">{p.name}</div>
-                  <div className="text-brand-700 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
+                  <div className="text-wine-600 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
                 </button>
               ))}
               {products.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500 col-span-full">No hay productos en el menú. Agrega desde "Menú (catálogo)".</div>}
@@ -410,7 +411,7 @@ function AssignModal({ order, onClose, onAssigned }) {
             <button
               key={p.id}
               onClick={() => assign(p.id)}
-              className="w-full card p-3 text-left hover:border-brand-400 dark:hover:border-brand-600 flex items-center justify-between transition"
+              className="w-full card p-3 text-left hover:border-wine-400 dark:hover:border-wine-500 flex items-center justify-between transition"
             >
               <div>
                 <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
@@ -548,7 +549,7 @@ function HistoryModal({ onClose }) {
                 onClick={() => loadHistory(p.id)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition border ${
                   selected === p.id
-                    ? "bg-brand-500 text-white border-brand-500 dark:bg-wine-600 dark:text-white"
+                    ? "bg-wine-600 text-white border-wine-500 dark:bg-wine-600 dark:text-white"
                     : "bg-paper-50 text-ink-600 border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-200 dark:border-obsidian-700/50 dark:hover:bg-obsidian-800"
                 }`}
               >
@@ -564,9 +565,9 @@ function HistoryModal({ onClose }) {
           )}
           {selected && !loading && history.length > 0 && (
             <div>
-              <div className="card p-3 bg-brand-50/60 border-brand-200 dark:bg-wine-900/20 dark:border-wine-800 mb-3 flex items-center justify-between">
+              <div className="card p-3 bg-wine-50/60 border-wine-200 dark:bg-wine-900/20 dark:border-wine-800 mb-3 flex items-center justify-between">
                 <span className="text-sm font-medium text-ink-700 dark:text-obsidian-100">Total entregado</span>
-                <span className="text-lg font-bold text-brand-700 dark:text-wine-300">{money(totalEarned)}</span>
+                <span className="text-lg font-bold text-wine-600 dark:text-wine-300">{money(totalEarned)}</span>
               </div>
               <div className="space-y-2">
                 {history.map((o) => (
@@ -770,14 +771,14 @@ export default function Delivery() {
       />
 
       {deliveredTodayCount > 0 && filter === "active" && (
-        <div className="mb-4 card p-3 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-emerald-800 dark:text-emerald-200">
+        <div className="mb-4 card flex items-center justify-between border-paper-300 p-3 dark:border-obsidian-700">
+          <div className="flex items-center gap-2 text-sm text-ink-700 dark:text-white">
             <Package size={16}/>
             <span><b>{deliveredTodayCount}</b> {deliveredTodayCount === 1 ? "pedido entregado" : "pedidos entregados"} hoy</span>
           </div>
           <button
             onClick={() => setFilter("delivered")}
-            className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:underline"
+            className="text-xs font-semibold text-wine-700 hover:underline dark:text-wine-300"
           >
             Ver todos ({totalDeliveredCount}) →
           </button>
@@ -785,14 +786,14 @@ export default function Delivery() {
       )}
 
       {loading ? (
-        <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
+        <div className="text-sm text-ink-600 dark:text-white">Cargando…</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {COLUMNS.map((col) => (
-            <div key={col.key} className={`rounded-2xl border ${col.tone} p-3 min-h-[200px]`}>
-              <div className="flex items-center justify-between mb-3 px-1">
-                <h3 className="font-semibold text-ink-800 dark:text-white">{col.title}</h3>
-                <span className="text-xs text-ink-600 dark:text-obsidian-300 bg-paper-50 dark:bg-obsidian-800 px-2 py-0.5 rounded-full border border-paper-300 dark:border-obsidian-600">
+            <div key={col.key} className={kanbanColumnClass(col.key)}>
+              <div className="mb-3 flex items-center justify-between px-1">
+                <h3 className="font-semibold text-ink-900 dark:text-white">{col.title}</h3>
+                <span className={KANBAN_COUNT_PILL}>
                   {byStatus(col.key).length}
                 </span>
               </div>
@@ -812,7 +813,7 @@ export default function Delivery() {
                   />
                 ))}
                 {byStatus(col.key).length === 0 && (
-                  <div className="text-center text-xs text-ink-400 dark:text-obsidian-500 py-6">Sin pedidos</div>
+                  <div className="py-6 text-center text-xs text-ink-500 dark:text-white/70">Sin pedidos</div>
                 )}
               </div>
             </div>
