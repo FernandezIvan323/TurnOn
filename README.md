@@ -243,34 +243,6 @@ AppTurnos/
 └── README.md
 ```
 
----
-
-## 🗄️ Modelo de base de datos
-
-| Tabla | Descripción |
-|-------|-------------|
-| `users` | Usuarios (admin/mesero) con username + PIN hasheado + rol |
-| `waiter_tables` | Asignación mesas ↔ meseros |
-| `categories` | Categorías del menú |
-| `products` | Productos con precio, categoría, stock, min_stock |
-| `stock_movements` | Movimientos de inventario (entrada/salida/ajuste) |
-| `tables` | Mesas físicas del restaurant |
-| `customers` | Clientes de domicilio |
-| `delivery_persons` | Repartidores |
-| `orders` | Pedidos (type, status, payment_status, total, tip, estimate_minutes) |
-| `order_items` | Items de cada pedido con snapshot de precio |
-| `cash_closings` | Cortes de caja diarios |
-| `expenses` | Gastos operativos |
-
-### Estados de pedido
-`pending → preparing → on_the_way → delivered` (domicilios)  
-`pending → preparing → ready_to_pay → delivered` (mesas)  
-`pending → preparing → ready_to_pay → delivered` (pickup)
-
-### Estados de pago
-`pending → paid` (pago normal)  
-`pending → debt` (deuda) → `paid` (cobro posterior)
-
 ## 📊 Workflow
 
 ```
