@@ -67,8 +67,8 @@ timeout /t 2 /nobreak >nul
 goto loop
 "@ | Set-Content -LiteralPath $keeper -Encoding ASCII
 
-# Lanzar keeper desacoplado
-start "TurnOn-Keeper" /MIN cmd.exe /c "`"$keeper`""
+# Lanzar keeper desacoplado (cmd start, no el alias Start-Process de PowerShell)
+cmd.exe /c "start `"TurnOn-Keeper`" /MIN cmd.exe /c `"$keeper`""
 
 $ok = $false
 $found = $null
