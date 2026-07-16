@@ -1,6 +1,5 @@
-# Cloudflare Quick Tunnel → TurnOn en http://127.0.0.1:PORT
-# Uso: npm run start:tunnel
-# Importante: NO redirigir stdout de cloudflared (llena el buffer y mata el proceso).
+# Cloudflare Quick Tunnel. Deja cloudflared corriendo (ventana minimizada).
+# NO redirigir stdout (buffer deadlock).
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
@@ -26,25 +25,17 @@ function Test-TurnOn {
   try {
     $r = Invoke-WebRequest -Uri "$target/api/health" -UseBasicParsing -TimeoutSec 3
     return $r.StatusCode -eq 200
-  } catch {
-    return $false
-  }
+  } catch { return $false }
 }
 
 if (-not (Test-TurnOn)) {
-  Write-Host ""
-  Write-Host "[tunnel] TurnOn NO responde en $target" -ForegroundColor Red
-  Write-Host "[tunnel] Primero: npm run start:lan   o   INICIAR-TURNON.bat" -ForegroundColor Yellow
-  Write-Host ""
+  Write-Host "[tunnel] TurnOn no responde en $target. Corre: npm run start:lan" -ForegroundColor Red
   exit 1
 }
 
 $cf = Get-Command cloudflared -ErrorAction SilentlyContinue
 if (-not $cf) {
-  Write-Host ""
-  Write-Host "[tunnel] No se encontro cloudflared." -ForegroundColor Red
-  Write-Host "  winget install --id Cloudflare.cloudflared" -ForegroundColor Yellow
-  Write-Host ""
+  Write-Host "[tunnel] Falta cloudflared: winget install --id Cloudflare.cloudflared" -ForegroundColor Red
   exit 1
 }
 
@@ -52,27 +43,21 @@ Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force -Err
 Start-Sleep -Milliseconds 400
 Remove-Item $tunnelLog, $urlFile -Force -ErrorAction SilentlyContinue
 
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  TurnOn + Cloudflare Quick Tunnel" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  Local OK: $target"
-Write-Host "  Deja esta ventana abierta (o el proceso cloudflared en segundo plano)."
-Write-Host ""
-
-$p = Start-Process -FilePath $cf.Source `
-  -ArgumentList @("tunnel", "--url", $target, "--no-autoupdate", "--logfile", $tunnelLog, "--loglevel", "info") `
-  -WorkingDirectory $root `
-  -WindowStyle Minimized `
-  -PassThru
-
-$p.Id | Set-Content -LiteralPath $pidFile -Encoding ascii
+# Lanzar con cmd start para que sobreviva a la terminal
+$bat = Join-Path $env:TEMP "turnon-tunnel.bat"
+@"
+@echo off
+cd /d "$root"
+start "TurnOn-Tunnel" /MIN "$($cf.Source)" tunnel --url $target --no-autoupdate --logfile "$tunnelLog" --loglevel info
+"@ | Set-Content -LiteralPath $bat -Encoding ASCII
+cmd.exe /c "`"$bat`""
 
 $url = $null
 for ($i = 0; $i -lt 60; $i++) {
   Start-Sleep -Milliseconds 500
-  if ($p.HasExited) {
-    Write-Host "[tunnel] cloudflared salio (codigo $($p.ExitCode)). Mira tunnel.log" -ForegroundColor Red
+  $cfProc = Get-Process cloudflared -ErrorAction SilentlyContinue
+  if (-not $cfProc -and $i -gt 10) {
+    Write-Host "[tunnel] cloudflared no arranco. Mira tunnel.log" -ForegroundColor Red
     if (Test-Path $tunnelLog) { Get-Content $tunnelLog -Tail 30 }
     exit 1
   }
@@ -87,27 +72,36 @@ for ($i = 0; $i -lt 60; $i++) {
 }
 
 if (-not $url) {
-  Write-Host "[tunnel] No aparecio URL. Mira tunnel.log" -ForegroundColor Red
+  Write-Host "[tunnel] No salio URL. Mira tunnel.log" -ForegroundColor Red
   if (Test-Path $tunnelLog) { Get-Content $tunnelLog -Tail 40 }
   exit 1
 }
 
+$cfId = (Get-Process cloudflared -ErrorAction SilentlyContinue | Select-Object -First 1).Id
+if ($cfId) { $cfId | Set-Content -LiteralPath $pidFile -Encoding ascii }
 $url | Set-Content -LiteralPath $urlFile -Encoding ascii
 
+# Esperar a que el tunel conteste
+$ok = $false
+for ($i = 1; $i -le 10; $i++) {
+  Start-Sleep -Seconds 1
+  try {
+    $r = Invoke-WebRequest -Uri "$url/api/health" -UseBasicParsing -TimeoutSec 15
+    if ($r.StatusCode -eq 200) { $ok = $true; break }
+  } catch { }
+}
+
+Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
-Write-Host "  LINK PUBLICO (celular con datos):" -ForegroundColor Green
+Write-Host "  LINK PUBLICO (celular + datos):" -ForegroundColor Green
 Write-Host "  $url" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
+if ($ok) {
+  Write-Host "  Health check: OK" -ForegroundColor Green
+} else {
+  Write-Host "  Health check: pendiente (proba en 10s en el celular)" -ForegroundColor Yellow
+}
 Write-Host "  Guardado en tunnel-url.txt"
-Write-Host "  Ctrl+C no cierra el tunel minimizado; para detener:"
-Write-Host "    Stop-Process -Name cloudflared -Force"
-Write-Host "  o cierra la ventana minimizada de cloudflared."
+Write-Host "  Deja el PC despierto (cargador, sin suspender)."
+Write-Host "  Si 502 Host Error: start:lan + start:tunnel otra vez (link NUEVO)."
 Write-Host ""
-Write-Host "  Si ves Error 530 / Host / puerta de enlace:"
-Write-Host "    1) npm run start:lan"
-Write-Host "    2) npm run start:tunnel   (link NUEVO)"
-Write-Host ""
-
-# Mantener la ventana del script abierta mostrando el link (tunel ya corre aparte)
-Write-Host "Presiona Enter para cerrar esta ventana (el tunel SIGUE corriendo)..."
-[void][System.Console]::ReadLine()

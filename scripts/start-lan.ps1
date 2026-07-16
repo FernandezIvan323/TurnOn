@@ -1,13 +1,12 @@
-# Arranca TurnOn LAN como proceso Windows independiente (no se cae al cerrar la terminal).
-# Uso: npm run start:lan
+# Arranca TurnOn LAN como proceso Windows independiente.
+# NO redirigir stdout/stderr al mismo api.log (el server ya hace tee a disco;
+# redirigir al mismo archivo en Windows puede tumbar el proceso).
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $root
 
 $pidApi = Join-Path $root "api.pid"
-$logApi = Join-Path $root "api.log"
-$errApi = Join-Path $root "api-error.log"
 $port = 3001
 
 $envFile = Join-Path $root "server\.env"
@@ -51,41 +50,39 @@ if (-not (Test-Path (Join-Path $root "dist\index.html"))) {
 }
 
 $nodeExe = (Get-Command node.exe).Source
-
-# Env del proceso hijo (Start-Process hereda el entorno actual)
 $env:HOST = "0.0.0.0"
 $env:LAN_MODE = "1"
 $env:TUNNEL_MODE = "1"
 $env:TRUST_PROXY = "1"
 $env:PORT = "$port"
 
-try {
-  "" | Set-Content -LiteralPath $logApi -Encoding utf8
-  "" | Set-Content -LiteralPath $errApi -Encoding utf8
-} catch { /* logs en uso: seguir */ }
+# cmd /c start con proceso separado del job tree de la terminal
+$bat = Join-Path $env:TEMP "turnon-lan-stable.bat"
+@"
+@echo off
+cd /d "$root"
+set HOST=0.0.0.0
+set LAN_MODE=1
+set TUNNEL_MODE=1
+set TRUST_PROXY=1
+set PORT=$port
+start "TurnOn-API" /MIN "$nodeExe" server\index.js
+"@ | Set-Content -LiteralPath $bat -Encoding ASCII
 
-# Proceso desacoplado: Hidden + sin consola padre (más estable que start /MIN)
-$proc = Start-Process -FilePath $nodeExe `
-  -ArgumentList @("server\index.js") `
-  -WorkingDirectory $root `
-  -WindowStyle Hidden `
-  -RedirectStandardOutput $logApi `
-  -RedirectStandardError $errApi `
-  -PassThru
+cmd.exe /c "`"$bat`""
 
 $ok = $false
 $found = $null
 for ($i = 0; $i -lt 40; $i++) {
   Start-Sleep -Milliseconds 400
-  if ($proc.HasExited) { break }
   $found = Get-NodeOnPort $port
   if ($found) { $ok = $true; break }
 }
 
 if (-not $ok) {
   Write-Host "[lan] ERROR: no arranco. Mira api.log y api-error.log" -ForegroundColor Red
-  if (Test-Path $logApi) { Get-Content $logApi -Tail 25 }
-  if (Test-Path $errApi) { Get-Content $errApi -Tail 25 }
+  if (Test-Path (Join-Path $root "api.log")) { Get-Content (Join-Path $root "api.log") -Tail 25 }
+  if (Test-Path (Join-Path $root "api-error.log")) { Get-Content (Join-Path $root "api-error.log") -Tail 25 }
   exit 1
 }
 
@@ -100,7 +97,7 @@ foreach ($ip in Get-LanIPs) {
   Write-Host "  Meseros:       http://${ip}:$port" -ForegroundColor Cyan
 }
 Write-Host ""
-Write-Host "  Para internet (celular con datos): npm run start:tunnel"
+Write-Host "  Internet celular: npm run start:tunnel  (o INICIAR-TODO.bat)"
 Write-Host "  admin / 7482   |   ivan o maria / 3197"
 Write-Host "  Detener: npm run dev:stop"
 Write-Host ""

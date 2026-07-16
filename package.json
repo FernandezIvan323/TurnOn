@@ -25,6 +25,7 @@
     "start": "node server/index.js",
     "start:lan": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-lan.ps1",
     "start:tunnel": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-tunnel.ps1",
+    "start:all": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-all.ps1",
     "startup:install": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-startup.ps1",
     "preview": "vite preview",
     "db:backup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/backup-db.ps1"
