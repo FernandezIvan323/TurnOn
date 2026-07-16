@@ -16,17 +16,34 @@ router.get("/", authRequired, async (_req, res) => {
 router.get("/history", authRequired, requireRole("admin"), async (req, res) => {
   const { delivery_person_id, limit = 50 } = req.query;
   if (!delivery_person_id) return res.status(400).json({ error: "delivery_person_id requerido" });
+  const lim = Math.min(Math.max(Number(limit) || 50, 1), 200);
   const { rows } = await query(
-    `SELECT o.id, o.created_at, c.name AS customer_name, c.address AS customer_address,
-            o.total, o.payment_method, o.status
+    `SELECT o.id, o.created_at, o.closed_at, o.total, o.payment_method, o.payment_status, o.status,
+            c.name AS customer_name, c.phone AS customer_phone,
+            c.address AS customer_address, c.neighborhood AS customer_neighborhood
      FROM orders o
      LEFT JOIN customers c ON c.id = o.customer_id
      WHERE o.delivery_person_id = $1 AND o.type = 'delivery'
      ORDER BY o.created_at DESC
      LIMIT $2`,
-    [delivery_person_id, limit]
+    [delivery_person_id, lim]
   );
-  res.json(rows);
+  const ids = rows.map((r) => r.id);
+  let itemsByOrder = {};
+  if (ids.length > 0) {
+    const items = await query(
+      `SELECT order_id, name_snapshot, unit_price, quantity, notes
+         FROM order_items
+        WHERE order_id = ANY($1::int[])
+        ORDER BY order_id, id`,
+      [ids]
+    );
+    items.rows.forEach((it) => {
+      if (!itemsByOrder[it.order_id]) itemsByOrder[it.order_id] = [];
+      itemsByOrder[it.order_id].push(it);
+    });
+  }
+  res.json(rows.map((o) => ({ ...o, items: itemsByOrder[o.id] || [] })));
 });
 
 router.post("/", authRequired, requireRole("admin"), async (req, res) => {

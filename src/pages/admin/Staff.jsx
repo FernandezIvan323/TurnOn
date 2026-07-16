@@ -419,7 +419,12 @@ function WaiterHistoryModal({ waiter, onClose }) {
   }, [waiter.id]);
 
   const moneyFmt = (n) =>
-    new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
+    new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(Number(n || 0));
 
   const filtered = useMemo(() => {
     if (range === "all") return orders;

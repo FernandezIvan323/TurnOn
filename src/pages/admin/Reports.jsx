@@ -131,7 +131,7 @@ export default function Reports() {
   const [drivers, setDrivers] = useState([]);
   const [dayExpenses, setDayExpenses] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [topBy, setTopBy] = useState("qty");
+  const topBy = "revenue";
 
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -295,7 +295,8 @@ export default function Reports() {
                 <h1 className="text-xl font-bold">Resumen de ventas</h1>
                 <p className="text-sm text-ink-500">{range.label}</p>
               </div>
-              <div className="mb-3 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-400">Resumen</h3>
+              <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3">
                 <StatCard
                   icon={DollarSign}
                   label="Ventas"
@@ -340,7 +341,8 @@ export default function Reports() {
                   </>
                 )}
               </div>
-              <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3">
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-400">Por canal</h3>
+              <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <StatCard
                   icon={Truck}
                   label="Domicilios"
@@ -391,20 +393,6 @@ export default function Reports() {
                 </div>
               )}
 
-              {/* Gráfico de ventas por día */}
-              {sales?.days?.length > 0 && (
-                <div className="card p-4 mb-4">
-                  <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-3">Ventas por día</h3>
-                  <BarChart
-                    data={sales.days.map((d) => ({
-                      label: new Date(d.date).toLocaleDateString("es-MX", { day: "2-digit", month: "short" }),
-                      value: Number(d.sales),
-                    }))}
-                    maxBars={31}
-                  />
-                </div>
-              )}
-
               {/* Comparativa */}
               {sales && (
                 <div className="card p-4">
@@ -429,19 +417,6 @@ export default function Reports() {
                 </div>
               )}
 
-              {topProducts.length > 0 && (
-                <div className="card p-4 mt-4 print:block">
-                  <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-2">Top productos (resumen)</h3>
-                  <div className="space-y-1 text-sm">
-                    {topProducts.slice(0, 5).map((p, i) => (
-                      <div key={i} className="flex justify-between border-b border-paper-200 dark:border-obsidian-800 py-1">
-                        <span>{i + 1}. {p.name} <span className="text-ink-400">×{p.qty}</span></span>
-                        <span className="font-medium">{money(p.revenue)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
               </div>{/* #reports-print */}
             </>
           )}
@@ -449,47 +424,39 @@ export default function Reports() {
           {/* ============ TAB: PRODUCTOS ============ */}
           {tab === "products" && (
             <>
-              <div className="card p-4 mb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100">Top productos</h3>
-                  <div className="flex gap-1">
-                    {[{ v: "qty", l: "Cantidad" }, { v: "revenue", l: "Ingresos" }].map((t) => (
-                      <button
-                        key={t.v}
-                        onClick={() => setTopBy(t.v)}
-                        className={`px-3 py-1 rounded-lg text-xs font-medium ${
-                          topBy === t.v ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
-                        }`}
-                      >
-                        {t.l}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              <div className="card mb-4 p-4">
+                <h3 className="mb-3 text-sm font-semibold text-ink-700 dark:text-obsidian-100">
+                  Top productos
+                </h3>
+                <p className="mb-3 text-xs text-ink-400">
+                  Unidades vendidas e ingresos generados (ordenados por ingresos).
+                </p>
                 {topProducts.length === 0 ? (
-                  <div className="text-sm text-ink-400 dark:text-obsidian-500 text-center py-6">Sin ventas en el período.</div>
+                  <div className="py-6 text-center text-sm text-ink-400">Sin ventas en el período.</div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead className="text-left text-ink-500 dark:text-obsidian-400 border-b border-paper-300 dark:border-obsidian-800">
+                      <thead className="border-b border-paper-300 text-left text-ink-500 dark:border-obsidian-800 dark:text-obsidian-400">
                         <tr>
                           <th className="py-2 pr-3 font-medium">#</th>
                           <th className="py-2 pr-3 font-medium">Producto</th>
                           <th className="py-2 pr-3 font-medium">Categoría</th>
-                          <th className="py-2 pr-3 font-medium text-right">Cantidad</th>
-                          <th className="py-2 pr-3 font-medium text-right">Pedidos</th>
-                          <th className="py-2 pl-3 font-medium text-right">Ingresos</th>
+                          <th className="py-2 pr-3 text-right font-medium">Unidades</th>
+                          <th className="py-2 pl-3 text-right font-medium">Ingresos</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {topProducts.map((p, i) => (
+                        {[...topProducts]
+                          .sort((a, b) => Number(b.revenue) - Number(a.revenue))
+                          .map((p, i) => (
                           <tr key={i} className="border-b border-paper-200 dark:border-obsidian-800">
-                            <td className="py-2 pr-3 text-ink-400 dark:text-obsidian-500">{i + 1}</td>
+                            <td className="py-2 pr-3 text-ink-400">{i + 1}</td>
                             <td className="py-2 pr-3 font-medium text-ink-800 dark:text-obsidian-50">{p.name}</td>
-                            <td className="py-2 pr-3 text-ink-500 dark:text-obsidian-400">{p.category || "—"}</td>
-                            <td className="py-2 pr-3 text-right font-semibold">{p.qty}</td>
-                            <td className="py-2 pr-3 text-right text-ink-500 dark:text-obsidian-400">{p.orders_count}</td>
-                            <td className="py-2 pl-3 text-right font-semibold text-wine-600 dark:text-wine-300">{money(p.revenue)}</td>
+                            <td className="py-2 pr-3 text-ink-500">{p.category || "—"}</td>
+                            <td className="py-2 pr-3 text-right font-semibold tabular-nums">{p.qty}</td>
+                            <td className="py-2 pl-3 text-right font-semibold tabular-nums text-wine-600 dark:text-wine-300">
+                              {money(p.revenue)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -714,18 +681,6 @@ export default function Reports() {
                       label="Órdenes totales"
                       value={history.reduce((s, h) => s + h.orders, 0)}
                       color="bg-amber-50 text-amber-700" darkColor="dark:bg-amber-900/30 dark:text-amber-300"
-                    />
-                  </div>
-
-                  {/* Gráfico de ventas por día */}
-                  <div className="card p-4 mb-4">
-                    <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-3">Ventas por día</h3>
-                    <BarChart
-                      data={history.map((h) => ({
-                        label: new Date(h.date).toLocaleDateString("es-MX", { day: "2-digit", month: "short" }),
-                        value: Number(h.sales),
-                      }))}
-                      maxBars={historyPeriod === "week" ? 7 : historyPeriod === "month" ? 30 : 52}
                     />
                   </div>
 

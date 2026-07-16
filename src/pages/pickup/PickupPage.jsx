@@ -3,7 +3,7 @@ import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
 import {
-  money, formatTime, statusLabels, statusColors,
+  money, formatTime, payMethodLabel, statusLabels, statusColors,
   assignTurns, waitMinutes, waitLabel,
 } from "../../lib/format";
 import { kanbanColumnClass, KANBAN_COUNT_PILL } from "../../lib/kanbanTones";
@@ -451,6 +451,7 @@ export default function PickupPage() {
 
   const [muted, setMuted] = useState(() => isNotifyMuted());
   const [newFlash, setNewFlash] = useState(0);
+  const [enriched, setEnriched] = useState([]);
   const knownIdsRef = useRef(null);
 
   const load = async ({ silent = false } = {}) => {
@@ -506,6 +507,34 @@ export default function PickupPage() {
     [orders]
   );
 
+  useEffect(() => {
+    if (filter !== "paid" && filter !== "cancelled") {
+      setEnriched([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const list = filtered
+        .slice()
+        .sort((a, b) => new Date(b.closed_at || b.created_at) - new Date(a.closed_at || a.created_at));
+      const slice = list.slice(0, 40);
+      const withItems = await Promise.all(
+        slice.map(async (o) => {
+          try {
+            const { data } = await api.get(`/orders/${o.id}`);
+            return { ...o, items: data.items || [] };
+          } catch {
+            return { ...o, items: [] };
+          }
+        })
+      );
+      if (!cancelled) setEnriched(withItems);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [filter, filtered]);
+
   const onCreated = async (payload) => { await api.post("/orders", payload); await load(); };
   const setStatus = async (id, status) => {
     await api.post(`/orders/${id}/status`, { status });
@@ -544,13 +573,25 @@ export default function PickupPage() {
             >
               {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>
-            <select className="input h-9 text-sm" value={filter} onChange={(e) => setFilter(e.target.value)}>
-              <option value="active">Activos</option>
-              <option value="paid">Cobrados</option>
-              <option value="cancelled">Cancelados</option>
-              <option value="all">Todos</option>
-            </select>
-            <button onClick={() => setOpenNew(true)} className="btn-primary">
+            <div className="flex rounded-xl border border-paper-300 p-0.5 dark:border-obsidian-700">
+              {[
+                { v: "active", l: "Activos" },
+                { v: "paid", l: "Cobrados" },
+                { v: "cancelled", l: "Cancelados" },
+              ].map((f) => (
+                <button
+                  key={f.v}
+                  type="button"
+                  onClick={() => setFilter(f.v)}
+                  className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                    filter === f.v ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200"
+                  }`}
+                >
+                  {f.l}
+                </button>
+              ))}
+            </div>
+            <button type="button" onClick={() => setOpenNew(true)} className="btn-primary h-9 whitespace-nowrap">
               <Plus size={16}/> Nuevo pedido
             </button>
           </div>
@@ -576,57 +617,77 @@ export default function PickupPage() {
       {loading ? (
         <div className="card p-8 text-center text-ink-600 dark:text-white">Cargando…</div>
       ) : filter === "paid" || filter === "cancelled" ? (
-        <div className="space-y-2">
-          <div className="mb-1 text-sm text-ink-600 dark:text-obsidian-300">
-            {filter === "paid" ? "Historial de cobrados / recogidos" : "Cancelados"} · {filtered.length} pedido
-            {filtered.length === 1 ? "" : "s"}
+        <div>
+          <div className="mb-3 text-sm font-medium text-ink-600 dark:text-obsidian-300">
+            {filter === "paid" ? "Cobrados / recogidos" : "Cancelados"} · {(enriched.length || filtered.length)}{" "}
+            pedido{(enriched.length || filtered.length) === 1 ? "" : "s"}
           </div>
-          {filtered.length === 0 ? (
-            <div className="card p-8 text-center text-sm text-ink-500 dark:text-obsidian-400">
+          {(enriched.length || filtered.length) === 0 ? (
+            <div className="card p-8 text-center text-sm text-ink-500">
               No hay pedidos {filter === "paid" ? "cobrados" : "cancelados"}.
             </div>
           ) : (
-            filtered
-              .slice()
-              .sort((a, b) => new Date(b.closed_at || b.created_at) - new Date(a.closed_at || a.created_at))
-              .map((o) => (
-                <div key={o.id} className="card flex flex-wrap items-center justify-between gap-3 p-4">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 text-sm">
-                      <span className="font-bold text-ink-900 dark:text-white">#{o.id}</span>
-                      {o.turn_number != null && (
-                        <span className="rounded-full bg-paper-200 px-2 py-0.5 text-[10px] font-bold dark:bg-obsidian-800">
-                          Turno {o.turn_number}
-                        </span>
-                      )}
-                      <span className="text-xs text-ink-500">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {(enriched.length ? enriched : filtered).map((o) => (
+                <div key={o.id} className="card flex h-full flex-col p-4">
+                  <div className="mb-2 flex items-start justify-between gap-2">
+                    <div>
+                      <div className="text-base font-bold text-ink-900 dark:text-white">
+                        #{o.id}
+                        {o.turn_number != null && (
+                          <span className="ml-2 rounded-full bg-paper-200 px-2 py-0.5 text-xs font-bold dark:bg-obsidian-800">
+                            Turno {o.turn_number}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 text-sm text-ink-500">
                         {new Date(o.closed_at || o.created_at).toLocaleString("es-CO", {
                           day: "2-digit",
                           month: "short",
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
-                      </span>
+                      </div>
                       {o.payment_status === "paid" && (
-                        <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                          Pagado{o.payment_method ? ` (${o.payment_method})` : ""}
-                        </span>
+                        <div className="mt-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                          ✓ Pagado ({payMethodLabel(o.payment_method)})
+                        </div>
                       )}
                       {o.status === "cancelled" && (
-                        <span className="text-[10px] font-semibold text-rose-600">Cancelado</span>
+                        <div className="mt-1 text-sm font-semibold text-rose-600">Cancelado</div>
                       )}
                     </div>
-                    {o.notes && (
-                      <div className="mt-0.5 text-xs text-ink-500 dark:text-obsidian-400">{o.notes}</div>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold tabular-nums text-ink-900 dark:text-white">
+                    <div className="text-xl font-bold tabular-nums text-ink-900 dark:text-white">
                       {money(o.total)}
                     </div>
                   </div>
+                  {o.notes && (
+                    <div className="mb-2 text-sm text-ink-500 dark:text-obsidian-400">{o.notes}</div>
+                  )}
+                  <div className="border-t border-paper-200 pt-2 dark:border-obsidian-700">
+                    <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-ink-400">
+                      Productos
+                    </div>
+                    {(o.items || []).length === 0 ? (
+                      <div className="text-sm text-ink-400">Sin detalle</div>
+                    ) : (
+                      <ul className="space-y-1 text-sm text-ink-700 dark:text-obsidian-200">
+                        {o.items.map((it, i) => (
+                          <li key={i} className="flex justify-between gap-2">
+                            <span>
+                              <b>{it.quantity}×</b> {it.name_snapshot}
+                            </span>
+                            <span className="tabular-nums shrink-0 text-ink-500">
+                              {money(Number(it.unit_price) * Number(it.quantity))}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
-              ))
+              ))}
+            </div>
           )}
         </div>
       ) : (

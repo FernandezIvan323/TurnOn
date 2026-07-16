@@ -11,10 +11,10 @@ export default function Header({ title, subtitle, right }) {
           <p className="mt-0.5 text-sm text-ink-600 dark:text-white">{subtitle}</p>
         )}
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 flex-nowrap items-center gap-2">
         {right}
         {/* En móvil el toggle va en la topbar del Layout */}
-        <div className="hidden lg:block">
+        <div className="hidden shrink-0 lg:block">
           <ThemeToggle />
         </div>
       </div>

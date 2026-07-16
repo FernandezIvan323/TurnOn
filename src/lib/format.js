@@ -1,10 +1,13 @@
 export const money = (v) =>
-  new Intl.NumberFormat("es-AR", {
+  new Intl.NumberFormat("es-CO", {
     style: "currency",
-    currency: "ARS",
+    currency: "COP",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(Number(v || 0));
+
+export const payMethodLabel = (m) =>
+  ({ cash: "Efectivo", card: "Tarjeta", transfer: "Transferencia", mixed: "Mixto" }[m] || m || "—");
 
 export const formatTime = (iso) => {
   if (!iso) return "—";

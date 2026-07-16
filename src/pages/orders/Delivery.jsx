@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
-import { money, formatTime, statusLabels, statusColors, typeLabels, assignTurns } from "../../lib/format";
+import { money, formatTime, payMethodLabel, assignTurns } from "../../lib/format";
 import { kanbanColumnClass, KANBAN_COUNT_PILL } from "../../lib/kanbanTones";
 import { diffNewOrders, playBeep, isNotifyMuted, setNotifyMuted } from "../../lib/notify";
 import {
@@ -118,11 +118,11 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
             <CheckCircle2 size={12} className="mr-1" /> {isPaid ? "Pagado · listo para cerrar al entregar" : "Listo para cerrar al entregar"}
           </span>
         )}
-        {order.status === "delivered" && (
+        {order.status === "delivered" && onReopen && (
           <button
             onClick={(e) => { e.stopPropagation(); onReopen(order); }}
-            className="w-full h-8 px-2 rounded-lg bg-paper-200 hover:bg-paper-300 text-ink-800 dark:bg-obsidian-800 dark:hover:bg-obsidian-700 dark:text-white text-xs font-medium flex items-center justify-center gap-1 transition"
-            title="Reabrir este pedido (corrige errores de cierre)"
+            className="btn-secondary h-8 text-xs"
+            title="Reabrir este pedido"
           >
             <RotateCcw size={14}/> Reabrir
           </button>
@@ -130,6 +130,113 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
       </div>
     </div>
   );
+}
+
+/** Tarjeta cuadrada para pedidos entregados / historial (productos + cliente). */
+function CompletedDeliveryCard({ order, onReopen, onClick }) {
+  const items = order.items || [];
+  return (
+    <div
+      className="card flex h-full cursor-pointer flex-col p-4 transition hover:border-wine-400 hover:shadow-pop dark:hover:border-wine-500/40"
+      onClick={onClick}
+    >
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div>
+          <div className="text-base font-bold text-ink-900 dark:text-white">
+            #{order.id}
+            <span className="ml-2 text-sm font-normal text-ink-500">
+              {formatTime(order.closed_at || order.created_at)}
+            </span>
+          </div>
+          {order.payment_status === "paid" && (
+            <span className="mt-0.5 inline-block text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              ✓ Pagado ({payMethodLabel(order.payment_method)})
+            </span>
+          )}
+          {order.payment_status === "debt" && (
+            <span className="mt-0.5 inline-block text-xs font-semibold text-rose-600">Deuda</span>
+          )}
+        </div>
+        <div className="text-right text-lg font-bold tabular-nums text-ink-900 dark:text-white">
+          {money(order.total)}
+        </div>
+      </div>
+
+      <div className="mb-2 space-y-1 text-sm">
+        <div className="flex items-center gap-1.5 font-semibold text-ink-800 dark:text-obsidian-50">
+          <UserIcon size={14} className="shrink-0 text-ink-500" />
+          {order.customer_name || "—"}
+        </div>
+        {order.customer_phone && (
+          <div className="flex items-center gap-1.5 text-ink-600 dark:text-obsidian-300">
+            <Phone size={12} /> {order.customer_phone}
+          </div>
+        )}
+        {(order.customer_address || order.customer_neighborhood) && (
+          <div className="flex items-start gap-1.5 text-xs text-ink-500 dark:text-obsidian-400">
+            <MapPin size={12} className="mt-0.5 shrink-0" />
+            <span>
+              {[order.customer_neighborhood, order.customer_address].filter(Boolean).join(" · ")}
+            </span>
+          </div>
+        )}
+        {order.delivery_name && (
+          <div className="flex items-center gap-1.5 text-xs text-ink-500">
+            <Truck size={12} /> {order.delivery_name}
+          </div>
+        )}
+      </div>
+
+      <div className="mb-3 min-h-0 flex-1 border-t border-paper-200 pt-2 dark:border-obsidian-700">
+        <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-ink-400">Productos</div>
+        {items.length === 0 ? (
+          <div className="text-xs text-ink-400">Sin detalle de ítems</div>
+        ) : (
+          <ul className="max-h-28 space-y-0.5 overflow-y-auto text-xs text-ink-700 dark:text-obsidian-200">
+            {items.map((it, i) => (
+              <li key={i} className="flex justify-between gap-2">
+                <span className="min-w-0">
+                  <b>{it.quantity}×</b> {it.name_snapshot}
+                </span>
+                <span className="shrink-0 tabular-nums text-ink-500">
+                  {money(Number(it.unit_price) * Number(it.quantity))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {onReopen && order.status === "delivered" && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onReopen(order);
+          }}
+          className="btn-secondary mt-auto h-9 w-full text-xs"
+        >
+          <RotateCcw size={14} /> Reabrir
+        </button>
+      )}
+    </div>
+  );
+}
+
+async function enrichOrdersWithItems(list) {
+  const slice = list.slice(0, 40);
+  const results = await Promise.all(
+    slice.map(async (o) => {
+      if (o.items?.length) return o;
+      try {
+        const { data } = await api.get(`/orders/${o.id}`);
+        return { ...o, items: data.items || [] };
+      } catch {
+        return { ...o, items: [] };
+      }
+    })
+  );
+  return results;
 }
 
 function NewOrderModal({ onClose, onCreated }) {
@@ -533,54 +640,52 @@ function HistoryModal({ onClose }) {
   const totalEarned = history.reduce((s, o) => s + Number(o.total), 0);
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-      <div className="card w-full max-w-2xl max-h-[90vh] flex flex-col">
-        <div className="px-5 py-4 border-b border-paper-300 dark:border-obsidian-800 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 flex items-center gap-2">
-            <Clock size={18}/> Historial de entregas
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+      <div className="card flex max-h-[90vh] w-full max-w-4xl flex-col">
+        <div className="flex items-center justify-between border-b border-paper-300 px-5 py-4 dark:border-obsidian-800">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-ink-800 dark:text-obsidian-50">
+            <Clock size={18}/> Historial de repartidores
           </h2>
-          <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
+          <button type="button" onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
-        <div className="p-5 overflow-y-auto flex-1">
-          <div className="flex gap-2 mb-4 flex-wrap">
+        <div className="flex-1 overflow-y-auto p-5">
+          <div className="mb-4 flex flex-wrap gap-2">
             {persons.map((p) => (
               <button
                 key={p.id}
+                type="button"
                 onClick={() => loadHistory(p.id)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition border ${
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                   selected === p.id
-                    ? "bg-wine-600 text-white border-wine-500 dark:bg-wine-600 dark:text-white"
-                    : "bg-paper-50 text-ink-600 border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-200 dark:border-obsidian-700/50 dark:hover:bg-obsidian-800"
+                    ? "border-wine-500 bg-wine-600 text-white"
+                    : "border-paper-300 bg-paper-50 text-ink-600 hover:bg-paper-200 dark:border-obsidian-700 dark:bg-obsidian-900 dark:text-obsidian-200"
                 }`}
               >
                 {p.name}
               </button>
             ))}
           </div>
-          {!selected && <div className="text-sm text-ink-400 dark:text-obsidian-500 text-center py-8">Selecciona un repartidor para ver su historial</div>}
-          {loading && <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>}
-          {err && <div className="text-sm text-rose-700 bg-rose-50 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300">{err}</div>}
+          {!selected && (
+            <div className="py-8 text-center text-sm text-ink-400">Selecciona un repartidor</div>
+          )}
+          {loading && <div className="text-sm text-ink-500">Cargando…</div>}
+          {err && (
+            <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
+              {err}
+            </div>
+          )}
           {selected && !loading && !err && history.length === 0 && (
-            <div className="text-sm text-ink-400 dark:text-obsidian-500 text-center py-8">{pname} no tiene entregas registradas.</div>
+            <div className="py-8 text-center text-sm text-ink-400">{pname} no tiene entregas.</div>
           )}
           {selected && !loading && history.length > 0 && (
             <div>
-              <div className="card p-3 bg-wine-50/60 border-wine-200 dark:bg-wine-900/20 dark:border-wine-800 mb-3 flex items-center justify-between">
-                <span className="text-sm font-medium text-ink-700 dark:text-obsidian-100">Total entregado</span>
+              <div className="card mb-4 flex items-center justify-between border-wine-200 bg-wine-50/60 p-3 dark:border-wine-800 dark:bg-wine-900/20">
+                <span className="text-sm font-medium">Total entregado · {pname}</span>
                 <span className="text-lg font-bold text-wine-600 dark:text-wine-300">{money(totalEarned)}</span>
               </div>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {history.map((o) => (
-                  <div key={o.id} className="flex items-center justify-between card p-3 text-sm">
-                    <div>
-                      <div className="font-medium text-ink-800 dark:text-obsidian-50">#{o.id} · {o.customer_name}</div>
-                      <div className="text-xs text-ink-500 dark:text-obsidian-400">{o.customer_address}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-ink-700 dark:text-obsidian-100">{money(o.total)}</div>
-                      <div className="text-xs text-ink-400 dark:text-obsidian-500">{new Date(o.created_at).toLocaleDateString()}</div>
-                    </div>
-                  </div>
+                  <CompletedDeliveryCard key={o.id} order={o} />
                 ))}
               </div>
             </div>
@@ -660,6 +765,7 @@ export default function Delivery() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [muted, setMuted] = useState(() => isNotifyMuted());
   const [newFlash, setNewFlash] = useState(0);
+  const [enriched, setEnriched] = useState([]);
   const knownIdsRef = useRef(null);
 
   const load = async ({ silent = false } = {}) => {
@@ -716,6 +822,24 @@ export default function Delivery() {
     [orders]
   );
 
+  useEffect(() => {
+    if (filter !== "delivered" && filter !== "cancelled") {
+      setEnriched([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const list = filtered
+        .slice()
+        .sort((a, b) => new Date(b.closed_at || b.created_at) - new Date(a.closed_at || a.created_at));
+      const withItems = await enrichOrdersWithItems(list);
+      if (!cancelled) setEnriched(withItems);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [filter, filtered]);
+
   const onCreated = async (payload) => { await api.post("/orders", payload); await load(); };
   const setStatus = async (id, status) => {
     await api.post(`/orders/${id}/status`, { status });
@@ -736,10 +860,10 @@ export default function Delivery() {
         title="Pedidos a domicilio"
         subtitle="Tablero Kanban de pedidos a domicilio"
         right={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-nowrap items-center gap-2">
             {newFlash > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-rose-600 text-white animate-pulse">
-                <Bell size={12} /> +{newFlash} nuevo{newFlash !== 1 ? "s" : ""}
+              <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg bg-rose-600 px-2 py-1 text-xs font-bold text-white animate-pulse">
+                <Bell size={12} /> +{newFlash}
               </span>
             )}
             <button
@@ -754,16 +878,30 @@ export default function Delivery() {
             >
               {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>
-            <select className="input h-9 text-sm" value={filter} onChange={(e) => setFilter(e.target.value)}>
-              <option value="active">Activos</option>
-              <option value="delivered">Entregados</option>
-              <option value="cancelled">Cancelados</option>
-              <option value="all">Todos</option>
-            </select>
-            <button onClick={() => setHistoryOpen(true)} className="btn-secondary h-9">
-              <Clock size={16}/> Historial
+            <div className="flex rounded-xl border border-paper-300 p-0.5 dark:border-obsidian-700">
+              {[
+                { v: "active", l: "Activos" },
+                { v: "delivered", l: "Entregados" },
+                { v: "cancelled", l: "Cancelados" },
+              ].map((f) => (
+                <button
+                  key={f.v}
+                  type="button"
+                  onClick={() => setFilter(f.v)}
+                  className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                    filter === f.v
+                      ? "bg-wine-600 text-white"
+                      : "text-ink-600 hover:bg-paper-200 dark:text-obsidian-200"
+                  }`}
+                >
+                  {f.l}
+                </button>
+              ))}
+            </div>
+            <button type="button" onClick={() => setHistoryOpen(true)} className="btn-secondary h-9 whitespace-nowrap">
+              <Clock size={16}/> Repartidores
             </button>
-            <button onClick={() => setOpenNew(true)} className="btn-primary">
+            <button type="button" onClick={() => setOpenNew(true)} className="btn-primary h-9 whitespace-nowrap">
               <Plus size={16}/> Nuevo pedido
             </button>
           </div>
@@ -771,16 +909,15 @@ export default function Delivery() {
       />
 
       {deliveredTodayCount > 0 && filter === "active" && (
-        <div className="mb-4 card flex items-center justify-between border-paper-300 p-3 dark:border-obsidian-700">
+        <div className="card mb-4 flex flex-wrap items-center justify-between gap-3 border-paper-300 p-3 dark:border-obsidian-700">
           <div className="flex items-center gap-2 text-sm text-ink-700 dark:text-white">
             <Package size={16}/>
-            <span><b>{deliveredTodayCount}</b> {deliveredTodayCount === 1 ? "pedido entregado" : "pedidos entregados"} hoy</span>
+            <span>
+              <b>{deliveredTodayCount}</b> entregado{deliveredTodayCount === 1 ? "" : "s"} hoy
+            </span>
           </div>
-          <button
-            onClick={() => setFilter("delivered")}
-            className="text-xs font-semibold text-wine-700 hover:underline dark:text-wine-300"
-          >
-            Ver todos ({totalDeliveredCount}) →
+          <button type="button" onClick={() => setFilter("delivered")} className="btn-secondary h-9 whitespace-nowrap text-xs">
+            <Package size={14} /> Ver entregados ({totalDeliveredCount})
           </button>
         </div>
       )}
@@ -788,33 +925,26 @@ export default function Delivery() {
       {loading ? (
         <div className="text-sm text-ink-600 dark:text-white">Cargando…</div>
       ) : filter === "delivered" || filter === "cancelled" ? (
-        <div className="space-y-2">
-          <div className="mb-1 text-sm text-ink-600 dark:text-obsidian-300">
-            {filter === "delivered" ? "Historial de entregados" : "Cancelados"} · {filtered.length} pedido
-            {filtered.length === 1 ? "" : "s"}
+        <div>
+          <div className="mb-3 text-sm font-medium text-ink-600 dark:text-obsidian-300">
+            {filter === "delivered" ? "Entregados" : "Cancelados"} · {(enriched.length || filtered.length)} pedido
+            {(enriched.length || filtered.length) === 1 ? "" : "s"}
           </div>
-          {filtered.length === 0 ? (
-            <div className="card p-8 text-center text-sm text-ink-500 dark:text-obsidian-400">
+          {(enriched.length || filtered.length) === 0 ? (
+            <div className="card p-8 text-center text-sm text-ink-500">
               No hay pedidos {filter === "delivered" ? "entregados" : "cancelados"}.
             </div>
           ) : (
-            filtered
-              .slice()
-              .sort((a, b) => new Date(b.closed_at || b.created_at) - new Date(a.closed_at || a.created_at))
-              .map((o) => (
-                <OrderCard
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {(enriched.length ? enriched : filtered).map((o) => (
+                <CompletedDeliveryCard
                   key={o.id}
                   order={o}
-                  turn={o.turn_number}
-                  isNext={false}
+                  onReopen={filter === "delivered" ? (x) => setToReopen(x) : undefined}
                   onClick={() => setToView(o)}
-                  onAssign={(x) => setToAssign(x)}
-                  onCancel={(x) => setToCancel(x)}
-                  onPreparing={(x) => setStatus(x.id, "preparing")}
-                  onBackPending={(x) => setStatus(x.id, "pending")}
-                  onReopen={(x) => setToReopen(x)}
                 />
-              ))
+              ))}
+            </div>
           )}
         </div>
       ) : (
