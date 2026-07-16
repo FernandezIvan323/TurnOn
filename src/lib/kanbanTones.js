@@ -1,6 +1,6 @@
 /** Neutral kanban column shells with a left accent (status color). */
 export const KANBAN_SHELL =
-  "rounded-2xl border border-paper-300 bg-paper-50/90 p-3 min-h-[200px] dark:border-obsidian-700 dark:bg-obsidian-900/80";
+  "rounded-2xl border border-paper-300 bg-paper-50/90 p-3 min-h-[120px] dark:border-obsidian-700 dark:bg-obsidian-900/80";
 
 export const KANBAN_ACCENT = {
   pending: "border-l-4 border-l-amber-500",

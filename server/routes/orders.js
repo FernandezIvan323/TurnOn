@@ -7,7 +7,7 @@ const router = Router();
 const ORDER_COLUMNS = `
   o.id, o.type, o.status, o.payment_status, o.payment_method,
   o.total, o.tip, o.notes, o.cancel_reason, o.created_at, o.closed_at,
-  o.estimate_minutes,
+  o.debt_settled_at, o.estimate_minutes,
   o.table_id, o.customer_id, o.user_id, o.delivery_person_id,
   t.number AS table_number, t.label AS table_label,
   c.name AS customer_name, c.phone AS customer_phone, c.address AS customer_address,
@@ -102,7 +102,12 @@ router.get("/", authRequired, async (req, res) => {
   const params = [];
   if (type)    { params.push(type);    filters.push(`o.type = $${params.length}`); }
   if (status)  { params.push(status);  filters.push(`o.status = $${params.length}`); }
-  if (payment) { params.push(payment); filters.push(`o.payment_status = $${params.length}`); }
+  if (payment === "debt_settled") {
+    filters.push(`o.debt_settled_at IS NOT NULL`);
+  } else if (payment) {
+    params.push(payment);
+    filters.push(`o.payment_status = $${params.length}`);
+  }
   if (from)    { params.push(from);    filters.push(`o.created_at >= $${params.length}`); }
   if (to)      { params.push(to);      filters.push(`o.created_at <= $${params.length}`); }
   // Caja "Por cobrar": todas las cuentas abiertas sin pagar (no solo ready_to_pay)
@@ -111,6 +116,17 @@ router.get("/", authRequired, async (req, res) => {
     filters.push(`o.status NOT IN ('paid','cancelled','delivered')`);
   }
   const where = filters.length ? "WHERE " + filters.join(" AND ") : "";
+  const orderSql =
+    payment === "debt_settled"
+      ? "o.debt_settled_at DESC NULLS LAST, o.id DESC"
+      : `CASE o.status
+          WHEN 'ready_to_pay' THEN 0
+          WHEN 'preparing'    THEN 1
+          WHEN 'pending'      THEN 2
+          WHEN 'on_the_way'   THEN 3
+          ELSE 4
+        END,
+        o.created_at ASC`;
 
   const { rows } = await query(
     `SELECT ${ORDER_COLUMNS}
@@ -120,15 +136,7 @@ router.get("/", authRequired, async (req, res) => {
        LEFT JOIN users u     ON u.id = o.user_id
        LEFT JOIN delivery_persons d ON d.id = o.delivery_person_id
        ${where}
-      ORDER BY
-        CASE o.status
-          WHEN 'ready_to_pay' THEN 0
-          WHEN 'preparing'    THEN 1
-          WHEN 'pending'      THEN 2
-          WHEN 'on_the_way'   THEN 3
-          ELSE 4
-        END,
-        o.created_at ASC
+      ORDER BY ${orderSql}
       LIMIT 200`,
     params
   );
@@ -575,7 +583,11 @@ router.post("/:id/pay-debt", authRequired, requireRole("admin"), async (req, res
     if (rows[0].payment_status !== "debt")
       return res.status(409).json({ error: "El pedido no tiene deuda pendiente" });
     await query(
-      `UPDATE orders SET payment_status = 'paid', payment_method = $2 WHERE id = $1`,
+      `UPDATE orders
+          SET payment_status = 'paid',
+              payment_method = $2,
+              debt_settled_at = NOW()
+        WHERE id = $1`,
       [req.params.id, payment_method]
     );
     res.json({ ok: true });

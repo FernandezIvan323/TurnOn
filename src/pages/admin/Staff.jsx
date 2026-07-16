@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
@@ -399,77 +399,202 @@ function AssignmentsTab() {
 function WaiterHistoryModal({ waiter, onClose }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [range, setRange] = useState("all"); // all | 7 | 30
 
   useEffect(() => {
     (async () => {
+      setLoading(true);
+      setError(null);
       try {
         const { data } = await api.get(`/reports/waiter-history?user_id=${waiter.id}`);
-        setOrders(data);
-      } catch { /* */ }
-      setLoading(false);
+        setOrders(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setError(e.response?.data?.error || e.message || "No se pudo cargar");
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [waiter.id]);
 
-  const money = (n) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
+  const moneyFmt = (n) =>
+    new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
 
-  const totalVentas = orders.filter((o) => o.payment_status === "paid").reduce((s, o) => s + Number(o.total), 0);
-  const totalPropinas = orders.filter((o) => o.payment_status === "paid").reduce((s, o) => s + Number(o.tip || 0), 0);
+  const filtered = useMemo(() => {
+    if (range === "all") return orders;
+    const days = Number(range);
+    const cut = Date.now() - days * 86400000;
+    return orders.filter((o) => new Date(o.created_at).getTime() >= cut);
+  }, [orders, range]);
+
+  const paid = filtered.filter((o) => o.payment_status === "paid");
+  const totalVentas = paid.reduce((s, o) => s + Number(o.total), 0);
+  const totalPropinas = paid.reduce((s, o) => s + Number(o.tip || 0), 0);
+
+  const byDay = useMemo(() => {
+    const map = new Map();
+    for (const o of filtered) {
+      const d = new Date(o.created_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(o);
+    }
+    return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [filtered]);
+
+  const dayLabel = (key) => {
+    const [y, m, d] = key.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString("es-CO", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+  };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50" onClick={onClose}>
-      <div className="card w-full max-w-lg p-0 max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-paper-200 dark:border-obsidian-700">
-          <div>
-            <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Historial de {waiter.name}</h2>
-            <div className="text-xs text-ink-500 dark:text-obsidian-400">
-              {orders.length} pedido{orders.length !== 1 ? "s" : ""} · Total {money(totalVentas)} · Propinas {money(totalPropinas)}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" onClick={onClose}>
+      <div
+        className="card flex max-h-[90vh] w-full max-w-2xl flex-col p-0"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sticky top-0 z-10 border-b border-paper-200 bg-white p-4 dark:border-obsidian-700 dark:bg-obsidian-900">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">
+                Historial · {waiter.name}
+              </h2>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="rounded-lg bg-paper-100 px-2 py-1 text-xs font-medium dark:bg-obsidian-800">
+                  {filtered.length} pedido{filtered.length !== 1 ? "s" : ""}
+                </span>
+                <span className="rounded-lg bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                  Ventas {moneyFmt(totalVentas)}
+                </span>
+                <span className="rounded-lg bg-sky-50 px-2 py-1 text-xs font-medium text-sky-800 dark:bg-sky-900/30 dark:text-sky-300">
+                  Propinas {moneyFmt(totalPropinas)}
+                </span>
+              </div>
             </div>
+            <button type="button" onClick={onClose} className="btn-ghost shrink-0">
+              <X size={18} />
+            </button>
           </div>
-          <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
+          <div className="mt-3 flex gap-1">
+            {[
+              { k: "all", l: "Todo" },
+              { k: "7", l: "7 días" },
+              { k: "30", l: "30 días" },
+            ].map((r) => (
+              <button
+                key={r.k}
+                type="button"
+                onClick={() => setRange(r.k)}
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                  range === r.k
+                    ? "bg-wine-600 text-white"
+                    : "bg-paper-100 text-ink-600 dark:bg-obsidian-800 dark:text-obsidian-200"
+                }`}
+              >
+                {r.l}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
           {loading ? (
-            <div className="text-center text-ink-400 dark:text-obsidian-500 py-8">Cargando…</div>
-          ) : orders.length === 0 ? (
-            <div className="text-center text-ink-400 dark:text-obsidian-500 py-8">No hay pedidos registrados.</div>
+            <div className="py-8 text-center text-ink-400 dark:text-obsidian-500">Cargando…</div>
+          ) : error ? (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
+              {error}
+            </div>
+          ) : byDay.length === 0 ? (
+            <div className="py-8 text-center text-ink-400 dark:text-obsidian-500">
+              No hay pedidos en este período.
+              <div className="mt-1 text-xs">Asigná mesas en la pestaña Asignar para que tome pedidos.</div>
+            </div>
           ) : (
-            orders.map((o) => (
-              <div key={o.id} className="border border-paper-200 dark:border-obsidian-700 rounded-xl overflow-hidden">
-                <div className="flex items-center justify-between px-3 py-2 bg-paper-100 dark:bg-obsidian-800 text-xs text-ink-600 dark:text-obsidian-300">
-                  <span>
-                    📅 {new Date(o.created_at).toLocaleDateString("es-CO")} · 🕐 {new Date(o.created_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                  <span className={`badge text-[10px] ${o.payment_status === "paid" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"}`}>
-                    {o.payment_status === "paid" ? "Pagado" : o.payment_status === "pending" ? "Pendiente" : "Anulado"}
-                  </span>
+            byDay.map(([day, dayOrders]) => (
+              <div key={day}>
+                <div className="sticky top-0 z-[1] mb-2 bg-white/95 py-1 text-xs font-bold capitalize text-ink-600 backdrop-blur dark:bg-obsidian-900/95 dark:text-obsidian-300">
+                  {dayLabel(day)} · {dayOrders.length} pedido{dayOrders.length !== 1 ? "s" : ""}
                 </div>
-                <div className="px-3 py-2 space-y-1.5">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="font-semibold text-ink-800 dark:text-obsidian-50">
-                      {o.type === "table" ? `🪑 Mesa ${o.table_number || "?"}${o.table_label ? ` · ${o.table_label}` : ""}` : o.type === "pickup" ? "📦 Para llevar" : "🛵 Domicilio"}
-                    </span>
-                    {o.customer_name && <span className="text-ink-500 dark:text-obsidian-400">· {o.customer_name}</span>}
-                    {o.customer_phone && <span className="text-ink-400 dark:text-obsidian-500 text-xs">({o.customer_phone})</span>}
-                  </div>
-                  {o.items.length > 0 && (
-                    <div className="text-xs space-y-0.5">
-                      {o.items.map((item, i) => (
-                        <div key={i} className="flex justify-between text-ink-600 dark:text-obsidian-200">
-                          <span>{item.quantity}x {item.name_snapshot}</span>
-                          <span>{money(item.unit_price * item.quantity)}</span>
+                <div className="space-y-2">
+                  {dayOrders.map((o) => (
+                    <div
+                      key={o.id}
+                      className="overflow-hidden rounded-xl border border-paper-200 dark:border-obsidian-700"
+                    >
+                      <div className="flex items-center justify-between bg-paper-100 px-3 py-2 text-xs text-ink-600 dark:bg-obsidian-800 dark:text-obsidian-300">
+                        <span>
+                          {new Date(o.created_at).toLocaleTimeString("es-CO", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                          {" · "}
+                          {o.type === "table"
+                            ? `Mesa ${o.table_number || "?"}${o.table_label ? ` · ${o.table_label}` : ""}`
+                            : o.type === "pickup"
+                              ? "Para llevar"
+                              : "Domicilio"}
+                        </span>
+                        <span
+                          className={`badge text-[10px] ${
+                            o.payment_status === "paid"
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                              : o.payment_status === "debt"
+                                ? "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
+                                : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                          }`}
+                        >
+                          {o.payment_status === "paid"
+                            ? "Pagado"
+                            : o.payment_status === "debt"
+                              ? "Deuda"
+                              : o.payment_status === "pending"
+                                ? "Pendiente"
+                                : o.payment_status}
+                        </span>
+                      </div>
+                      <div className="space-y-1 px-3 py-2">
+                        {(o.items || []).length > 0 && (
+                          <div className="space-y-0.5 text-xs text-ink-600 dark:text-obsidian-200">
+                            {o.items.map((item, i) => (
+                              <div key={i} className="flex justify-between gap-2">
+                                <span>
+                                  {item.quantity}× {item.name_snapshot}
+                                </span>
+                                <span className="tabular-nums shrink-0">
+                                  {moneyFmt(item.unit_price * item.quantity)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between border-t border-paper-200 pt-1.5 text-sm dark:border-obsidian-700">
+                          <span className="text-xs text-ink-500">
+                            {o.payment_method === "cash"
+                              ? "Efectivo"
+                              : o.payment_method === "card"
+                                ? "Tarjeta"
+                                : o.payment_method === "transfer"
+                                  ? "Transferencia"
+                                  : o.payment_method || "—"}
+                          </span>
+                          <div className="text-right">
+                            <span className="font-bold tabular-nums text-ink-800 dark:text-obsidian-50">
+                              {moneyFmt(o.total)}
+                            </span>
+                            {Number(o.tip) > 0 && (
+                              <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">
+                                +{moneyFmt(o.tip)} propina
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  )}
-                  <div className="flex justify-between items-center pt-1 border-t border-paper-200 dark:border-obsidian-700 text-sm">
-                    <span className="text-ink-500 dark:text-obsidian-400 text-xs">
-                      💰 {o.payment_method === "cash" ? "Efectivo" : o.payment_method === "card" ? "Tarjeta" : o.payment_method === "transfer" ? "Transferencia" : o.payment_method || "—"}
-                    </span>
-                    <div className="text-right">
-                      <span className="font-bold text-ink-800 dark:text-obsidian-50">{money(o.total)}</span>
-                      {Number(o.tip) > 0 && <span className="text-xs text-emerald-600 dark:text-emerald-400 ml-2">+{money(o.tip)} propina</span>}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             ))
@@ -563,27 +688,53 @@ export default function Staff() {
               <tr>
                 <th className="px-4 py-2 font-medium">Usuario</th>
                 <th className="px-4 py-2 font-medium">Nombre</th>
+                <th className="px-4 py-2 font-medium">Mesas</th>
                 <th className="px-4 py-2 font-medium">Estado</th>
                 <th className="px-4 py-2 font-medium w-32 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {waiters.map((w) => (
-                <tr key={w.id} className="border-t border-paper-200 dark:border-obsidian-800">
-                  <td className="px-4 py-2 font-mono text-ink-700 dark:text-obsidian-100">@{w.username}</td>
-                  <td className="px-4 py-2 font-medium text-ink-800 dark:text-obsidian-50">{w.name}</td>
-                  <td className="px-4 py-2">
-                    <span className={`badge ${w.active ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-obsidian-800 dark:text-obsidian-400"}`}>
-                      {w.active ? "Activo" : "Inactivo"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-right space-x-1">
-                    <button onClick={() => setPinUser(w)} className="btn-ghost text-xs" title="Cambiar PIN"><KeyRound size={14}/></button>
-                    <button onClick={() => setHistoryWaiter(w)} className="btn-ghost text-xs" title="Ver historial"><Clock size={14}/></button>
+              {waiters.map((w) => {
+                const wTables = tables.filter((t) => Number(t.assigned_user_id) === Number(w.id));
+                return (
+                  <tr key={w.id} className="border-t border-paper-200 dark:border-obsidian-800">
+                    <td className="px-4 py-2 font-mono text-ink-700 dark:text-obsidian-100">@{w.username}</td>
+                    <td className="px-4 py-2 font-medium text-ink-800 dark:text-obsidian-50">{w.name}</td>
+                    <td className="px-4 py-2">
+                      {wTables.length === 0 ? (
+                        <span className="text-xs italic text-ink-400 dark:text-obsidian-500">Sin mesas</span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {wTables.map((t) => (
+                            <span
+                              key={t.id}
+                              className="inline-flex items-center rounded-md bg-wine-50 px-1.5 py-0.5 text-[10px] font-semibold text-wine-800 dark:bg-wine-900/40 dark:text-wine-300"
+                            >
+                              Mesa {t.number}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className={`badge ${w.active ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-obsidian-800 dark:text-obsidian-400"}`}>
+                        {w.active ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
+                    <td className="space-x-1 px-4 py-2 text-right">
+                      <button type="button" onClick={() => setPinUser(w)} className="btn-ghost text-xs" title="Cambiar PIN"><KeyRound size={14}/></button>
+                      <button type="button" onClick={() => setHistoryWaiter(w)} className="btn-ghost text-xs" title="Ver historial"><Clock size={14}/></button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {waiters.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">
+                    No hay meseros. Crea uno con &quot;Nuevo&quot; en esta pestaña.
                   </td>
                 </tr>
-              ))}
-              {waiters.length === 0 && <tr><td colSpan={4} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">No hay meseros registrados. Crea uno con "Nuevo".</td></tr>}
+              )}
             </tbody>
           </table>
         </div>

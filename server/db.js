@@ -178,6 +178,10 @@ export async function runMigrations() {
   await pool.query(`
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS stock_deducted BOOLEAN NOT NULL DEFAULT FALSE;
   `);
+  // Historial de deudas cobradas
+  await pool.query(`
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS debt_settled_at TIMESTAMPTZ;
+  `);
 
   // Fusionar líneas duplicadas 1x+1x → 2x (misma mesa/pedido, mismo producto y nota)
   await pool.query(`

@@ -73,15 +73,19 @@ const PAYMENT_LABELS = { cash: "Efectivo", card: "Tarjeta", transfer: "Transfere
 
 function StatCard({ icon: Icon, label, value, sub, color = "bg-wine-50 text-wine-700", darkColor = "dark:bg-wine-900/30 dark:text-wine-300" }) {
   return (
-    <div className="card p-4">
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color} ${darkColor}`}>
+    <div className="card flex h-full p-4">
+      <div className="flex min-w-0 flex-1 items-start gap-3">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${color} ${darkColor}`}>
           <Icon size={18} />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="text-xs text-ink-500 dark:text-obsidian-400">{label}</div>
-          <div className="text-xl font-semibold text-ink-800 dark:text-obsidian-50 truncate">{value}</div>
-          {sub && <div className="text-[11px] text-ink-400 dark:text-obsidian-500 mt-0.5 truncate">{sub}</div>}
+          <div className="text-base font-semibold leading-tight tabular-nums text-ink-800 dark:text-obsidian-50 sm:text-lg">
+            {value}
+          </div>
+          {sub && (
+            <div className="mt-0.5 text-[11px] leading-snug text-ink-400 dark:text-obsidian-500">{sub}</div>
+          )}
         </div>
       </div>
     </div>
@@ -291,7 +295,7 @@ export default function Reports() {
                 <h1 className="text-xl font-bold">Resumen de ventas</h1>
                 <p className="text-sm text-ink-500">{range.label}</p>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 mb-4">
+              <div className="mb-3 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
                 <StatCard
                   icon={DollarSign}
                   label="Ventas"
@@ -335,6 +339,8 @@ export default function Reports() {
                     />
                   </>
                 )}
+              </div>
+              <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3">
                 <StatCard
                   icon={Truck}
                   label="Domicilios"

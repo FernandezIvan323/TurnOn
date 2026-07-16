@@ -575,14 +575,68 @@ export default function PickupPage() {
 
       {loading ? (
         <div className="card p-8 text-center text-ink-600 dark:text-white">Cargando…</div>
+      ) : filter === "paid" || filter === "cancelled" ? (
+        <div className="space-y-2">
+          <div className="mb-1 text-sm text-ink-600 dark:text-obsidian-300">
+            {filter === "paid" ? "Historial de cobrados / recogidos" : "Cancelados"} · {filtered.length} pedido
+            {filtered.length === 1 ? "" : "s"}
+          </div>
+          {filtered.length === 0 ? (
+            <div className="card p-8 text-center text-sm text-ink-500 dark:text-obsidian-400">
+              No hay pedidos {filter === "paid" ? "cobrados" : "cancelados"}.
+            </div>
+          ) : (
+            filtered
+              .slice()
+              .sort((a, b) => new Date(b.closed_at || b.created_at) - new Date(a.closed_at || a.created_at))
+              .map((o) => (
+                <div key={o.id} className="card flex flex-wrap items-center justify-between gap-3 p-4">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="font-bold text-ink-900 dark:text-white">#{o.id}</span>
+                      {o.turn_number != null && (
+                        <span className="rounded-full bg-paper-200 px-2 py-0.5 text-[10px] font-bold dark:bg-obsidian-800">
+                          Turno {o.turn_number}
+                        </span>
+                      )}
+                      <span className="text-xs text-ink-500">
+                        {new Date(o.closed_at || o.created_at).toLocaleString("es-CO", {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      {o.payment_status === "paid" && (
+                        <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                          Pagado{o.payment_method ? ` (${o.payment_method})` : ""}
+                        </span>
+                      )}
+                      {o.status === "cancelled" && (
+                        <span className="text-[10px] font-semibold text-rose-600">Cancelado</span>
+                      )}
+                    </div>
+                    {o.notes && (
+                      <div className="mt-0.5 text-xs text-ink-500 dark:text-obsidian-400">{o.notes}</div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold tabular-nums text-ink-900 dark:text-white">
+                      {money(o.total)}
+                    </div>
+                  </div>
+                </div>
+              ))
+          )}
+        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-3">
           {COLUMNS.map((col) => {
             const ColIcon = col.icon;
             const colOrders = byStatus(col.key);
             return (
-              <div key={col.key} className={kanbanColumnClass(col.key)}>
-                <div className="mb-3 flex items-center justify-between px-1">
+              <div key={col.key} className={`${kanbanColumnClass(col.key)} max-h-[calc(100vh-12rem)] flex flex-col`}>
+                <div className="mb-3 flex shrink-0 items-center justify-between px-1">
                   <h3 className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
                     <ColIcon size={16}/> {col.title}
                   </h3>
@@ -590,7 +644,7 @@ export default function PickupPage() {
                     {colOrders.length}
                   </span>
                 </div>
-                <div className="space-y-2">
+                <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
                   {colOrders.map((o) => (
                     <OrderCard
                       key={o.id}
@@ -598,11 +652,11 @@ export default function PickupPage() {
                       turn={o.turn_number}
                       isNext={nextOrder && o.id === nextOrder.id}
                       onClick={() => {}}
-                      onPreparing={(o) => setStatus(o.id, "preparing")}
-                      onReady={(o) => setStatus(o.id, "ready_to_pay")}
-                      onPay={(o) => setToPay(o)}
-                      onCancel={(o) => setToCancel(o)}
-                      onBackPending={(o) => setStatus(o.id, "pending")}
+                      onPreparing={(x) => setStatus(x.id, "preparing")}
+                      onReady={(x) => setStatus(x.id, "ready_to_pay")}
+                      onPay={(x) => setToPay(x)}
+                      onCancel={(x) => setToCancel(x)}
+                      onBackPending={(x) => setStatus(x.id, "pending")}
                     />
                   ))}
                   {colOrders.length === 0 && (

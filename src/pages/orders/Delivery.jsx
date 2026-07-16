@@ -787,17 +787,54 @@ export default function Delivery() {
 
       {loading ? (
         <div className="text-sm text-ink-600 dark:text-white">Cargando…</div>
+      ) : filter === "delivered" || filter === "cancelled" ? (
+        <div className="space-y-2">
+          <div className="mb-1 text-sm text-ink-600 dark:text-obsidian-300">
+            {filter === "delivered" ? "Historial de entregados" : "Cancelados"} · {filtered.length} pedido
+            {filtered.length === 1 ? "" : "s"}
+          </div>
+          {filtered.length === 0 ? (
+            <div className="card p-8 text-center text-sm text-ink-500 dark:text-obsidian-400">
+              No hay pedidos {filter === "delivered" ? "entregados" : "cancelados"}.
+            </div>
+          ) : (
+            filtered
+              .slice()
+              .sort((a, b) => new Date(b.closed_at || b.created_at) - new Date(a.closed_at || a.created_at))
+              .map((o) => (
+                <OrderCard
+                  key={o.id}
+                  order={o}
+                  turn={o.turn_number}
+                  isNext={false}
+                  onClick={() => setToView(o)}
+                  onAssign={(x) => setToAssign(x)}
+                  onCancel={(x) => setToCancel(x)}
+                  onPreparing={(x) => setStatus(x.id, "preparing")}
+                  onBackPending={(x) => setStatus(x.id, "pending")}
+                  onReopen={(x) => setToReopen(x)}
+                />
+              ))
+          )}
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {COLUMNS.map((col) => (
-            <div key={col.key} className={kanbanColumnClass(col.key)}>
-              <div className="mb-3 flex items-center justify-between px-1">
+        <div
+          className={`grid grid-cols-1 gap-4 items-start ${
+            filter === "active" ? "md:grid-cols-3" : "md:grid-cols-2 xl:grid-cols-4"
+          }`}
+        >
+          {(filter === "active"
+            ? COLUMNS.filter((c) => c.key !== "delivered")
+            : COLUMNS
+          ).map((col) => (
+            <div key={col.key} className={`${kanbanColumnClass(col.key)} max-h-[calc(100vh-12rem)] flex flex-col`}>
+              <div className="mb-3 flex shrink-0 items-center justify-between px-1">
                 <h3 className="font-semibold text-ink-900 dark:text-white">{col.title}</h3>
                 <span className={KANBAN_COUNT_PILL}>
                   {byStatus(col.key).length}
                 </span>
               </div>
-              <div className="space-y-2">
+              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
                 {byStatus(col.key).map((o) => (
                   <OrderCard
                     key={o.id}
@@ -805,11 +842,11 @@ export default function Delivery() {
                     turn={o.turn_number}
                     isNext={nextOrder && o.id === nextOrder.id}
                     onClick={() => setToView(o)}
-                    onAssign={(o) => setToAssign(o)}
-                    onCancel={(o) => setToCancel(o)}
-                    onPreparing={(o) => setStatus(o.id, "preparing")}
-                    onBackPending={(o) => setStatus(o.id, "pending")}
-                    onReopen={(o) => setToReopen(o)}
+                    onAssign={(x) => setToAssign(x)}
+                    onCancel={(x) => setToCancel(x)}
+                    onPreparing={(x) => setStatus(x.id, "preparing")}
+                    onBackPending={(x) => setStatus(x.id, "pending")}
+                    onReopen={(x) => setToReopen(x)}
                   />
                 ))}
                 {byStatus(col.key).length === 0 && (
