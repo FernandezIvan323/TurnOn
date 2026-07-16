@@ -2,7 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
-import { money, formatTime, payMethodLabel, assignTurns } from "../../lib/format";
+import {
+  money,
+  formatTime,
+  payMethodLabel,
+  assignTurns,
+  statusLabels,
+  statusColors,
+} from "../../lib/format";
 import { kanbanColumnClass, KANBAN_COUNT_PILL } from "../../lib/kanbanTones";
 import { diffNewOrders, playBeep, isNotifyMuted, setNotifyMuted } from "../../lib/notify";
 import {
@@ -545,66 +552,139 @@ function OrderDetailModal({ order, onClose, onChanged }) {
   const [loading, setLoading] = useState(true);
   const load = async () => {
     setLoading(true);
-    const { data } = await api.get(`/orders/${order.id}`);
-    setItems(data.items);
-    setLoading(false);
+    try {
+      const { data } = await api.get(`/orders/${order.id}`);
+      setItems(data.items || []);
+    } catch {
+      setItems(order.items || []);
+    } finally {
+      setLoading(false);
+    }
   };
-  useEffect(() => { load(); }, [order.id]);
+  useEffect(() => {
+    load();
+  }, [order.id]);
 
   const closePaid = async () => {
     await api.post(`/orders/${order.id}/close`, { payment_method: "cash" });
-    onChanged(); onClose();
+    onChanged();
+    onClose();
   };
 
   const markDebt = async () => {
     await api.post(`/orders/${order.id}/mark-delivered`);
-    onChanged(); onClose();
+    onChanged();
+    onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-      <div className="card w-full max-w-2xl p-5 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Pedido #{order.id}</h2>
-          <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="card max-h-[90vh] w-full max-w-2xl overflow-y-auto p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">
+            Pedido #{order.id}
+          </h2>
+          <button type="button" onClick={onClose} className="btn-ghost">
+            <X size={18} />
+          </button>
         </div>
-        <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-          <div><span className="text-ink-400 dark:text-obsidian-500">Cliente:</span> <b>{order.customer_name}</b></div>
-          <div><span className="text-ink-400 dark:text-obsidian-500">Teléfono:</span> {order.customer_phone}</div>
-          <div className="col-span-2"><span className="text-ink-400 dark:text-obsidian-500">Dirección:</span> {order.customer_address} {order.customer_neighborhood && `· ${order.customer_neighborhood}`}</div>
-          {order.customer_reference && <div className="col-span-2"><span className="text-ink-400 dark:text-obsidian-500">Referencia:</span> {order.customer_reference}</div>}
-          {order.delivery_name && <div><span className="text-ink-400 dark:text-obsidian-500">Repartidor:</span> <b>{order.delivery_name}</b></div>}
-          <div><span className="text-ink-400 dark:text-obsidian-500">Estado:</span> <span className={`badge ${statusColors[order.status]}`}>{statusLabels[order.status]}</span></div>
+        <div className="mb-4 grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <span className="text-ink-400 dark:text-obsidian-500">Cliente:</span>{" "}
+            <b>{order.customer_name || "—"}</b>
+          </div>
+          <div>
+            <span className="text-ink-400 dark:text-obsidian-500">Teléfono:</span>{" "}
+            {order.customer_phone || "—"}
+          </div>
+          <div className="col-span-2">
+            <span className="text-ink-400 dark:text-obsidian-500">Dirección:</span>{" "}
+            {order.customer_address || "—"}
+            {order.customer_neighborhood ? ` · ${order.customer_neighborhood}` : ""}
+          </div>
+          {order.customer_reference && (
+            <div className="col-span-2">
+              <span className="text-ink-400 dark:text-obsidian-500">Referencia:</span>{" "}
+              {order.customer_reference}
+            </div>
+          )}
+          {order.delivery_name && (
+            <div>
+              <span className="text-ink-400 dark:text-obsidian-500">Repartidor:</span>{" "}
+              <b>{order.delivery_name}</b>
+            </div>
+          )}
+          <div>
+            <span className="text-ink-400 dark:text-obsidian-500">Estado:</span>{" "}
+            <span className={`badge ${statusColors[order.status] || ""}`}>
+              {statusLabels[order.status] || order.status}
+            </span>
+          </div>
+          {order.payment_status === "paid" && (
+            <div>
+              <span className="text-ink-400 dark:text-obsidian-500">Pago:</span>{" "}
+              {payMethodLabel(order.payment_method)}
+            </div>
+          )}
         </div>
         {order.notes && (
-          <div className="card p-3 bg-amber-50 border-amber-200 mb-3 text-sm text-amber-900 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
-            <StickyNote size={14} className="inline mr-1" /> {order.notes}
+          <div className="card mb-3 border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+            <StickyNote size={14} className="mr-1 inline" /> {order.notes}
           </div>
         )}
-        {loading ? <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div> : (
+        {loading ? (
+          <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
+        ) : (
           <div className="space-y-1.5">
-            {items.map((it) => (
-              <div key={it.id} className="flex items-center justify-between text-sm py-1.5 border-b border-paper-200 dark:border-obsidian-800">
+            {items.length === 0 && (
+              <div className="text-sm text-ink-400">Sin productos en el pedido.</div>
+            )}
+            {items.map((it, i) => (
+              <div
+                key={it.id ?? i}
+                className="flex items-center justify-between border-b border-paper-200 py-1.5 text-sm dark:border-obsidian-800"
+              >
                 <div>
-                  <div className="font-medium text-ink-800 dark:text-obsidian-50">{it.name_snapshot} {it.notes && <span className="text-xs text-amber-700 dark:text-amber-400">· {it.notes}</span>}</div>
-                  <div className="text-xs text-ink-500 dark:text-obsidian-400">{money(it.unit_price)} c/u</div>
+                  <div className="font-medium text-ink-800 dark:text-obsidian-50">
+                    {it.name_snapshot}{" "}
+                    {it.notes && (
+                      <span className="text-xs text-amber-700 dark:text-amber-400">· {it.notes}</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-ink-500 dark:text-obsidian-400">
+                    {money(it.unit_price)} c/u
+                  </div>
                 </div>
-                <div className="font-semibold text-ink-700 dark:text-obsidian-100">x{it.quantity}</div>
+                <div className="font-semibold text-ink-700 dark:text-obsidian-100">
+                  x{it.quantity}
+                </div>
               </div>
             ))}
           </div>
         )}
-        <div className="mt-4 pt-3 border-t border-paper-200 dark:border-obsidian-800 flex items-center justify-between">
+        <div className="mt-4 flex items-center justify-between border-t border-paper-200 pt-3 dark:border-obsidian-800">
           <span className="text-ink-500 dark:text-obsidian-400">Total</span>
-          <span className="text-2xl font-bold text-ink-800 dark:text-obsidian-50">{money(order.total)}</span>
+          <span className="text-2xl font-bold tabular-nums text-ink-800 dark:text-obsidian-50">
+            {money(order.total)}
+          </span>
         </div>
         {order.status === "on_the_way" && (
-          <div className="flex gap-2 mt-4">
-            <button onClick={closePaid} className="btn-primary flex-1">
-              <CheckCircle2 size={16}/> Entregado y cobrado
+          <div className="mt-4 flex gap-2">
+            <button type="button" onClick={closePaid} className="btn-primary flex-1">
+              <CheckCircle2 size={16} /> Entregado y cobrado
             </button>
-            <button onClick={markDebt} className="btn-secondary flex-1 border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/20">
-              <AlertTriangle size={16}/> Entregado (deuda)
+            <button
+              type="button"
+              onClick={markDebt}
+              className="btn-secondary flex-1 border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/20"
+            >
+              <AlertTriangle size={16} /> Entregado (deuda)
             </button>
           </div>
         )}
