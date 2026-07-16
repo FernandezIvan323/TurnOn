@@ -5,7 +5,7 @@
 ![PostgreSQL](https://img.shields.io/badge/postgresql-18%2B-4169E1?logo=postgresql)
 ![License](https://img.shields.io/badge/license-MIT-yellow?logo=opensourceinitiative)
 
-# AppTurnos 
+# TurnOn
 
 > Sistema de gestión integral para restaurant con mesas y pedidos a domicilio.
 
