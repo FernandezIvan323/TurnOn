@@ -133,10 +133,24 @@ export default function ClosingHistory() {
               <button onClick={() => setSelected(null)} className="btn-ghost text-sm">Cerrar</button>
             </div>
 
-            <div className="hidden print:block mb-3">
-              <h1 className="text-xl font-bold">Corte de caja</h1>
-              <div className="text-sm">TurnOn · {dateOnly(selected.closing_date)}</div>
-              <div className="text-sm">Cajero: {selected.closed_by_name || "—"}</div>
+            <div className="closing-print-header mb-3 hidden border-b border-obsidian-600 pb-3 print:block">
+              <div className="flex items-center gap-3">
+                <img
+                  src="/favicon.svg"
+                  alt="TurnOn"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 rounded-xl object-cover"
+                />
+                <div>
+                  <div className="text-lg font-bold text-white">TurnOn</div>
+                  <div className="text-xs text-zinc-300">Gestión del restaurant</div>
+                </div>
+              </div>
+              <h1 className="mt-3 text-base font-bold text-white">Corte de caja</h1>
+              <div className="text-sm text-zinc-200">
+                {dateOnly(selected.closing_date)} · Cajero: {selected.closed_by_name || "—"}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-sm mb-3">

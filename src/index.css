@@ -110,4 +110,90 @@
   }
   .print\:block { display: block !important; }
   .print\:hidden { display: none !important; }
+
+  /* —— Corte de caja: hoja oscura + logo legible (evita blanco-sobre-blanco) —— */
+  body:has(#closing-printable) {
+    background: #0f1419 !important;
+  }
+  body:has(#closing-printable) * {
+    visibility: hidden;
+  }
+  body:has(#closing-printable) #closing-printable,
+  body:has(#closing-printable) #closing-printable * {
+    visibility: visible;
+  }
+  body:has(#closing-printable) #closing-printable {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 12mm;
+    box-sizing: border-box;
+  }
+  #closing-printable,
+  #closing-printable .card {
+    background: #0f1419 !important;
+    color: #f4f4f5 !important;
+    border-color: #374151 !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  #closing-printable * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  #closing-printable h1,
+  #closing-printable h2,
+  #closing-printable h3,
+  #closing-printable .font-bold,
+  #closing-printable .font-semibold,
+  #closing-printable .font-medium {
+    color: #fafafa !important;
+  }
+  #closing-printable .text-ink-500,
+  #closing-printable .text-ink-600,
+  #closing-printable .text-ink-700,
+  #closing-printable .text-ink-800,
+  #closing-printable .text-ink-900,
+  #closing-printable [class*="text-ink-"],
+  #closing-printable [class*="text-obsidian-"],
+  #closing-printable [class*="dark:text-"] {
+    color: #e4e4e7 !important;
+  }
+  #closing-printable .text-white,
+  #closing-printable .text-zinc-200,
+  #closing-printable .text-zinc-300 {
+    color: #f4f4f5 !important;
+  }
+  #closing-printable .text-zinc-400 {
+    color: #a1a1aa !important;
+  }
+  #closing-printable [class*="bg-paper-"],
+  #closing-printable [class*="bg-obsidian-"],
+  #closing-printable [class*="dark:bg-"] {
+    background-color: #1a222c !important;
+    border-color: #3f4a56 !important;
+  }
+  #closing-printable [class*="bg-emerald-"] {
+    background-color: #064e3b !important;
+    color: #a7f3d0 !important;
+  }
+  #closing-printable [class*="bg-blue-"],
+  #closing-printable [class*="bg-sky-"] {
+    background-color: #0c4a6e !important;
+    color: #bae6fd !important;
+  }
+  #closing-printable [class*="bg-rose-"] {
+    background-color: #7f1d1d !important;
+    color: #fecaca !important;
+  }
+  #closing-printable [class*="border-"] {
+    border-color: #3f4a56 !important;
+  }
+  #closing-printable .closing-print-header img {
+    display: block !important;
+  }
 }

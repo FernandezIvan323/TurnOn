@@ -15,12 +15,22 @@ import {
   History,
   Printer,
   ArrowRight,
-  XCircle,
+  CalendarDays,
   Landmark,
 } from "lucide-react";
 
 function todayISO() {
   return todayLocalISO();
+}
+
+function shiftISO(iso, days) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + days);
+  const yy = dt.getFullYear();
+  const mm = String(dt.getMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
 }
 
 function n(v) {
@@ -274,6 +284,11 @@ function ClosingDetail({ closing, date, onReset }) {
       ? n(closing.bank_count)
       : n(closing.card_count) + n(closing.transfer_count);
 
+  const closedAtLabel = new Date(closing.closed_at).toLocaleString("es-MX", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+
   return (
     <div className="space-y-4" id="closing-printable">
       <div className="card p-5 sm:p-6">
@@ -287,13 +302,10 @@ function ClosingDetail({ closing, date, onReset }) {
               Cerrado por{" "}
               <span className="font-semibold">{closing.closed_by_name || "—"}</span>
               {" · "}
-              {new Date(closing.closed_at).toLocaleString("es-MX", {
-                dateStyle: "short",
-                timeStyle: "short",
-              })}
+              {closedAtLabel}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button onClick={() => window.print()} className="btn-secondary text-sm" type="button">
               <Printer size={14} /> Imprimir
             </button>
@@ -301,19 +313,39 @@ function ClosingDetail({ closing, date, onReset }) {
               <button
                 onClick={onReset}
                 className="btn-ghost text-sm"
-                title="Cerrar otro día"
+                title="Elegí otra fecha para ver o hacer su corte. Este cierre no se modifica."
                 type="button"
               >
-                <XCircle size={14} /> Otro día
+                <CalendarDays size={14} /> Elegir otro día
               </button>
             )}
           </div>
         </div>
 
-        <div className="mb-4 hidden print:block">
-          <h1 className="text-xl font-bold">Corte de caja</h1>
-          <div className="text-sm">TurnOn · {date}</div>
-          <div className="text-sm">Cajero: {closing.closed_by_name || "—"}</div>
+        {/* Cabecera solo impresión: logo + marca */}
+        <div className="closing-print-header mb-5 hidden border-b border-obsidian-600 pb-4 print:block">
+          <div className="flex items-center gap-3">
+            <img
+              src="/favicon.svg"
+              alt="TurnOn"
+              width={48}
+              height={48}
+              className="h-12 w-12 rounded-xl object-cover ring-1 ring-white/20"
+            />
+            <div>
+              <div className="text-xl font-bold tracking-tight text-white">TurnOn</div>
+              <div className="text-xs font-medium text-zinc-300">Gestión del restaurant</div>
+            </div>
+          </div>
+          <h1 className="mt-4 text-lg font-bold text-white">Corte de caja</h1>
+          <div className="mt-1 text-sm text-zinc-200">
+            Fecha de operación: <strong className="text-white">{date}</strong>
+          </div>
+          <div className="text-sm text-zinc-200">
+            Cajero: <strong className="text-white">{closing.closed_by_name || "—"}</strong>
+            {" · "}
+            Cerrado: {closedAtLabel}
+          </div>
         </div>
 
         <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -451,8 +483,8 @@ function ClosingDetail({ closing, date, onReset }) {
           </div>
         )}
 
-        <div className="mt-6 hidden border-t border-ink-200 pt-4 text-xs text-ink-500 print:block">
-          Generado el {new Date().toLocaleString("es-MX")} · TurnOn
+        <div className="mt-6 hidden border-t border-obsidian-600 pt-4 text-xs text-zinc-400 print:block">
+          Generado el {new Date().toLocaleString("es-MX")} · TurnOn · Documento de cierre Z
         </div>
       </div>
     </div>
@@ -763,6 +795,25 @@ export default function CashClosing() {
   const blocked = preview && preview.pending_count > 0;
   const alreadyClosed = !!closing;
 
+  /** Cambiar a otra fecha de operación (no borra el corte actual). */
+  const pickOtherDay = () => {
+    const today = todayISO();
+    // Si ya estamos en hoy, ir a ayer para que el cambio sea visible
+    const next = date === today ? shiftISO(today, -1) : today;
+    setDate(next);
+    // Abrir el selector de fecha del header
+    requestAnimationFrame(() => {
+      const el = document.getElementById("closing-date");
+      if (!el) return;
+      el.focus();
+      try {
+        el.showPicker?.();
+      } catch {
+        /* showPicker no disponible en todos los navegadores */
+      }
+    });
+  };
+
   return (
     <div className="mx-auto w-full max-w-4xl">
       <Header
@@ -771,11 +822,13 @@ export default function CashClosing() {
         right={
           <div className="flex items-center gap-2">
             <input
+              id="closing-date"
               type="date"
               value={date}
               max={todayISO()}
               onChange={(e) => setDate(e.target.value)}
               className="input py-1.5 text-sm"
+              title="Fecha del corte"
             />
             <Link to="/cashier/closing/history" className="btn-secondary text-sm">
               <History size={14} /> Histórico
@@ -797,7 +850,7 @@ export default function CashClosing() {
         ) : err ? (
           <div className="card p-4 text-sm text-rose-700 dark:text-white">{err}</div>
         ) : !preview ? null : alreadyClosed ? (
-          <ClosingDetail closing={closing} date={date} onReset={() => setDate(todayISO())} />
+          <ClosingDetail closing={closing} date={date} onReset={pickOtherDay} />
         ) : blocked ? (
           <>
             <PendingBanner orders={preview.pending_orders} />
