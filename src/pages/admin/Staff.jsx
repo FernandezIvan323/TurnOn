@@ -521,8 +521,13 @@ function WaiterHistoryModal({ waiter, onClose }) {
           ) : (
             byDay.map(([day, dayOrders]) => (
               <div key={day}>
-                <div className="sticky top-0 z-[1] mb-2 bg-white/95 py-1 text-xs font-bold capitalize text-ink-600 backdrop-blur dark:bg-obsidian-900/95 dark:text-obsidian-300">
-                  {dayLabel(day)} · {dayOrders.length} pedido{dayOrders.length !== 1 ? "s" : ""}
+                <div className="sticky top-0 z-[1] mb-2 flex items-center justify-between gap-2 border-b border-paper-300 bg-paper-100 px-2 py-1.5 dark:border-obsidian-600 dark:bg-obsidian-800">
+                  <span className="text-xs font-bold capitalize text-ink-900 dark:text-white">
+                    {dayLabel(day)}
+                  </span>
+                  <span className="shrink-0 rounded-md bg-white px-1.5 py-0.5 text-[10px] font-semibold text-ink-700 dark:bg-obsidian-950 dark:text-obsidian-100">
+                    {dayOrders.length} pedido{dayOrders.length !== 1 ? "s" : ""}
+                  </span>
                 </div>
                 <div className="space-y-2">
                   {dayOrders.map((o) => (
@@ -709,13 +714,17 @@ export default function Staff() {
                       {wTables.length === 0 ? (
                         <span className="text-xs italic text-ink-400 dark:text-obsidian-500">Sin mesas</span>
                       ) : (
-                        <div className="flex flex-wrap gap-1">
+                        <div
+                          className="flex flex-wrap gap-1"
+                          title={wTables.map((t) => `Mesa ${t.number}${t.label ? ` · ${t.label}` : ""}`).join(", ")}
+                        >
                           {wTables.map((t) => (
                             <span
                               key={t.id}
-                              className="inline-flex items-center rounded-md bg-wine-50 px-1.5 py-0.5 text-[10px] font-semibold text-wine-800 dark:bg-wine-900/40 dark:text-wine-300"
+                              className="inline-flex items-center rounded-md border border-wine-200 bg-wine-100 px-2 py-0.5 text-xs font-semibold text-wine-900 dark:border-wine-600 dark:bg-wine-800 dark:text-wine-50"
                             >
                               Mesa {t.number}
+                              {t.label ? ` · ${t.label}` : ""}
                             </span>
                           ))}
                         </div>

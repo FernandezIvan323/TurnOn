@@ -140,8 +140,33 @@ function CashVsBankPanel({
   );
 }
 
+/** Antigüedad legible a partir de created_at (ej. "hace 3 días", "hoy 14:30"). */
+function orderAgeLabel(createdAt) {
+  if (!createdAt) return null;
+  const created = new Date(createdAt);
+  if (Number.isNaN(created.getTime())) return null;
+  const now = new Date();
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startCreated = new Date(created.getFullYear(), created.getMonth(), created.getDate());
+  const dayDiff = Math.round((startToday - startCreated) / 86400000);
+  const time = created.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+  if (dayDiff <= 0) return `hoy ${time}`;
+  if (dayDiff === 1) return `ayer ${time}`;
+  return `hace ${dayDiff} días · ${created.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}`;
+}
+
+function isStaleOrder(createdAt) {
+  if (!createdAt) return false;
+  const created = new Date(createdAt);
+  if (Number.isNaN(created.getTime())) return false;
+  const startToday = new Date();
+  startToday.setHours(0, 0, 0, 0);
+  return created < startToday;
+}
+
 function PendingBanner({ orders }) {
   if (!orders || orders.length === 0) return null;
+  const staleCount = orders.filter((o) => isStaleOrder(o.created_at)).length;
   return (
     <div className="card border-amber-300/80 bg-amber-50/40 p-4 dark:border-amber-700/50 dark:bg-amber-900/15">
       <div className="mb-2 flex items-center gap-2 font-semibold text-amber-900 dark:text-white">
@@ -149,40 +174,73 @@ function PendingBanner({ orders }) {
         Hay {orders.length} pedido{orders.length === 1 ? "" : "s"} pendiente
         {orders.length === 1 ? "" : "s"} de cobro
       </div>
-      <p className="mb-3 text-xs text-amber-900 dark:text-white">
-        Para hacer el corte, cobrá o cancelá todos los pedidos abiertos.
+      <p className="mb-2 text-xs text-amber-900 dark:text-white">
+        El corte de caja <strong>no se puede confirmar</strong> mientras haya cuentas abiertas.
+        Cobrá, cancelá o marcá como deuda cada uno (las deudas no bloquean el corte).
       </p>
-      <div className="max-h-40 space-y-1 overflow-y-auto">
-        {orders.map((o) => (
-          <div
-            key={o.id}
-            className="flex items-center justify-between rounded-lg border border-paper-200 bg-paper-50 px-3 py-1.5 text-xs dark:border-obsidian-700 dark:bg-obsidian-950"
-          >
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="font-mono text-ink-600 dark:text-white">#{o.id}</span>
-              <span className="badge bg-paper-200 text-ink-800 dark:bg-obsidian-800 dark:text-white">
-                {typeLabels[o.type] || o.type}
-              </span>
-              <span className="truncate text-ink-800 dark:text-white">
-                {o.type === "table"
-                  ? `Mesa ${o.table_number || "?"}`
-                  : o.customer_name || "—"}
-              </span>
+      {staleCount > 0 && (
+        <p className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-200">
+          {staleCount} pedido{staleCount === 1 ? "" : "s"} de{" "}
+          <strong>días anteriores</strong> — probablemente de pruebas u operación olvidada.
+          Resolvelos para dejar el local listo para un nuevo día.
+        </p>
+      )}
+      <div className="max-h-48 space-y-1 overflow-y-auto">
+        {orders.map((o) => {
+          const stale = isStaleOrder(o.created_at);
+          const age = orderAgeLabel(o.created_at);
+          return (
+            <div
+              key={o.id}
+              className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-1.5 text-xs ${
+                stale
+                  ? "border-rose-300 bg-rose-50/80 dark:border-rose-700 dark:bg-rose-950/40"
+                  : "border-paper-200 bg-paper-50 dark:border-obsidian-700 dark:bg-obsidian-950"
+              }`}
+            >
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="font-mono text-ink-600 dark:text-white">#{o.id}</span>
+                <span className="badge bg-paper-200 text-ink-800 dark:bg-obsidian-800 dark:text-white">
+                  {typeLabels[o.type] || o.type}
+                </span>
+                <span className="truncate font-medium text-ink-800 dark:text-white">
+                  {o.type === "table"
+                    ? `Mesa ${o.table_number || "?"}`
+                    : o.customer_name || "—"}
+                </span>
+                {age && (
+                  <span
+                    className={`badge text-[10px] ${
+                      stale
+                        ? "bg-rose-100 text-rose-900 dark:bg-rose-900/50 dark:text-rose-100"
+                        : "bg-paper-200 text-ink-600 dark:bg-obsidian-800 dark:text-obsidian-200"
+                    }`}
+                  >
+                    {stale ? "Día anterior · " : ""}
+                    {age}
+                  </span>
+                )}
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="badge bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-white">
+                  {statusLabels[o.status] || o.status}
+                </span>
+                <span className="font-semibold tabular-nums text-ink-900 dark:text-white">
+                  {money(o.total)}
+                </span>
+              </div>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="badge bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-white">
-                {statusLabels[o.status] || o.status}
-              </span>
-              <span className="font-semibold tabular-nums text-ink-900 dark:text-white">
-                {money(o.total)}
-              </span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-      <Link to="/cashier" className="btn-secondary mt-3 w-full text-sm">
-        Ir a Caja <ArrowRight size={14} />
-      </Link>
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        <Link to="/cashier" className="btn-secondary flex-1 text-sm">
+          Ir a Caja <ArrowRight size={14} />
+        </Link>
+        <Link to="/tables" className="btn-ghost flex-1 text-sm">
+          Ver mesas <ArrowRight size={14} />
+        </Link>
+      </div>
     </div>
   );
 }
