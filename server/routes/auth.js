@@ -1,5 +1,5 @@
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { query } from "../db.js";
@@ -9,9 +9,15 @@ const router = Router();
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
+  // Por IP + usuario: un mesero con PIN mal no bloquea a todo el local
+  keyGenerator: (req) => {
+    const ipKey = ipKeyGenerator(req.ip || "unknown");
+    const u = String(req.body?.username || "").trim().toLowerCase() || "-";
+    return `${ipKey}:${u}`;
+  },
   message: { error: "Demasiados intentos. Intenta de nuevo en 15 minutos." },
 });
 
@@ -38,22 +44,26 @@ async function buildUserPayload(row) {
 }
 
 router.post("/login", loginLimiter, async (req, res) => {
-  const { username, pin } = req.body || {};
+  const username = String(req.body?.username || "").trim().toLowerCase();
+  const pin = String(req.body?.pin ?? "").trim();
   if (!username || !pin)
     return res.status(400).json({ error: "Usuario y PIN son requeridos" });
+  if (!/^\d{4}$/.test(pin))
+    return res.status(400).json({ error: "El PIN debe ser de 4 dígitos" });
 
   const { rows } = await query(
     "SELECT id, username, name, pin, role, active FROM users WHERE username = $1",
     [username]
   );
-  if (rows.length === 0)
-    return res.status(401).json({ error: "Usuario o PIN incorrecto" });
+  const badCreds =
+    "Usuario o PIN incorrecto. Usá el usuario de login (ej. maria), no el nombre completo.";
+  if (rows.length === 0) return res.status(401).json({ error: badCreds });
   const user = rows[0];
   if (!user.active)
     return res.status(403).json({ error: "Usuario inactivo" });
 
-  const ok = await bcrypt.compare(String(pin), user.pin);
-  if (!ok) return res.status(401).json({ error: "Usuario o PIN incorrecto" });
+  const ok = await bcrypt.compare(pin, user.pin);
+  if (!ok) return res.status(401).json({ error: badCreds });
 
   const token = jwt.sign(
     { id: user.id, username: user.username, role: user.role, name: user.name },
@@ -113,15 +123,19 @@ router.post("/users", authRequired, requireRole("admin"), async (req, res) => {
 
 // Admin: cambiar PIN de cualquier usuario
 router.put("/users/:id/pin", authRequired, requireRole("admin"), async (req, res) => {
-  const { pin } = req.body || {};
-  if (!/^\d{4}$/.test(String(pin || "")))
+  const userId = Number(req.params.id);
+  if (!Number.isInteger(userId) || userId <= 0)
+    return res.status(400).json({ error: "ID de usuario inválido" });
+  const pin = String(req.body?.pin ?? "").trim();
+  if (!/^\d{4}$/.test(pin))
     return res.status(400).json({ error: "El PIN debe ser de 4 dígitos" });
-  const hash = await bcrypt.hash(String(pin), 10);
+  const hash = await bcrypt.hash(pin, 10);
   const { rows } = await query(
     "UPDATE users SET pin = $2 WHERE id = $1 RETURNING id, username, name, role, active",
-    [req.params.id, hash]
+    [userId, hash]
   );
   if (rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
+  console.log(`[auth] PIN actualizado user_id=${rows[0].id} username=${rows[0].username}`);
   res.json({ ok: true, user: rows[0] });
 });
 

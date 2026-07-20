@@ -9,7 +9,9 @@ export const useAuth = create((set) => ({
   login: async (username, pin) => {
     set({ loading: true, error: null });
     try {
-      const { data } = await api.post("/auth/login", { username, pin });
+      const u = String(username || "").trim().toLowerCase();
+      const p = String(pin || "").replace(/\D/g, "").slice(0, 4);
+      const { data } = await api.post("/auth/login", { username: u, pin: p });
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       set({ user: data.user, loading: false });

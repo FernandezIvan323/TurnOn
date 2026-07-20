@@ -25,9 +25,11 @@ export default function Login() {
 
   const submit = async (e) => {
     e?.preventDefault();
-    if (!username || pin.length !== PIN_LENGTH || loading) return;
+    const u = username.trim().toLowerCase();
+    const p = pin.replace(/\D/g, "").slice(0, PIN_LENGTH);
+    if (!u || p.length !== PIN_LENGTH || loading) return;
     try {
-      await login(username, pin);
+      await login(u, p);
     } catch {
       setPin("");
     }
@@ -53,9 +55,13 @@ export default function Login() {
             type="text"
             className={authInputClassName()}
             value={username}
-            onChange={(e) => setUsername(e.target.value.toLowerCase())}
+            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
             autoComplete="username"
-            placeholder="Tu usuario"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            inputMode="text"
+            placeholder="Tu usuario (ej. maria)"
             disabled={loading}
           />
         </div>

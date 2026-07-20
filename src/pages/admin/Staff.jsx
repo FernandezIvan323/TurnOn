@@ -261,59 +261,105 @@ function ChangePinModal({ user, onClose, onSaved }) {
   const [pin2, setPin2] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
+  const [done, setDone] = useState(null);
   const save = async () => {
     setSaving(true); setErr(null);
     try {
       if (pin !== pin2) throw new Error("Los PIN no coinciden");
-      await api.put(`/auth/users/${user.id}/pin`, { pin });
-      onSaved(); onClose();
+      const { data } = await api.put(`/auth/users/${user.id}/pin`, { pin: pin.trim() });
+      const uname = data?.user?.username || user.username;
+      setDone(uname);
+      onSaved?.();
     } catch (e) {
       setErr(e.response?.data?.error || e.message);
     } finally { setSaving(false); }
   };
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-      <div className="card w-full max-w-md p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Cambiar PIN</h2>
-          <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 p-4"
+      onClick={done ? onClose : undefined}
+    >
+      <div className="card w-full max-w-md p-5 shadow-pop" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">
+            {done ? "PIN actualizado" : "Cambiar PIN"}
+          </h2>
+          <button type="button" onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
-        <p className="text-sm text-ink-500 dark:text-obsidian-400 mb-3">
-          Usuario <span className="font-mono font-medium text-ink-700 dark:text-obsidian-100">@{user.username}</span>
-          {" · "}{user.name}
-        </p>
-        <label className="label">Nuevo PIN (4 dígitos)</label>
-        <input
-          className="input"
-          type="password"
-          maxLength={4}
-          inputMode="numeric"
-          value={pin}
-          onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
-          autoFocus
-          autoComplete="new-password"
-        />
-        <label className="label mt-3">Confirmar PIN</label>
-        <input
-          className="input"
-          type="password"
-          maxLength={4}
-          inputMode="numeric"
-          value={pin2}
-          onChange={(e) => setPin2(e.target.value.replace(/\D/g, "").slice(0, 4))}
-          autoComplete="new-password"
-        />
-        {err && (
-          <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
-            {err}
-          </div>
+        {done ? (
+          <>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200">
+              <p className="font-semibold">Listo para usar en el celular</p>
+              <p className="mt-2">
+                Usuario:{" "}
+                <span className="font-mono font-bold">@{done}</span>
+              </p>
+              <p className="mt-1 text-xs opacity-90">
+                El mesero debe entrar con ese usuario (no el nombre completo) y el PIN nuevo de 4 dígitos.
+              </p>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button type="button" onClick={onClose} className="btn-primary w-full sm:w-auto">
+                Entendido
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="mb-3 text-sm text-ink-500 dark:text-obsidian-400">
+              Usuario{" "}
+              <span className="font-mono font-medium text-ink-700 dark:text-obsidian-100">
+                @{user.username}
+              </span>
+              {" · "}
+              {user.name}
+            </p>
+            <p className="mb-3 text-xs text-ink-500 dark:text-obsidian-400">
+              En el login se usa <strong className="text-ink-700 dark:text-obsidian-200">@{user.username}</strong>, no el nombre.
+            </p>
+            <label className="label">Nuevo PIN (4 dígitos)</label>
+            <input
+              className="input"
+              type="password"
+              maxLength={4}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              autoFocus
+              autoComplete="new-password"
+            />
+            <label className="label mt-3">Confirmar PIN</label>
+            <input
+              className="input"
+              type="password"
+              maxLength={4}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={pin2}
+              onChange={(e) => setPin2(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              autoComplete="new-password"
+            />
+            {err && (
+              <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
+                {err}
+              </div>
+            )}
+            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button type="button" onClick={onClose} className="btn-secondary w-full sm:w-auto">
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={save}
+                disabled={saving || pin.length !== 4 || pin2.length !== 4}
+                className="btn-primary w-full sm:w-auto"
+              >
+                {saving ? "Guardando…" : "Actualizar PIN"}
+              </button>
+            </div>
+          </>
         )}
-        <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button onClick={save} disabled={saving || pin.length !== 4 || pin2.length !== 4} className="btn-primary">
-            {saving ? "Guardando…" : "Actualizar PIN"}
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -808,7 +854,7 @@ export default function Staff() {
         <ChangePinModal
           user={pinUser}
           onClose={() => setPinUser(null)}
-          onSaved={() => { setPinUser(null); }}
+          onSaved={() => {}}
         />
       )}
 
