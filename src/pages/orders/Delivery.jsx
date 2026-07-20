@@ -26,206 +26,304 @@ const COLUMNS = [
   { key: "delivered", title: "Entregados" },
 ];
 
+const DELIVERY_STATUS_ACCENT = {
+  pending: "border-l-amber-500 bg-gradient-to-br from-amber-50/80 to-white dark:from-amber-950/40 dark:to-obsidian-900",
+  preparing: "border-l-blue-500 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-950/40 dark:to-obsidian-900",
+  on_the_way: "border-l-indigo-500 bg-gradient-to-br from-indigo-50/80 to-white dark:from-indigo-950/40 dark:to-obsidian-900",
+  delivered: "border-l-emerald-500 bg-gradient-to-br from-emerald-50/60 to-white dark:from-emerald-950/30 dark:to-obsidian-900",
+};
+
 function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPreparing, onBackPending, onReopen }) {
   const isPaid = order.payment_status === "paid";
+  const accent =
+    DELIVERY_STATUS_ACCENT[order.status] ||
+    "border-l-paper-400 bg-white dark:border-l-obsidian-600 dark:bg-obsidian-900";
+
   return (
     <div
       onClick={onClick}
-      className={`card p-3 cursor-pointer transition hover:border-wine-400 hover:shadow-pop dark:hover:border-wine-500/40 ${isNext ? "ring-2 ring-wine-500 dark:ring-wine-400" : ""}`}
+      className={`group relative cursor-pointer overflow-hidden rounded-2xl border border-paper-300 border-l-4 p-0 shadow-soft transition hover:-translate-y-0.5 hover:border-wine-400 hover:shadow-pop dark:border-obsidian-700 dark:hover:border-wine-500/50 ${accent} ${
+        isNext ? "ring-2 ring-wine-500 ring-offset-1 dark:ring-wine-400 dark:ring-offset-obsidian-950" : ""
+      }`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="flex items-center gap-2 mb-0.5">
-            {turn && (
-              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                isNext
-                  ? "bg-wine-600 text-white dark:bg-wine-500"
-                  : "bg-paper-200 text-ink-700 dark:bg-obsidian-800 dark:text-white"
-              }`}>
-                #{turn}
+      {isNext && (
+        <div className="absolute right-0 top-0 rounded-bl-xl bg-wine-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white dark:bg-wine-500">
+          Siguiente
+        </div>
+      )}
+
+      <div className="p-3.5">
+        {/* Header: turno + id + total */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+              {turn != null && (
+                <span
+                  className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[11px] font-bold tabular-nums ${
+                    isNext
+                      ? "bg-wine-600 text-white dark:bg-wine-500"
+                      : "bg-paper-200/90 text-ink-800 dark:bg-obsidian-800 dark:text-white"
+                  }`}
+                >
+                  #{turn}
+                </span>
+              )}
+              <span className="text-[11px] font-medium text-ink-500 dark:text-obsidian-300">
+                Pedido #{order.id}
               </span>
+              <span className="inline-flex items-center gap-0.5 text-[11px] text-ink-500 dark:text-obsidian-400">
+                <Clock size={10} /> {formatTime(order.created_at)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-wine-100 text-wine-700 dark:bg-wine-900/50 dark:text-wine-300">
+                <UserIcon size={15} />
+              </span>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-bold text-ink-900 dark:text-white">
+                  {order.customer_name || "Sin nombre"}
+                </div>
+                {order.delivery_name && (
+                  <div className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-indigo-700 dark:text-indigo-300">
+                    <Truck size={11} /> {order.delivery_name}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="shrink-0 rounded-xl bg-white/80 px-2.5 py-1.5 text-right shadow-sm ring-1 ring-paper-200 dark:bg-obsidian-950/80 dark:ring-obsidian-700">
+            <div className="text-base font-bold tabular-nums leading-tight text-ink-900 dark:text-white">
+              {money(order.total)}
+            </div>
+            {isPaid && (
+              <div className="mt-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                ✓ {payMethodLabel(order.payment_method)}
+              </div>
             )}
-            <div className="text-xs text-ink-600 dark:text-white">#{order.id} · {formatTime(order.created_at)}</div>
-          </div>
-          <div className="font-semibold text-ink-900 dark:text-white flex items-center gap-1.5">
-            <UserIcon size={14} className="text-ink-500 dark:text-white/80" />
-            {order.customer_name || "—"}
           </div>
         </div>
-        <div className="text-right">
-          <div className="font-semibold tabular-nums text-ink-900 dark:text-white">{money(order.total)}</div>
-          {isPaid && (
-            <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 mt-0.5">
-              ✓ Pagado {order.payment_method ? `(${order.payment_method})` : ""}
-            </div>
+
+        {/* Chips meta */}
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {order.customer_phone && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-paper-100 px-2 py-0.5 text-[11px] font-medium text-ink-700 dark:bg-obsidian-800 dark:text-obsidian-100">
+              <Phone size={11} className="text-ink-400" />
+              {order.customer_phone}
+            </span>
           )}
-          {order.delivery_name && (
-            <div className="text-[10px] text-ink-600 dark:text-white mt-0.5">
-              <Truck size={10} className="inline" /> {order.delivery_name}
-            </div>
+          {order.customer_neighborhood && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-paper-100 px-2 py-0.5 text-[11px] font-medium text-ink-700 dark:bg-obsidian-800 dark:text-obsidian-100">
+              <MapPin size={11} className="text-ink-400" />
+              {order.customer_neighborhood}
+            </span>
+          )}
+          {order.notes && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
+              <StickyNote size={11} /> Nota
+            </span>
           )}
         </div>
-      </div>
-      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-600 dark:text-white">
-        {order.customer_phone && (
-          <span className="inline-flex items-center gap-1"><Phone size={12}/>{order.customer_phone}</span>
-        )}
-        {order.customer_neighborhood && (
-          <span className="inline-flex items-center gap-1"><MapPin size={12}/>{order.customer_neighborhood}</span>
-        )}
-        {order.notes && (
-          <span className="inline-flex items-center gap-1 text-amber-800 dark:text-amber-200"><StickyNote size={12}/>nota</span>
-        )}
-      </div>
-      <div className="mt-3 flex gap-1.5 flex-wrap">
-        {order.status === "pending" && (
-          <>
-            <button
-              onClick={(e) => { e.stopPropagation(); onPreparing(order); }}
-              className="flex-1 h-8 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center justify-center gap-1 transition"
-              title="Marcar como en preparación"
+
+        {/* Actions */}
+        <div className="mt-3 flex flex-wrap gap-1.5 border-t border-paper-200/80 pt-3 dark:border-obsidian-700/80">
+          {order.status === "pending" && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPreparing(order);
+                }}
+                className="inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-blue-600 px-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                title="Marcar como en preparación"
+              >
+                <ChefHat size={14} /> Preparar
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAssign(order);
+                }}
+                className="inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-wine-600 px-2 text-xs font-semibold text-white transition hover:bg-wine-700"
+                title="Asignar repartidor"
+              >
+                <Truck size={14} /> Asignar
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancel(order);
+                }}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-paper-300 bg-white text-ink-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-200 dark:hover:border-rose-800 dark:hover:bg-rose-950/40"
+                title="Cancelar"
+              >
+                <XCircle size={15} />
+              </button>
+            </>
+          )}
+          {order.status === "preparing" && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAssign(order);
+                }}
+                className="inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-wine-600 px-2 text-xs font-semibold text-white transition hover:bg-wine-700"
+              >
+                <Truck size={14} /> Asignar repartidor
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBackPending(order);
+                }}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-paper-300 bg-white text-ink-600 transition hover:bg-paper-100 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-200"
+                title="Volver a pendiente"
+              >
+                <ArrowLeft size={15} />
+              </button>
+            </>
+          )}
+          {order.status === "on_the_way" && (
+            <div
+              className={`flex w-full items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold ${
+                isPaid
+                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
+                  : "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200"
+              }`}
             >
-              <ChefHat size={14}/> En preparación
-            </button>
+              <CheckCircle2 size={14} />
+              {isPaid ? "Pagado · cerrar al entregar" : "En camino · cobrar al entregar"}
+            </div>
+          )}
+          {order.status === "delivered" && onReopen && (
             <button
-              onClick={(e) => { e.stopPropagation(); onAssign(order); }}
-              className="btn-primary text-xs flex-1 h-8"
-              title="Asignar repartidor directamente"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onReopen(order);
+              }}
+              className="inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-xl border border-paper-300 bg-white text-xs font-semibold text-ink-700 transition hover:bg-paper-50 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-100"
+              title="Reabrir este pedido"
             >
-              <Truck size={14}/> Asignar
+              <RotateCcw size={14} /> Reabrir
             </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onCancel(order); }}
-              className="btn-secondary text-xs h-8 px-2"
-              title="Cancelar"
-            >
-              <XCircle size={14}/>
-            </button>
-          </>
-        )}
-        {order.status === "preparing" && (
-          <>
-            <button
-              onClick={(e) => { e.stopPropagation(); onAssign(order); }}
-              className="btn-primary text-xs flex-1 h-8"
-            >
-              <Truck size={14}/> Asignar repartidor
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onBackPending(order); }}
-              className="btn-secondary text-xs h-8 px-2"
-              title="Volver a pendiente"
-            >
-              <ArrowLeft size={14}/>
-            </button>
-          </>
-        )}
-        {order.status === "on_the_way" && (
-          <span className="badge w-full justify-center py-1 bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-white">
-            <CheckCircle2 size={12} className="mr-1" /> {isPaid ? "Pagado · listo para cerrar al entregar" : "Listo para cerrar al entregar"}
-          </span>
-        )}
-        {order.status === "delivered" && onReopen && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onReopen(order); }}
-            className="btn-secondary h-8 text-xs"
-            title="Reabrir este pedido"
-          >
-            <RotateCcw size={14}/> Reabrir
-          </button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-/** Tarjeta cuadrada para pedidos entregados / historial (productos + cliente). */
+/** Tarjeta para pedidos entregados / historial (productos + cliente). */
 function CompletedDeliveryCard({ order, onReopen, onClick }) {
   const items = order.items || [];
+  const isDebt = order.payment_status === "debt";
   return (
     <div
-      className="card flex h-full cursor-pointer flex-col p-4 transition hover:border-wine-400 hover:shadow-pop dark:hover:border-wine-500/40"
+      className={`flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-l-4 border-paper-300 p-0 shadow-soft transition hover:-translate-y-0.5 hover:border-wine-400 hover:shadow-pop dark:border-obsidian-700 dark:hover:border-wine-500/50 ${
+        isDebt
+          ? "border-l-rose-500 bg-gradient-to-br from-rose-50/70 to-white dark:from-rose-950/30 dark:to-obsidian-900"
+          : "border-l-emerald-500 bg-gradient-to-br from-emerald-50/60 to-white dark:from-emerald-950/25 dark:to-obsidian-900"
+      }`}
       onClick={onClick}
     >
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <div>
-          <div className="text-base font-bold text-ink-900 dark:text-white">
-            #{order.id}
-            <span className="ml-2 text-sm font-normal text-ink-500">
-              {formatTime(order.closed_at || order.created_at)}
-            </span>
+      <div className="flex flex-1 flex-col p-4">
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-base font-bold text-ink-900 dark:text-white">#{order.id}</span>
+              <span className="inline-flex items-center gap-0.5 text-xs text-ink-500 dark:text-obsidian-400">
+                <Clock size={11} /> {formatTime(order.closed_at || order.created_at)}
+              </span>
+            </div>
+            {order.payment_status === "paid" && (
+              <span className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                ✓ {payMethodLabel(order.payment_method)}
+              </span>
+            )}
+            {isDebt && (
+              <span className="mt-1 inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">
+                Deuda
+              </span>
+            )}
           </div>
-          {order.payment_status === "paid" && (
-            <span className="mt-0.5 inline-block text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-              ✓ Pagado ({payMethodLabel(order.payment_method)})
-            </span>
-          )}
-          {order.payment_status === "debt" && (
-            <span className="mt-0.5 inline-block text-xs font-semibold text-rose-600">Deuda</span>
-          )}
+          <div className="shrink-0 rounded-xl bg-white/90 px-2.5 py-1.5 text-right shadow-sm ring-1 ring-paper-200 dark:bg-obsidian-950/80 dark:ring-obsidian-700">
+            <div className="text-lg font-bold tabular-nums text-ink-900 dark:text-white">
+              {money(order.total)}
+            </div>
+          </div>
         </div>
-        <div className="text-right text-lg font-bold tabular-nums text-ink-900 dark:text-white">
-          {money(order.total)}
-        </div>
-      </div>
 
-      <div className="mb-2 space-y-1 text-sm">
-        <div className="flex items-center gap-1.5 font-semibold text-ink-800 dark:text-obsidian-50">
-          <UserIcon size={14} className="shrink-0 text-ink-500" />
-          {order.customer_name || "—"}
-        </div>
-        {order.customer_phone && (
-          <div className="flex items-center gap-1.5 text-ink-600 dark:text-obsidian-300">
-            <Phone size={12} /> {order.customer_phone}
-          </div>
-        )}
-        {(order.customer_address || order.customer_neighborhood) && (
-          <div className="flex items-start gap-1.5 text-xs text-ink-500 dark:text-obsidian-400">
-            <MapPin size={12} className="mt-0.5 shrink-0" />
-            <span>
-              {[order.customer_neighborhood, order.customer_address].filter(Boolean).join(" · ")}
-            </span>
-          </div>
-        )}
-        {order.delivery_name && (
-          <div className="flex items-center gap-1.5 text-xs text-ink-500">
-            <Truck size={12} /> {order.delivery_name}
-          </div>
-        )}
-      </div>
-
-      <div className="mb-3 min-h-0 flex-1 border-t border-paper-200 pt-2 dark:border-obsidian-700">
-        <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-ink-400">Productos</div>
-        {items.length === 0 ? (
-          <div className="text-xs text-ink-400">Sin detalle de ítems</div>
-        ) : (
-          <ul className="max-h-28 space-y-0.5 overflow-y-auto text-xs text-ink-700 dark:text-obsidian-200">
-            {items.map((it, i) => (
-              <li key={i} className="flex justify-between gap-2">
-                <span className="min-w-0">
-                  <b>{it.quantity}×</b> {it.name_snapshot}
+        <div className="mb-3 flex items-start gap-2">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+            <UserIcon size={14} />
+          </span>
+          <div className="min-w-0 space-y-0.5 text-sm">
+            <div className="truncate font-semibold text-ink-900 dark:text-white">
+              {order.customer_name || "—"}
+            </div>
+            {order.customer_phone && (
+              <div className="flex items-center gap-1 text-xs text-ink-600 dark:text-obsidian-300">
+                <Phone size={11} /> {order.customer_phone}
+              </div>
+            )}
+            {(order.customer_address || order.customer_neighborhood) && (
+              <div className="flex items-start gap-1 text-xs text-ink-500 dark:text-obsidian-400">
+                <MapPin size={11} className="mt-0.5 shrink-0" />
+                <span className="line-clamp-2">
+                  {[order.customer_neighborhood, order.customer_address].filter(Boolean).join(" · ")}
                 </span>
-                <span className="shrink-0 tabular-nums text-ink-500">
-                  {money(Number(it.unit_price) * Number(it.quantity))}
-                </span>
-              </li>
-            ))}
-          </ul>
+              </div>
+            )}
+            {order.delivery_name && (
+              <div className="flex items-center gap-1 text-xs font-medium text-indigo-700 dark:text-indigo-300">
+                <Truck size={11} /> {order.delivery_name}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-3 min-h-0 flex-1 rounded-xl bg-white/60 p-2.5 ring-1 ring-paper-200/80 dark:bg-obsidian-950/50 dark:ring-obsidian-700">
+          <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-400 dark:text-obsidian-400">
+            Productos
+          </div>
+          {items.length === 0 ? (
+            <div className="text-xs text-ink-400">Sin detalle de ítems</div>
+          ) : (
+            <ul className="max-h-28 space-y-1 overflow-y-auto text-xs text-ink-700 dark:text-obsidian-200">
+              {items.map((it, i) => (
+                <li key={i} className="flex justify-between gap-2">
+                  <span className="min-w-0">
+                    <b className="tabular-nums text-ink-900 dark:text-white">{it.quantity}×</b>{" "}
+                    {it.name_snapshot}
+                  </span>
+                  <span className="shrink-0 tabular-nums text-ink-500 dark:text-obsidian-400">
+                    {money(Number(it.unit_price) * Number(it.quantity))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {onReopen && order.status === "delivered" && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onReopen(order);
+            }}
+            className="mt-auto inline-flex h-9 w-full items-center justify-center gap-1 rounded-xl border border-paper-300 bg-white text-xs font-semibold text-ink-700 transition hover:bg-paper-50 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-100"
+          >
+            <RotateCcw size={14} /> Reabrir
+          </button>
         )}
       </div>
-
-      {onReopen && order.status === "delivered" && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onReopen(order);
-          }}
-          className="btn-secondary mt-auto h-9 w-full text-xs"
-        >
-          <RotateCcw size={14} /> Reabrir
-        </button>
-      )}
     </div>
   );
 }

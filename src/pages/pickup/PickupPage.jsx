@@ -29,19 +29,14 @@ const METHOD_LABELS = {
 
 const ESTIMATE_PRESETS = [5, 10, 15, 20, 30];
 
-function TurnBadge({ turn, isNext }) {
-  if (!turn) return null;
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${
-      isNext
-        ? "bg-wine-600 text-white dark:bg-wine-500"
-        : "bg-paper-200 text-ink-700 dark:bg-obsidian-800 dark:text-white"
-    }`}>
-      #{turn}
-      {isNext && <span className="ml-0.5 text-[10px] font-normal opacity-80">SIGUIENTE</span>}
-    </span>
-  );
-}
+const PICKUP_STATUS_ACCENT = {
+  pending:
+    "border-l-amber-500 bg-gradient-to-br from-amber-50/80 to-white dark:from-amber-950/40 dark:to-obsidian-900",
+  preparing:
+    "border-l-blue-500 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-950/40 dark:to-obsidian-900",
+  ready_to_pay:
+    "border-l-emerald-500 bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-950/40 dark:to-obsidian-900",
+};
 
 function WaitTimeBadge({ createdAt, estimateMin }) {
   const elapsed = waitMinutes(createdAt);
@@ -49,20 +44,20 @@ function WaitTimeBadge({ createdAt, estimateMin }) {
     const remaining = Math.max(0, estimateMin - elapsed);
     if (remaining > 0) {
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] text-blue-700 dark:text-blue-300">
-          <Timer size={11}/> ~{remaining}min restantes
+        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">
+          <Timer size={11} /> ~{remaining} min
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-800 dark:text-amber-200">
-        <Timer size={11}/> Tiempo cumplido
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
+        <Timer size={11} /> Tiempo cumplido
       </span>
     );
   }
   return (
-    <span className="text-[11px] text-ink-600 dark:text-white">
-      Esperando {waitLabel(createdAt)}
+    <span className="inline-flex items-center gap-1 rounded-full bg-paper-100 px-2 py-0.5 text-[11px] font-medium text-ink-600 dark:bg-obsidian-800 dark:text-obsidian-200">
+      <Clock size={11} /> {waitLabel(createdAt)}
     </span>
   );
 }
@@ -70,94 +65,147 @@ function WaitTimeBadge({ createdAt, estimateMin }) {
 function OrderCard({ order, turn, isNext, onClick, onPreparing, onReady, onPay, onCancel, onBackPending }) {
   const elapsed = waitMinutes(order.created_at);
   const overEstimate = order.estimate_minutes && elapsed > order.estimate_minutes;
+  const accent =
+    PICKUP_STATUS_ACCENT[order.status] ||
+    "border-l-paper-400 bg-white dark:border-l-obsidian-600 dark:bg-obsidian-900";
 
   return (
     <div
       onClick={onClick}
-      className={`card p-3 cursor-pointer transition hover:border-wine-400 hover:shadow-pop dark:hover:border-wine-500/40 ${
-        isNext ? "ring-2 ring-wine-500 dark:ring-wine-400" : ""
-      } ${overEstimate ? "ring-2 ring-amber-400/80 dark:ring-amber-500/60" : ""}`}
+      className={`group relative cursor-pointer overflow-hidden rounded-2xl border border-paper-300 border-l-4 p-0 shadow-soft transition hover:-translate-y-0.5 hover:border-wine-400 hover:shadow-pop dark:border-obsidian-700 dark:hover:border-wine-500/50 ${accent} ${
+        isNext ? "ring-2 ring-wine-500 ring-offset-1 dark:ring-wine-400 dark:ring-offset-obsidian-950" : ""
+      } ${overEstimate && !isNext ? "ring-2 ring-amber-400/70 dark:ring-amber-500/50" : ""}`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <TurnBadge turn={turn} isNext={isNext} />
-          <div>
-            <div className="text-xs text-ink-600 dark:text-white">
-              #{order.id} · {formatTime(order.created_at)}
+      {isNext && (
+        <div className="absolute right-0 top-0 rounded-bl-xl bg-wine-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white dark:bg-wine-500">
+          Siguiente
+        </div>
+      )}
+
+      <div className="p-3.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+              {turn != null && (
+                <span
+                  className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[11px] font-bold tabular-nums ${
+                    isNext
+                      ? "bg-wine-600 text-white dark:bg-wine-500"
+                      : "bg-paper-200/90 text-ink-800 dark:bg-obsidian-800 dark:text-white"
+                  }`}
+                >
+                  #{turn}
+                </span>
+              )}
+              <span className="text-[11px] font-medium text-ink-500 dark:text-obsidian-300">
+                Pedido #{order.id}
+              </span>
+              <span className="inline-flex items-center gap-0.5 text-[11px] text-ink-500 dark:text-obsidian-400">
+                <Clock size={10} /> {formatTime(order.created_at)}
+              </span>
             </div>
-            <div className="font-semibold text-ink-900 dark:text-white">
-              Pedido #{order.id}
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                <ShoppingBag size={15} />
+              </span>
+              <div className="min-w-0">
+                <div className="text-sm font-bold text-ink-900 dark:text-white">
+                  Para llevar
+                </div>
+                {order.estimate_minutes > 0 && (
+                  <div className="text-[11px] text-ink-500 dark:text-obsidian-400">
+                    Estimado {order.estimate_minutes} min
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-        <div className="text-right">
-          <div className="font-semibold tabular-nums text-ink-900 dark:text-white">{money(order.total)}</div>
-          {order.payment_status === "paid" && (
-            <div className="mt-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-              Pagado
+          <div className="shrink-0 rounded-xl bg-white/80 px-2.5 py-1.5 text-right shadow-sm ring-1 ring-paper-200 dark:bg-obsidian-950/80 dark:ring-obsidian-700">
+            <div className="text-base font-bold tabular-nums leading-tight text-ink-900 dark:text-white">
+              {money(order.total)}
             </div>
+            {order.payment_status === "paid" && (
+              <div className="mt-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                ✓ Pagado
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <WaitTimeBadge createdAt={order.created_at} estimateMin={order.estimate_minutes} />
+          {order.notes && (
+            <span className="inline-flex max-w-full items-center gap-1 truncate rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
+              <StickyNote size={11} />
+              <span className="truncate">{order.notes}</span>
+            </span>
           )}
         </div>
-      </div>
 
-      <div className="mt-2">
-        <WaitTimeBadge createdAt={order.created_at} estimateMin={order.estimate_minutes} />
-      </div>
-
-      {order.estimate_minutes > 0 && (
-        <div className="mt-1 text-[11px] text-ink-600 dark:text-white">
-          Estimado: {order.estimate_minutes}min
+        <div className="mt-3 flex flex-wrap gap-1.5 border-t border-paper-200/80 pt-3 dark:border-obsidian-700/80">
+          {order.status === "pending" && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPreparing(order);
+                }}
+                className="inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-blue-600 px-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+              >
+                <ChefHat size={14} /> Preparar
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancel(order);
+                }}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-paper-300 bg-white text-ink-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-200 dark:hover:border-rose-800 dark:hover:bg-rose-950/40"
+                title="Cancelar"
+              >
+                <Trash2 size={15} />
+              </button>
+            </>
+          )}
+          {order.status === "preparing" && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReady(order);
+                }}
+                className="inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-emerald-600 px-2 text-xs font-semibold text-white transition hover:bg-emerald-700"
+              >
+                <CheckCircle2 size={14} /> Listo
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBackPending(order);
+                }}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-paper-300 bg-white text-ink-600 transition hover:bg-paper-100 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-200"
+                title="Volver a pendiente"
+              >
+                <ArrowRight size={15} className="rotate-180" />
+              </button>
+            </>
+          )}
+          {order.status === "ready_to_pay" && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPay(order);
+              }}
+              className="inline-flex h-9 w-full items-center justify-center gap-1 rounded-xl bg-wine-600 px-2 text-xs font-semibold text-white transition hover:bg-wine-700"
+            >
+              <CheckCircle2 size={14} /> Cobrar
+            </button>
+          )}
         </div>
-      )}
-
-      {order.notes && (
-        <div className="mt-1.5 flex items-center gap-1 text-xs text-amber-800 dark:text-amber-200">
-          <StickyNote size={11}/> {order.notes}
-        </div>
-      )}
-
-      <div className="mt-3 flex gap-1.5 flex-wrap">
-        {order.status === "pending" && (
-          <>
-            <button
-              onClick={(e) => { e.stopPropagation(); onPreparing(order); }}
-              className="flex-1 h-8 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center justify-center gap-1 transition"
-            >
-              <ChefHat size={14}/> Preparar
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onCancel(order); }}
-              className="btn-secondary text-xs h-8 px-2"
-            >
-              <Trash2 size={14}/>
-            </button>
-          </>
-        )}
-        {order.status === "preparing" && (
-          <>
-            <button
-              onClick={(e) => { e.stopPropagation(); onReady(order); }}
-              className="flex-1 h-8 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium flex items-center justify-center gap-1 transition"
-            >
-              <CheckCircle2 size={14}/> Listo para recoger
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onBackPending(order); }}
-              className="btn-secondary text-xs h-8 px-2"
-              title="Volver a pendiente"
-            >
-              <ArrowRight size={14} className="rotate-180"/>
-            </button>
-          </>
-        )}
-        {order.status === "ready_to_pay" && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onPay(order); }}
-            className="flex-1 h-8 px-2 rounded-lg bg-wine-600 hover:bg-wine-700 text-white text-xs font-medium flex items-center justify-center gap-1 transition dark:bg-wine-600 dark:hover:bg-wine-700"
-          >
-            <CheckCircle2 size={14}/> Cobrar
-          </button>
-        )}
       </div>
     </div>
   );
@@ -628,65 +676,87 @@ export default function PickupPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {(enriched.length ? enriched : filtered).map((o) => (
-                <div key={o.id} className="card flex h-full flex-col p-4">
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <div>
-                      <div className="text-base font-bold text-ink-900 dark:text-white">
-                        #{o.id}
-                        {o.turn_number != null && (
-                          <span className="ml-2 rounded-full bg-paper-200 px-2 py-0.5 text-xs font-bold dark:bg-obsidian-800">
-                            Turno {o.turn_number}
-                          </span>
-                        )}
+              {(enriched.length ? enriched : filtered).map((o) => {
+                const cancelled = o.status === "cancelled";
+                return (
+                  <div
+                    key={o.id}
+                    className={`flex h-full flex-col overflow-hidden rounded-2xl border border-l-4 border-paper-300 shadow-soft dark:border-obsidian-700 ${
+                      cancelled
+                        ? "border-l-rose-500 bg-gradient-to-br from-rose-50/70 to-white dark:from-rose-950/30 dark:to-obsidian-900"
+                        : "border-l-emerald-500 bg-gradient-to-br from-emerald-50/60 to-white dark:from-emerald-950/25 dark:to-obsidian-900"
+                    }`}
+                  >
+                    <div className="flex flex-1 flex-col p-4">
+                      <div className="mb-3 flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="text-base font-bold text-ink-900 dark:text-white">
+                              #{o.id}
+                            </span>
+                            {o.turn_number != null && (
+                              <span className="rounded-lg bg-paper-200/90 px-2 py-0.5 text-[11px] font-bold dark:bg-obsidian-800">
+                                Turno {o.turn_number}
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-1 flex items-center gap-1 text-xs text-ink-500 dark:text-obsidian-400">
+                            <Clock size={11} />
+                            {new Date(o.closed_at || o.created_at).toLocaleString("es-CO", {
+                              day: "2-digit",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </div>
+                          {o.payment_status === "paid" && (
+                            <span className="mt-1.5 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                              ✓ {payMethodLabel(o.payment_method)}
+                            </span>
+                          )}
+                          {cancelled && (
+                            <span className="mt-1.5 inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">
+                              Cancelado
+                            </span>
+                          )}
+                        </div>
+                        <div className="shrink-0 rounded-xl bg-white/90 px-2.5 py-1.5 text-right shadow-sm ring-1 ring-paper-200 dark:bg-obsidian-950/80 dark:ring-obsidian-700">
+                          <div className="text-lg font-bold tabular-nums text-ink-900 dark:text-white">
+                            {money(o.total)}
+                          </div>
+                        </div>
                       </div>
-                      <div className="mt-0.5 text-sm text-ink-500">
-                        {new Date(o.closed_at || o.created_at).toLocaleString("es-CO", {
-                          day: "2-digit",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </div>
-                      {o.payment_status === "paid" && (
-                        <div className="mt-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                          ✓ Pagado ({payMethodLabel(o.payment_method)})
+                      {o.notes && (
+                        <div className="mb-2 flex items-start gap-1 text-xs text-ink-500 dark:text-obsidian-400">
+                          <StickyNote size={12} className="mt-0.5 shrink-0" />
+                          <span>{o.notes}</span>
                         </div>
                       )}
-                      {o.status === "cancelled" && (
-                        <div className="mt-1 text-sm font-semibold text-rose-600">Cancelado</div>
-                      )}
-                    </div>
-                    <div className="text-xl font-bold tabular-nums text-ink-900 dark:text-white">
-                      {money(o.total)}
+                      <div className="rounded-xl bg-white/60 p-2.5 ring-1 ring-paper-200/80 dark:bg-obsidian-950/50 dark:ring-obsidian-700">
+                        <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-400 dark:text-obsidian-400">
+                          Productos
+                        </div>
+                        {(o.items || []).length === 0 ? (
+                          <div className="text-sm text-ink-400">Sin detalle</div>
+                        ) : (
+                          <ul className="space-y-1 text-sm text-ink-700 dark:text-obsidian-200">
+                            {o.items.map((it, i) => (
+                              <li key={i} className="flex justify-between gap-2">
+                                <span>
+                                  <b className="tabular-nums">{it.quantity}×</b> {it.name_snapshot}
+                                </span>
+                                <span className="shrink-0 tabular-nums text-ink-500">
+                                  {money(Number(it.unit_price) * Number(it.quantity))}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  {o.notes && (
-                    <div className="mb-2 text-sm text-ink-500 dark:text-obsidian-400">{o.notes}</div>
-                  )}
-                  <div className="border-t border-paper-200 pt-2 dark:border-obsidian-700">
-                    <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-ink-400">
-                      Productos
-                    </div>
-                    {(o.items || []).length === 0 ? (
-                      <div className="text-sm text-ink-400">Sin detalle</div>
-                    ) : (
-                      <ul className="space-y-1 text-sm text-ink-700 dark:text-obsidian-200">
-                        {o.items.map((it, i) => (
-                          <li key={i} className="flex justify-between gap-2">
-                            <span>
-                              <b>{it.quantity}×</b> {it.name_snapshot}
-                            </span>
-                            <span className="tabular-nums shrink-0 text-ink-500">
-                              {money(Number(it.unit_price) * Number(it.quantity))}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
