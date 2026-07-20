@@ -535,8 +535,8 @@ function WaiterHistoryModal({ waiter, onClose }) {
                       key={o.id}
                       className="overflow-hidden rounded-xl border border-paper-200 dark:border-obsidian-700"
                     >
-                      <div className="flex items-center justify-between border-b border-paper-200 bg-white px-3 py-2 text-xs font-medium text-ink-800 dark:border-obsidian-600 dark:bg-white dark:text-ink-900">
-                        <span>
+                      <div className="flex items-center justify-between bg-paper-100 px-3 py-2 text-xs font-medium text-ink-800 dark:bg-obsidian-800 dark:text-white">
+                        <span className="text-ink-800 dark:text-white">
                           {new Date(o.created_at).toLocaleTimeString("es-CO", {
                             hour: "2-digit",
                             minute: "2-digit",
