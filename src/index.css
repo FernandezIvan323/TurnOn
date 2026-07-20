@@ -69,6 +69,82 @@
   .select {
     @apply input appearance-none cursor-pointer;
   }
+
+  /* Tablas de datos — diseño unificado TurnOn */
+  .data-table-wrap {
+    @apply card overflow-hidden;
+  }
+  .data-table-scroll {
+    @apply overflow-x-auto overflow-y-hidden;
+  }
+  .data-table {
+    @apply w-full text-sm border-collapse;
+  }
+  .data-table thead {
+    @apply sticky top-0 z-[1] bg-paper-50/95 text-left backdrop-blur
+           dark:bg-obsidian-950/95;
+  }
+  .data-table thead tr {
+    @apply border-b border-paper-300 dark:border-obsidian-700;
+  }
+  .data-table th {
+    @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide
+           text-ink-500 dark:text-obsidian-300 whitespace-nowrap;
+  }
+  .data-table th.text-right,
+  .data-table td.text-right {
+    @apply text-right;
+  }
+  .data-table tbody tr {
+    @apply border-t border-paper-200 transition-colors
+           dark:border-obsidian-800;
+  }
+  .data-table tbody tr:hover {
+    @apply bg-paper-50 dark:bg-obsidian-800/40;
+  }
+  .data-table tbody tr:nth-child(even) {
+    @apply bg-paper-50/40 dark:bg-obsidian-950/30;
+  }
+  .data-table tbody tr:nth-child(even):hover {
+    @apply bg-paper-50 dark:bg-obsidian-800/40;
+  }
+  .data-table td {
+    @apply px-4 py-3 align-middle text-ink-700 dark:text-obsidian-100;
+  }
+  .data-table td.font-medium,
+  .data-table .cell-strong {
+    @apply font-medium text-ink-900 dark:text-white;
+  }
+  .data-table .cell-muted {
+    @apply text-ink-500 dark:text-obsidian-400;
+  }
+  .data-table .cell-money {
+    @apply text-right font-semibold tabular-nums text-ink-900 dark:text-white;
+  }
+  .data-table tfoot tr {
+    @apply border-t-2 border-paper-300 bg-paper-50 dark:border-obsidian-700 dark:bg-obsidian-950;
+  }
+  .data-table tfoot td {
+    @apply px-4 py-3 font-semibold text-ink-800 dark:text-white;
+  }
+  /* Tabla embebida en card con padding (reportes / daily) */
+  .data-table-embed {
+    @apply w-full text-sm border-collapse;
+  }
+  .data-table-embed thead tr {
+    @apply border-b border-paper-300 text-left dark:border-obsidian-700;
+  }
+  .data-table-embed th {
+    @apply py-2 pr-3 text-xs font-semibold uppercase tracking-wide
+           text-ink-500 dark:text-obsidian-400;
+  }
+  .data-table-embed td {
+    @apply py-2 pr-3 align-middle text-ink-700 dark:text-obsidian-100
+           border-b border-paper-100 dark:border-obsidian-800;
+  }
+  .data-table-embed tbody tr:hover {
+    @apply bg-paper-50/80 dark:bg-obsidian-800/30;
+  }
 }
 
 ::-webkit-scrollbar {

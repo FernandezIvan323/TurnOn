@@ -137,26 +137,26 @@ export default function DailyReport() {
           {/* Productos más vendidos */}
           <div className="card p-4">
             <h2 className="font-semibold text-ink-700 dark:text-obsidian-100 mb-2">Productos más vendidos</h2>
-            <table className="w-full text-sm">
+            <table className="data-table-embed">
               <thead>
-                <tr className="text-left text-ink-400 dark:text-obsidian-500 border-b border-ink-200 dark:border-obsidian-700">
-                  <th className="py-1 pr-2">Producto</th>
-                  <th className="py-1 pr-2">Categoría</th>
-                  <th className="py-1 pr-2 text-right">Cantidad</th>
-                  <th className="py-1 text-right">Ingresos</th>
+                <tr>
+                  <th>Producto</th>
+                  <th>Categoría</th>
+                  <th className="text-right">Cantidad</th>
+                  <th className="text-right">Ingresos</th>
                 </tr>
               </thead>
               <tbody>
                 {data.top_products?.map((p, i) => (
-                  <tr key={i} className="border-b border-ink-100 dark:border-obsidian-800">
-                    <td className="py-1 pr-2 font-medium">{p.name}</td>
-                    <td className="py-1 pr-2 text-ink-500 dark:text-obsidian-400">{p.category || "—"}</td>
-                    <td className="py-1 pr-2 text-right">{p.qty}</td>
-                    <td className="py-1 text-right">{money(p.revenue)}</td>
+                  <tr key={i}>
+                    <td className="font-medium">{p.name}</td>
+                    <td className="cell-muted">{p.category || "—"}</td>
+                    <td className="text-right tabular-nums">{p.qty}</td>
+                    <td className="text-right font-semibold tabular-nums">{money(p.revenue)}</td>
                   </tr>
                 ))}
                 {(!data.top_products || data.top_products.length === 0) && (
-                  <tr><td colSpan={4} className="py-2 text-center text-ink-400 dark:text-obsidian-500">Sin ventas</td></tr>
+                  <tr><td colSpan={4} className="py-3 text-center cell-muted">Sin ventas</td></tr>
                 )}
               </tbody>
             </table>
@@ -165,20 +165,20 @@ export default function DailyReport() {
           {/* Ventas por categoría */}
           <div className="card p-4">
             <h2 className="font-semibold text-ink-700 dark:text-obsidian-100 mb-2">Ventas por categoría</h2>
-            <table className="w-full text-sm">
+            <table className="data-table-embed">
               <thead>
-                <tr className="text-left text-ink-400 dark:text-obsidian-500 border-b border-ink-200 dark:border-obsidian-700">
-                  <th className="py-1 pr-2">Categoría</th>
-                  <th className="py-1 pr-2 text-right">Unidades</th>
-                  <th className="py-1 text-right">Ingresos</th>
+                <tr>
+                  <th>Categoría</th>
+                  <th className="text-right">Unidades</th>
+                  <th className="text-right">Ingresos</th>
                 </tr>
               </thead>
               <tbody>
                 {data.by_category?.map((c, i) => (
-                  <tr key={i} className="border-b border-ink-100 dark:border-obsidian-800">
-                    <td className="py-1 pr-2 font-medium">{c.category}</td>
-                    <td className="py-1 pr-2 text-right">{c.qty}</td>
-                    <td className="py-1 text-right">{money(c.revenue)}</td>
+                  <tr key={i}>
+                    <td className="font-medium">{c.category}</td>
+                    <td className="text-right tabular-nums">{c.qty}</td>
+                    <td className="text-right font-semibold tabular-nums">{money(c.revenue)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -702,144 +702,165 @@ export default function Staff() {
       />
 
       {tab === "delivery" && (
-        <div className="card overflow-x-auto overflow-y-hidden">
-          <table className="w-full min-w-[28rem] text-sm">
-            <thead className="bg-paper-200 dark:bg-obsidian-800 text-ink-600 dark:text-obsidian-200 text-left">
-              <tr>
-                <th className="px-4 py-2 font-medium">Nombre</th>
-                <th className="px-4 py-2 font-medium">Teléfono</th>
-                <th className="px-4 py-2 font-medium">Estado</th>
-                <th className="px-4 py-2 font-medium w-32 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {delivery.map((p) => (
-                <tr key={p.id} className="border-t border-paper-200 dark:border-obsidian-800">
-                  <td className="px-4 py-2 font-medium text-ink-800 dark:text-obsidian-50">{p.name}</td>
-                  <td className="px-4 py-2 text-ink-600 dark:text-obsidian-200">{p.phone || "—"}</td>
-                  <td className="px-4 py-2">
-                    <span className={`badge ${
-                      p.status === "available" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" :
-                      p.status === "busy" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" :
-                       "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
-                    }`}>
-                      {p.status === "available" ? "Disponible" : p.status === "busy" ? "Ocupado" : "Fuera de turno"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    <button onClick={() => setEditing({ type: "delivery", value: p })} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                    <button onClick={() => setConfirmDelete({ type: "delivery", id: p.id, name: p.name })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
-                  </td>
+        <div className="data-table-wrap">
+          <div className="data-table-scroll">
+            <table className="data-table min-w-[28rem]">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Teléfono</th>
+                  <th>Estado</th>
+                  <th className="text-right">Acciones</th>
                 </tr>
-              ))}
-              {delivery.length === 0 && <tr><td colSpan={4} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">No hay repartidores. Crea uno con "Nuevo".</td></tr>}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {delivery.map((p) => (
+                  <tr key={p.id}>
+                    <td className="cell-strong">{p.name}</td>
+                    <td className="cell-muted">{p.phone || "—"}</td>
+                    <td>
+                      <span className={`badge ${
+                        p.status === "available" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" :
+                        p.status === "busy" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" :
+                         "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
+                      }`}>
+                        {p.status === "available" ? "Disponible" : p.status === "busy" ? "Ocupado" : "Fuera de turno"}
+                      </span>
+                    </td>
+                    <td className="text-right">
+                      <button onClick={() => setEditing({ type: "delivery", value: p })} className="btn-ghost text-xs"><Edit2 size={14}/></button>
+                      <button onClick={() => setConfirmDelete({ type: "delivery", id: p.id, name: p.name })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
+                    </td>
+                  </tr>
+                ))}
+                {delivery.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center cell-muted">
+                      No hay repartidores. Crea uno con &quot;Nuevo&quot;.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {tab === "waiters" && (
-        <div className="card overflow-x-auto overflow-y-hidden">
-          <table className="w-full min-w-[32rem] text-sm">
-            <thead className="bg-paper-200 dark:bg-obsidian-800 text-ink-600 dark:text-obsidian-200 text-left">
-              <tr>
-                <th className="px-4 py-2 font-medium">Usuario</th>
-                <th className="px-4 py-2 font-medium">Nombre</th>
-                <th className="px-4 py-2 font-medium">Mesas</th>
-                <th className="px-4 py-2 font-medium">Estado</th>
-                <th className="px-4 py-2 font-medium w-32 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {waiters.map((w) => {
-                const wTables = tables.filter((t) => Number(t.assigned_user_id) === Number(w.id));
-                return (
-                  <tr key={w.id} className="border-t border-paper-200 dark:border-obsidian-800">
-                    <td className="px-4 py-2 font-mono text-ink-700 dark:text-obsidian-100">@{w.username}</td>
-                    <td className="px-4 py-2 font-medium text-ink-800 dark:text-obsidian-50">{w.name}</td>
-                    <td className="px-4 py-2">
-                      {wTables.length === 0 ? (
-                        <span className="text-xs italic text-ink-400 dark:text-obsidian-500">Sin mesas</span>
-                      ) : (
-                        <div
-                          className="flex flex-wrap gap-1"
-                          title={wTables.map((t) => `Mesa ${t.number}${t.label ? ` · ${t.label}` : ""}`).join(", ")}
-                        >
-                          {wTables.map((t) => (
-                            <span
-                              key={t.id}
-                              className="inline-flex items-center rounded-md border border-wine-200 bg-wine-100 px-2 py-0.5 text-xs font-semibold text-wine-900 dark:border-wine-600 dark:bg-wine-800 dark:text-wine-50"
-                            >
-                              Mesa {t.number}
-                              {t.label ? ` · ${t.label}` : ""}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-2">
-                      <span className={`badge ${w.active ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-obsidian-800 dark:text-obsidian-400"}`}>
-                        {w.active ? "Activo" : "Inactivo"}
-                      </span>
-                    </td>
-                    <td className="space-x-1 px-4 py-2 text-right">
-                      <button type="button" onClick={() => setPinUser(w)} className="btn-ghost text-xs" title="Cambiar PIN"><KeyRound size={14}/></button>
-                      <button type="button" onClick={() => setHistoryWaiter(w)} className="btn-ghost text-xs" title="Ver historial"><Clock size={14}/></button>
+        <div className="data-table-wrap">
+          <div className="data-table-scroll">
+            <table className="data-table min-w-[32rem]">
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Nombre</th>
+                  <th>Mesas</th>
+                  <th>Estado</th>
+                  <th className="text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {waiters.map((w) => {
+                  const wTables = tables.filter((t) => Number(t.assigned_user_id) === Number(w.id));
+                  return (
+                    <tr key={w.id}>
+                      <td className="font-mono cell-muted">@{w.username}</td>
+                      <td className="cell-strong">{w.name}</td>
+                      <td>
+                        {wTables.length === 0 ? (
+                          <span className="text-xs italic cell-muted">Sin mesas</span>
+                        ) : (
+                          <div
+                            className="flex flex-wrap gap-1"
+                            title={wTables.map((t) => `Mesa ${t.number}${t.label ? ` · ${t.label}` : ""}`).join(", ")}
+                          >
+                            {wTables.map((t) => (
+                              <span
+                                key={t.id}
+                                className="inline-flex items-center rounded-md border border-wine-200 bg-wine-100 px-2 py-0.5 text-xs font-semibold text-wine-900 dark:border-wine-600 dark:bg-wine-800 dark:text-wine-50"
+                              >
+                                Mesa {t.number}
+                                {t.label ? ` · ${t.label}` : ""}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`badge ${w.active ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-obsidian-800 dark:text-obsidian-400"}`}>
+                          {w.active ? "Activo" : "Inactivo"}
+                        </span>
+                      </td>
+                      <td className="space-x-1 text-right">
+                        <button type="button" onClick={() => setPinUser(w)} className="btn-ghost text-xs" title="Cambiar PIN"><KeyRound size={14}/></button>
+                        <button type="button" onClick={() => setHistoryWaiter(w)} className="btn-ghost text-xs" title="Ver historial"><Clock size={14}/></button>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {waiters.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center cell-muted">
+                      No hay meseros. Crea uno con &quot;Nuevo&quot; en esta pestaña.
                     </td>
                   </tr>
-                );
-              })}
-              {waiters.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">
-                    No hay meseros. Crea uno con &quot;Nuevo&quot; en esta pestaña.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {tab === "tables" && (
-        <div className="card overflow-x-auto overflow-y-hidden">
-          <table className="w-full min-w-[36rem] text-sm">
-            <thead className="bg-paper-200 dark:bg-obsidian-800 text-ink-600 dark:text-obsidian-200 text-left">
-              <tr>
-                <th className="px-4 py-2 font-medium">N°</th>
-                <th className="px-4 py-2 font-medium">Etiqueta</th>
-                <th className="px-4 py-2 font-medium">Capacidad</th>
-                <th className="px-4 py-2 font-medium">Mesero</th>
-                <th className="px-4 py-2 font-medium">Estado actual</th>
-                <th className="px-4 py-2 font-medium w-32 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tables.map((t) => (
-                <tr key={t.id} className="border-t border-paper-200 dark:border-obsidian-800">
-                  <td className="px-4 py-2 font-bold text-ink-800 dark:text-obsidian-50">{t.number}</td>
-                  <td className="px-4 py-2 text-ink-600 dark:text-obsidian-200">{t.label || "—"}</td>
-                  <td className="px-4 py-2 text-ink-600 dark:text-obsidian-200">{t.capacity}</td>
-                  <td className="px-4 py-2">
-                    {t.assigned_user_name ? (
-                      <span className="text-sm font-medium text-wine-700 dark:text-wine-400">{t.assigned_user_name}</span>
-                    ) : (
-                      <span className="text-xs text-ink-400 dark:text-obsidian-500 italic">Sin asignar</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2">
-                    {t.current_order_id ? <span className="badge bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">Ocupada</span>
-                                         : <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Libre</span>}
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    <button onClick={() => setEditing({ type: "table", value: t })} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                    <button onClick={() => setConfirmDelete({ type: "table", id: t.id, name: `mesa ${t.number}` })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
-                  </td>
+        <div className="data-table-wrap">
+          <div className="data-table-scroll">
+            <table className="data-table min-w-[36rem]">
+              <thead>
+                <tr>
+                  <th>N°</th>
+                  <th>Etiqueta</th>
+                  <th>Capacidad</th>
+                  <th>Mesero</th>
+                  <th>Estado actual</th>
+                  <th className="text-right">Acciones</th>
                 </tr>
-              ))}
-              {tables.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">No hay mesas. Crea una con "Nuevo".</td></tr>}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {tables.map((t) => (
+                  <tr key={t.id}>
+                    <td className="cell-strong font-bold">{t.number}</td>
+                    <td className="cell-muted">{t.label || "—"}</td>
+                    <td className="cell-muted">{t.capacity}</td>
+                    <td>
+                      {t.assigned_user_name ? (
+                        <span className="text-sm font-medium text-wine-700 dark:text-wine-400">{t.assigned_user_name}</span>
+                      ) : (
+                        <span className="text-xs italic cell-muted">Sin asignar</span>
+                      )}
+                    </td>
+                    <td>
+                      {t.current_order_id ? (
+                        <span className="badge bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">Ocupada</span>
+                      ) : (
+                        <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Libre</span>
+                      )}
+                    </td>
+                    <td className="text-right">
+                      <button onClick={() => setEditing({ type: "table", value: t })} className="btn-ghost text-xs"><Edit2 size={14}/></button>
+                      <button onClick={() => setConfirmDelete({ type: "table", id: t.id, name: `mesa ${t.number}` })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
+                    </td>
+                  </tr>
+                ))}
+                {tables.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center cell-muted">
+                      No hay mesas. Crea una con &quot;Nuevo&quot;.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

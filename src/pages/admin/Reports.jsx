@@ -434,27 +434,27 @@ export default function Reports() {
                 {topProducts.length === 0 ? (
                   <div className="py-6 text-center text-sm text-ink-400">Sin ventas en el período.</div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="border-b border-paper-300 text-left text-ink-500 dark:border-obsidian-800 dark:text-obsidian-400">
+                  <div className="data-table-scroll">
+                    <table className="data-table-embed">
+                      <thead>
                         <tr>
-                          <th className="py-2 pr-3 font-medium">#</th>
-                          <th className="py-2 pr-3 font-medium">Producto</th>
-                          <th className="py-2 pr-3 font-medium">Categoría</th>
-                          <th className="py-2 pr-3 text-right font-medium">Unidades</th>
-                          <th className="py-2 pl-3 text-right font-medium">Ingresos</th>
+                          <th>#</th>
+                          <th>Producto</th>
+                          <th>Categoría</th>
+                          <th className="text-right">Unidades</th>
+                          <th className="text-right">Ingresos</th>
                         </tr>
                       </thead>
                       <tbody>
                         {[...topProducts]
                           .sort((a, b) => Number(b.revenue) - Number(a.revenue))
                           .map((p, i) => (
-                          <tr key={i} className="border-b border-paper-200 dark:border-obsidian-800">
-                            <td className="py-2 pr-3 text-ink-400">{i + 1}</td>
-                            <td className="py-2 pr-3 font-medium text-ink-800 dark:text-obsidian-50">{p.name}</td>
-                            <td className="py-2 pr-3 text-ink-500">{p.category || "—"}</td>
-                            <td className="py-2 pr-3 text-right font-semibold tabular-nums">{p.qty}</td>
-                            <td className="py-2 pl-3 text-right font-semibold tabular-nums text-wine-600 dark:text-wine-300">
+                          <tr key={i}>
+                            <td className="cell-muted">{i + 1}</td>
+                            <td className="font-medium text-ink-900 dark:text-white">{p.name}</td>
+                            <td className="cell-muted">{p.category || "—"}</td>
+                            <td className="text-right font-semibold tabular-nums">{p.qty}</td>
+                            <td className="text-right font-semibold tabular-nums text-wine-600 dark:text-wine-300">
                               {money(p.revenue)}
                             </td>
                           </tr>
@@ -589,25 +589,25 @@ export default function Reports() {
                   Sin entregas registradas en este período.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="text-left text-ink-500 dark:text-obsidian-400 border-b border-paper-300 dark:border-obsidian-800">
+                <div className="data-table-scroll">
+                  <table className="data-table-embed">
+                    <thead>
                       <tr>
-                        <th className="py-2 pr-3 font-medium">#</th>
-                        <th className="py-2 pr-3 font-medium">Repartidor</th>
-                        <th className="py-2 pr-3 font-medium">Teléfono</th>
-                        <th className="py-2 pr-3 font-medium text-right">Entregas</th>
-                        <th className="py-2 pl-3 font-medium text-right">Ingresos</th>
+                        <th>#</th>
+                        <th>Repartidor</th>
+                        <th>Teléfono</th>
+                        <th className="text-right">Entregas</th>
+                        <th className="text-right">Ingresos</th>
                       </tr>
                     </thead>
                     <tbody>
                       {drivers.map((d, i) => (
-                        <tr key={d.id} className="border-b border-paper-200 dark:border-obsidian-800">
-                          <td className="py-2 pr-3 text-ink-400">{i + 1}</td>
-                          <td className="py-2 pr-3 font-medium text-ink-800 dark:text-obsidian-50">{d.name}</td>
-                          <td className="py-2 pr-3 text-ink-500 dark:text-obsidian-400">{d.phone || "—"}</td>
-                          <td className="py-2 pr-3 text-right font-semibold">{d.deliveries}</td>
-                          <td className="py-2 pl-3 text-right font-semibold text-wine-600 dark:text-wine-300">{money(d.revenue)}</td>
+                        <tr key={d.id}>
+                          <td className="cell-muted">{i + 1}</td>
+                          <td className="font-medium text-ink-900 dark:text-white">{d.name}</td>
+                          <td className="cell-muted">{d.phone || "—"}</td>
+                          <td className="text-right font-semibold tabular-nums">{d.deliveries}</td>
+                          <td className="text-right font-semibold tabular-nums text-wine-600 dark:text-wine-300">{money(d.revenue)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -685,57 +685,57 @@ export default function Reports() {
                   </div>
 
                   {/* Tabla de días */}
-                  <div className="card overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-paper-100 dark:bg-obsidian-950 text-ink-600 dark:text-obsidian-200 text-xs uppercase">
+                  <div className="data-table-wrap">
+                    <div className="data-table-scroll">
+                      <table className="data-table min-w-[48rem]">
+                        <thead>
                           <tr>
-                            <th className="text-left px-4 py-2.5">Fecha</th>
-                            <th className="text-right px-4 py-2.5">Órdenes</th>
-                            <th className="text-right px-4 py-2.5">Ventas</th>
-                            <th className="text-right px-4 py-2.5">Gastos</th>
-                            <th className="text-right px-4 py-2.5">Neto</th>
-                            <th className="text-center px-4 py-2.5">Tipos</th>
-                            <th className="text-center px-4 py-2.5">Corte</th>
-                            <th className="px-4 py-2.5"></th>
+                            <th>Fecha</th>
+                            <th className="text-right">Órdenes</th>
+                            <th className="text-right">Ventas</th>
+                            <th className="text-right">Gastos</th>
+                            <th className="text-right">Neto</th>
+                            <th className="text-center">Tipos</th>
+                            <th className="text-center">Corte</th>
+                            <th className="text-right"></th>
                           </tr>
                         </thead>
                         <tbody>
                           {history.map((h) => {
                             const hasClosing = cashClosings.some((c) => closingDateKey(c) === h.date);
                             return (
-                              <tr key={h.date} className="border-t border-paper-200 dark:border-obsidian-800 hover:bg-paper-50 dark:hover:bg-obsidian-900/50 cursor-pointer" onClick={() => nav(`/reports/daily?date=${h.date}`)}>
-                                <td className="px-4 py-3">
-                                  <div className="font-medium text-ink-800 dark:text-obsidian-50">{new Date(h.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })}</div>
+                              <tr key={h.date} className="cursor-pointer" onClick={() => nav(`/reports/daily?date=${h.date}`)}>
+                                <td className="cell-strong">
+                                  {new Date(h.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })}
                                 </td>
-                                <td className="px-4 py-3 text-right font-medium">{h.orders}</td>
-                                <td className="px-4 py-3 text-right text-emerald-700 dark:text-emerald-400 font-medium">{money(h.sales)}</td>
-                                <td className="px-4 py-3 text-right text-rose-700 dark:text-rose-400">{money(h.expenses)}</td>
-                                <td className={`px-4 py-3 text-right font-bold ${Number(h.net) >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}`}>
+                                <td className="text-right font-medium tabular-nums">{h.orders}</td>
+                                <td className="text-right font-medium tabular-nums text-emerald-700 dark:text-emerald-400">{money(h.sales)}</td>
+                                <td className="text-right tabular-nums text-rose-700 dark:text-rose-400">{money(h.expenses)}</td>
+                                <td className={`text-right font-bold tabular-nums ${Number(h.net) >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}`}>
                                   {money(h.net)}
                                 </td>
-                                <td className="px-4 py-3 text-center">
+                                <td className="text-center">
                                   <div className="inline-flex flex-wrap items-center justify-center gap-1 text-[10px] font-semibold">
                                     <span className="px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300" title="Mesas">M {h.table_count}</span>
                                     <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" title="Domicilios">D {h.delivery_count}</span>
                                     <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" title="Para llevar">P {h.pickup_count}</span>
                                   </div>
                                 </td>
-                                <td className="px-4 py-3 text-center">
+                                <td className="text-center">
                                   {hasClosing ? (
-                                    <span className="inline-flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-300 font-medium">
+                                    <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
                                       Cerrado
                                     </span>
                                   ) : (
                                     <button
                                       onClick={(e) => { e.stopPropagation(); nav(`/cashier/closing?date=${h.date}`); }}
-                                      className="text-xs text-amber-600 dark:text-amber-400 hover:underline"
+                                      className="text-xs text-amber-600 hover:underline dark:text-amber-400"
                                     >
                                       Abrir corte
                                     </button>
                                   )}
                                 </td>
-                                <td className="px-4 py-3 text-right">
+                                <td className="text-right">
                                   <Printer size={14} className="text-ink-400 dark:text-obsidian-500"/>
                                 </td>
                               </tr>

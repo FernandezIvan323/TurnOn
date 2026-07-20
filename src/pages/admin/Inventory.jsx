@@ -178,35 +178,41 @@ export default function Inventory() {
       {loading ? (
         <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
       ) : (
-        <div className="card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-paper-200 dark:bg-obsidian-800 text-ink-600 dark:text-obsidian-200 text-left">
-              <tr>
-                <th className="px-4 py-2 font-medium">Producto</th>
-                <th className="px-4 py-2 font-medium">Categoría</th>
-                <th className="px-4 py-2 font-medium text-right">Stock</th>
-                <th className="px-4 py-2 font-medium text-right">Min.</th>
-                <th className="px-4 py-2 font-medium text-right w-32">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((p) => (
-                <tr key={p.id} className={`border-t border-paper-200 dark:border-obsidian-800 ${p.low_stock ? "bg-rose-50/50 dark:bg-rose-900/10" : ""}`}>
-                  <td className="px-4 py-2 font-medium text-ink-800 dark:text-obsidian-50">{p.name}</td>
-                  <td className="px-4 py-2 text-ink-500 dark:text-obsidian-400">{p.category_name || "—"}</td>
-                  <td className={`px-4 py-2 text-right font-semibold ${p.low_stock ? "text-rose-700 dark:text-rose-300" : "text-ink-700 dark:text-obsidian-100"}`}>
-                    {p.stock}
-                  </td>
-                  <td className="px-4 py-2 text-right text-ink-500 dark:text-obsidian-400">{p.min_stock}</td>
-                  <td className="px-4 py-2 text-right">
-                    <button onClick={() => setMovements(p)} className="btn-ghost text-xs" title="Historial"><History size={14}/></button>
-                    <button onClick={() => setEditing(p)} className="btn-ghost text-xs" title="Ajustar stock"><Package size={14}/></button>
-                  </td>
+        <div className="data-table-wrap">
+          <div className="data-table-scroll">
+            <table className="data-table min-w-[32rem]">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Categoría</th>
+                  <th className="text-right">Stock</th>
+                  <th className="text-right">Min.</th>
+                  <th className="text-right">Acciones</th>
                 </tr>
-              ))}
-              {filtered.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-ink-400 dark:text-obsidian-500">Sin resultados</td></tr>}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((p) => (
+                  <tr key={p.id} className={p.low_stock ? "!bg-rose-50/60 dark:!bg-rose-900/15" : undefined}>
+                    <td className="cell-strong">{p.name}</td>
+                    <td className="cell-muted">{p.category_name || "—"}</td>
+                    <td className={`text-right font-semibold tabular-nums ${p.low_stock ? "text-rose-700 dark:text-rose-300" : ""}`}>
+                      {p.stock}
+                    </td>
+                    <td className="text-right cell-muted tabular-nums">{p.min_stock}</td>
+                    <td className="text-right">
+                      <button onClick={() => setMovements(p)} className="btn-ghost text-xs" title="Historial"><History size={14}/></button>
+                      <button onClick={() => setEditing(p)} className="btn-ghost text-xs" title="Ajustar stock"><Package size={14}/></button>
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center cell-muted">Sin resultados</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

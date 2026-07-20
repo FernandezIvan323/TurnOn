@@ -462,33 +462,33 @@ export default function Expenses() {
           </div>
         </div>
       ) : (
-        <div className="card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-paper-100 text-xs uppercase text-ink-700 dark:bg-obsidian-950 dark:text-white">
+        <div className="data-table-wrap">
+          <div className="data-table-scroll">
+            <table className="data-table min-w-[40rem]">
+              <thead>
                 <tr>
-                  <th className="px-4 py-2.5 text-left">Fecha</th>
-                  <th className="px-4 py-2.5 text-left">Categoría</th>
-                  <th className="px-4 py-2.5 text-left">Descripción</th>
-                  <th className="px-4 py-2.5 text-right">Monto</th>
-                  <th className="px-4 py-2.5 text-left">Método</th>
-                  <th className="px-4 py-2.5 text-left">Registrado por</th>
-                  <th className="px-4 py-2.5"></th>
+                  <th>Fecha</th>
+                  <th>Categoría</th>
+                  <th>Descripción</th>
+                  <th className="text-right">Monto</th>
+                  <th>Método</th>
+                  <th>Registrado por</th>
+                  <th className="text-right"></th>
                 </tr>
               </thead>
               <tbody>
                 {filteredExpenses.map((e) => (
-                  <tr key={e.id} className="border-t border-paper-200 dark:border-obsidian-800">
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-ink-900 dark:text-white">{dateOnly(e.expense_date)}</div>
-                      <div className="text-xs text-ink-600 dark:text-white">{formatTime(e.created_at)}</div>
+                  <tr key={e.id}>
+                    <td>
+                      <div className="cell-strong">{dateOnly(e.expense_date)}</div>
+                      <div className="text-xs cell-muted">{formatTime(e.created_at)}</div>
                     </td>
-                    <td className="px-4 py-3">{renderCat({ name: e.category_name, icon: e.category_icon })}</td>
-                    <td className="max-w-xs truncate px-4 py-3 text-ink-700 dark:text-white">{e.description || "—"}</td>
-                    <td className="px-4 py-3 text-right font-semibold tabular-nums text-rose-700 dark:text-rose-300">{money(e.amount)}</td>
-                    <td className="px-4 py-3">{renderMethod(e.payment_method)}</td>
-                    <td className="px-4 py-3 text-xs text-ink-700 dark:text-white">{e.user_name || "—"}</td>
-                    <td className="px-4 py-3 text-right">
+                    <td>{renderCat({ name: e.category_name, icon: e.category_icon })}</td>
+                    <td className="max-w-xs truncate">{e.description || "—"}</td>
+                    <td className="text-right font-semibold tabular-nums text-rose-700 dark:text-rose-300">{money(e.amount)}</td>
+                    <td>{renderMethod(e.payment_method)}</td>
+                    <td className="text-xs cell-muted">{e.user_name || "—"}</td>
+                    <td className="text-right">
                       <div className="flex justify-end gap-1">
                         <button
                           onClick={() => { setEditTarget(e); setModalOpen(true); }}
@@ -512,12 +512,12 @@ export default function Expenses() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-paper-300 bg-paper-100 dark:border-obsidian-700 dark:bg-obsidian-950">
-                  <td colSpan={3} className="px-4 py-3 text-right text-sm font-semibold text-ink-800 dark:text-white">
+                <tr>
+                  <td colSpan={3} className="text-right">
                     Total ({filteredExpenses.length} gasto{filteredExpenses.length === 1 ? "" : "s"}
                     {search.trim() ? " filtrados" : ""}):
                   </td>
-                  <td className="px-4 py-3 text-right text-base font-bold tabular-nums text-rose-700 dark:text-rose-300">{money(filteredTotal)}</td>
+                  <td className="text-right text-base font-bold tabular-nums text-rose-700 dark:text-rose-300">{money(filteredTotal)}</td>
                   <td colSpan={3}></td>
                 </tr>
               </tfoot>

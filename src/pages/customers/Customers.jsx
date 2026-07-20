@@ -157,30 +157,32 @@ export default function Customers() {
       ) : list.length === 0 ? (
         <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">No hay clientes.</div>
       ) : (
-        <div className="card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-paper-200 dark:bg-obsidian-800 text-ink-600 dark:text-obsidian-200 text-left">
-              <tr>
-                <th className="px-4 py-2 font-medium">Nombre</th>
-                <th className="px-4 py-2 font-medium">Teléfono</th>
-                <th className="px-4 py-2 font-medium">Dirección</th>
-                <th className="px-4 py-2 font-medium w-32 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((c) => (
-                <tr key={c.id} className="border-t border-paper-200 dark:border-obsidian-800 hover:bg-paper-100 dark:hover:bg-obsidian-800/50">
-                  <td className="px-4 py-2 font-medium text-ink-800 dark:text-obsidian-50">{c.name}</td>
-                  <td className="px-4 py-2 text-ink-600 dark:text-obsidian-200">{c.phone}</td>
-                  <td className="px-4 py-2 text-ink-600 dark:text-obsidian-200">{c.address || "—"}</td>
-                  <td className="px-4 py-2 text-right">
-                    <button onClick={() => setViewing(c)} className="btn-ghost text-xs">Historial</button>
-                    <button onClick={() => setEditing(c)} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                  </td>
+        <div className="data-table-wrap">
+          <div className="data-table-scroll">
+            <table className="data-table min-w-[28rem]">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Teléfono</th>
+                  <th>Dirección</th>
+                  <th className="text-right">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {list.map((c) => (
+                  <tr key={c.id}>
+                    <td className="cell-strong">{c.name}</td>
+                    <td>{c.phone}</td>
+                    <td className="cell-muted">{c.address || "—"}</td>
+                    <td className="text-right">
+                      <button onClick={() => setViewing(c)} className="btn-ghost text-xs">Historial</button>
+                      <button onClick={() => setEditing(c)} className="btn-ghost text-xs"><Edit2 size={14}/></button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

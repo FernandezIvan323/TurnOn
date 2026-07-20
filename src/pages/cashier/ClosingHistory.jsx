@@ -68,20 +68,20 @@ export default function ClosingHistory() {
           No hay cortes registrados todavía.
         </div>
       ) : (
-        <div className="card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-paper-100 dark:bg-obsidian-950 text-ink-600 dark:text-obsidian-200 text-xs uppercase">
+        <div className="data-table-wrap">
+          <div className="data-table-scroll">
+            <table className="data-table min-w-[48rem]">
+              <thead>
                 <tr>
-                  <th className="text-left px-4 py-2.5">Fecha</th>
-                  <th className="text-right px-4 py-2.5">Pedidos</th>
-                  <th className="text-right px-4 py-2.5">Ventas</th>
-                  <th className="text-right px-4 py-2.5">Efectivo</th>
-                  <th className="text-right px-4 py-2.5">Esperado</th>
-                  <th className="text-right px-4 py-2.5">Contado</th>
-                  <th className="text-right px-4 py-2.5">Diferencia</th>
-                  <th className="text-left  px-4 py-2.5">Cerrado por</th>
-                  <th className="px-4 py-2.5"></th>
+                  <th>Fecha</th>
+                  <th className="text-right">Pedidos</th>
+                  <th className="text-right">Ventas</th>
+                  <th className="text-right">Efectivo</th>
+                  <th className="text-right">Esperado</th>
+                  <th className="text-right">Contado</th>
+                  <th className="text-right">Diferencia</th>
+                  <th>Cerrado por</th>
+                  <th className="text-right"></th>
                 </tr>
               </thead>
               <tbody>
@@ -96,20 +96,20 @@ export default function ClosingHistory() {
                   return (
                     <tr
                       key={c.id}
-                      className="border-t border-paper-200 dark:border-obsidian-800 hover:bg-paper-100 dark:hover:bg-obsidian-900 cursor-pointer"
+                      className="cursor-pointer"
                       onClick={() => setSelected(c)}
                     >
-                      <td className="px-4 py-3 font-medium text-ink-800 dark:text-obsidian-50">{dateOnly(c.closing_date)}</td>
-                      <td className="px-4 py-3 text-right">{c.total_orders}</td>
-                      <td className="px-4 py-3 text-right font-semibold">{money(c.total_sales)}</td>
-                      <td className="px-4 py-3 text-right">{money(c.cash_sales)}</td>
-                      <td className="px-4 py-3 text-right">{money(c.expected_cash)}</td>
-                      <td className="px-4 py-3 text-right">{money(c.counted_cash)}</td>
-                      <td className={`px-4 py-3 text-right font-semibold ${diffClass}`}>
+                      <td className="cell-strong">{dateOnly(c.closing_date)}</td>
+                      <td className="text-right tabular-nums">{c.total_orders}</td>
+                      <td className="cell-money">{money(c.total_sales)}</td>
+                      <td className="text-right tabular-nums">{money(c.cash_sales)}</td>
+                      <td className="text-right tabular-nums">{money(c.expected_cash)}</td>
+                      <td className="text-right tabular-nums">{money(c.counted_cash)}</td>
+                      <td className={`text-right font-semibold tabular-nums ${diffClass}`}>
                         {d > 0 ? "+" : ""}{money(d)}
                       </td>
-                      <td className="px-4 py-3 text-ink-600 dark:text-obsidian-200">{c.closed_by_name || "—"}</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="cell-muted">{c.closed_by_name || "—"}</td>
+                      <td className="text-right">
                         <Receipt size={14} className="text-ink-400"/>
                       </td>
                     </tr>
