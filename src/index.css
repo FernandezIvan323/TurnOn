@@ -89,11 +89,7 @@
   }
   .data-table th {
     @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide
-           text-ink-500 dark:text-obsidian-300 whitespace-nowrap;
-  }
-  .data-table th.text-right,
-  .data-table td.text-right {
-    @apply text-right;
+           text-ink-500 dark:text-obsidian-400 whitespace-nowrap;
   }
   .data-table tbody tr {
     @apply border-t border-paper-200 transition-colors
@@ -111,7 +107,6 @@
   .data-table td {
     @apply px-4 py-3 align-middle text-ink-700 dark:text-obsidian-100;
   }
-  .data-table td.font-medium,
   .data-table .cell-strong {
     @apply font-medium text-ink-900 dark:text-white;
   }
