@@ -18,8 +18,8 @@ export default function Layout() {
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Barra superior móvil */}
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-paper-300 bg-white/95 px-3 py-2.5 backdrop-blur dark:border-obsidian-800 dark:bg-obsidian-950/95 lg:hidden">
+        {/* Barra superior móvil (safe-area para notch) */}
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-paper-300 bg-white/95 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur dark:border-obsidian-800 dark:bg-obsidian-950/95 lg:hidden">
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
@@ -41,7 +41,7 @@ export default function Layout() {
           <ThemeToggle />
         </header>
 
-        <main className="mx-auto w-full max-w-[1600px] flex-1 p-3 sm:p-5 lg:p-8">
+        <main className="mx-auto w-full max-w-[1600px] flex-1 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-5 lg:p-8">
           <Outlet />
         </main>
       </div>

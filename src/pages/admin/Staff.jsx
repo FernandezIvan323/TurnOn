@@ -13,13 +13,14 @@ function Tabs({ value, onChange }) {
     { v: "assignments",  l: "Asignar",      icon: UserCog },
   ];
   return (
-    <div className="flex gap-1 bg-paper-50 dark:bg-obsidian-900 border border-paper-300 dark:border-obsidian-700 rounded-xl p-1 flex-wrap">
+    <div className="flex max-w-full gap-1 overflow-x-auto rounded-xl border border-paper-300 bg-paper-50 p-1 dark:border-obsidian-700 dark:bg-obsidian-900">
       {tabs.map((t) => (
         <button
           key={t.v}
+          type="button"
           onClick={() => onChange(t.v)}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 ${
-            value === t.v ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
+          className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium sm:py-1.5 ${
+            value === t.v ? "bg-wine-600 text-white" : "text-ink-600 hover:bg-paper-200 dark:text-obsidian-200 dark:hover:bg-obsidian-800"
           }`}
         >
           <t.icon size={14}/> {t.l}
@@ -655,8 +656,8 @@ export default function Staff() {
       />
 
       {tab === "delivery" && (
-        <div className="card overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="card overflow-x-auto overflow-y-hidden">
+          <table className="w-full min-w-[28rem] text-sm">
             <thead className="bg-paper-200 dark:bg-obsidian-800 text-ink-600 dark:text-obsidian-200 text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">Nombre</th>
@@ -692,8 +693,8 @@ export default function Staff() {
       )}
 
       {tab === "waiters" && (
-        <div className="card overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="card overflow-x-auto overflow-y-hidden">
+          <table className="w-full min-w-[32rem] text-sm">
             <thead className="bg-paper-200 dark:bg-obsidian-800 text-ink-600 dark:text-obsidian-200 text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">Usuario</th>
@@ -755,8 +756,8 @@ export default function Staff() {
       )}
 
       {tab === "tables" && (
-        <div className="card overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="card overflow-x-auto overflow-y-hidden">
+          <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-paper-200 dark:bg-obsidian-800 text-ink-600 dark:text-obsidian-200 text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">N°</th>

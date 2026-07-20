@@ -111,7 +111,7 @@ export default function Sidebar({ open = false, onClose }) {
               end={it.to === "/dashboard"}
               onClick={() => onClose?.()}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition sm:py-2.5 ${
+                `flex min-h-11 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition sm:min-h-0 sm:py-2.5 ${
                   isActive
                     ? "bg-wine-50 text-wine-700 dark:bg-wine-900/40 dark:text-wine-300"
                     : "text-ink-600 hover:bg-paper-200 dark:text-obsidian-200 dark:hover:bg-obsidian-800"
@@ -144,21 +144,11 @@ export default function Sidebar({ open = false, onClose }) {
         <button
           type="button"
           onClick={() => setShowLogout(true)}
-          className="btn-ghost mt-1 w-full justify-start"
+          className="btn-ghost mt-1 min-h-11 w-full justify-start"
         >
           <LogOut size={20} /> Cerrar sesión
         </button>
       </div>
-
-      {showLogout && (
-        <LogoutConfirm
-          onConfirm={() => {
-            logout();
-            nav("/login");
-          }}
-          onCancel={() => setShowLogout(false)}
-        />
-      )}
     </>
   );
 
@@ -178,13 +168,24 @@ export default function Sidebar({ open = false, onClose }) {
         aria-hidden={!open}
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[min(14rem,72vw)] max-w-full flex-col border-r border-paper-300 bg-white shadow-pop transition-transform duration-200 ease-out dark:border-obsidian-800 dark:bg-obsidian-900 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(18rem,85vw)] max-w-full flex-col border-r border-paper-300 bg-white shadow-pop transition-transform duration-200 ease-out dark:border-obsidian-800 dark:bg-obsidian-900 lg:hidden ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-hidden={!open}
       >
         {panel}
       </aside>
+
+      {/* Fuera del drawer (y con portal en body): no queda atrapado por transform del menú */}
+      {showLogout && (
+        <LogoutConfirm
+          onConfirm={() => {
+            logout();
+            nav("/login");
+          }}
+          onCancel={() => setShowLogout(false)}
+        />
+      )}
     </>
   );
 }

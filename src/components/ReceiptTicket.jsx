@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import api from "../lib/api";
 import { money, typeLabels, formatTime } from "../lib/format";
 import { Printer, X } from "lucide-react";
@@ -45,10 +46,10 @@ export default function ReceiptTicket({ order, onClose }) {
   const total = Number(detail?.total || 0);
   const grand = total + tip;
 
-  return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 no-print-bg">
-      <div className="card w-full max-w-sm p-0 overflow-hidden">
-        <div className="no-print flex items-center justify-between px-4 py-3 border-b border-paper-200 dark:border-obsidian-800">
+  return createPortal(
+    <div className="no-print-bg fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 p-4">
+      <div className="card w-full max-w-sm overflow-hidden p-0">
+        <div className="no-print flex items-center justify-between border-b border-paper-200 px-4 py-3 dark:border-obsidian-800">
           <h2 className="font-semibold text-ink-800 dark:text-obsidian-50">Ticket de cobro</h2>
           <div className="flex gap-2">
             <button type="button" onClick={() => window.print()} className="btn-primary text-sm">
@@ -154,11 +155,12 @@ export default function ReceiptTicket({ order, onClose }) {
             </div>
           </div>
 
-          <div className="text-center text-[10px] text-ink-400 mt-4">
+          <div className="mt-4 text-center text-[10px] text-ink-400">
             ¡Gracias por su preferencia!
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
