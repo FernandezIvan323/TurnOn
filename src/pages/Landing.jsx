@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../store/auth";
 import Brand from "../components/Brand";
 import DeviceFrame from "../components/landing/DeviceFrame";
-import AdminScreenCarousel from "../components/landing/AdminScreenCarousel";
+import MockDashboard from "../components/landing/MockDashboard";
 import MockTables from "../components/landing/MockTables";
 import MockKanban from "../components/landing/MockKanban";
 import MockCashClosing from "../components/landing/MockCashClosing";
@@ -147,7 +147,7 @@ export default function Landing() {
             </div>
             <div className="device-stage lg:col-span-7">
               <DeviceFrame variant="laptop" tilt="left" float>
-                <AdminScreenCarousel />
+                <MockDashboard />
               </DeviceFrame>
             </div>
           </div>
@@ -343,7 +343,7 @@ export default function Landing() {
                 {/* Laptop (caja / admin) */}
                 <div className="w-full max-w-xl shrink-0 sm:max-w-md md:max-w-lg lg:max-w-xl">
                   <DeviceFrame variant="laptop" tilt="left" float label="Panel cajero / admin">
-                    <AdminScreenCarousel compact />
+                    <MockDashboard compact />
                   </DeviceFrame>
                 </div>
                 {/* Phone (mesero) — al lado, sin tapar el laptop */}
