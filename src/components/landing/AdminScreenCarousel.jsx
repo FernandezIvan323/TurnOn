@@ -1,85 +1,110 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import MockDashboard from "./MockDashboard";
 import MockKanban from "./MockKanban";
 import MockTables from "./MockTables";
 
 const SLIDES = [
-  { key: "dashboard", label: "Dashboard", render: (compact) => <MockDashboard compact={compact} /> },
-  { key: "domicilios", label: "Domicilios", render: () => <MockKanban /> },
-  { key: "mesas", label: "Mesas", render: () => <MockTables /> },
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    render: (compact) => <MockDashboard compact={compact} />,
+  },
+  {
+    key: "domicilios",
+    label: "Domicilios",
+    render: () => <MockKanban />,
+  },
+  {
+    key: "mesas",
+    label: "Mesas",
+    render: () => <MockTables />,
+  },
 ];
 
-const INTERVAL_MS = 4200;
+/** Cada módulo se muestra este tiempo antes de pasar al siguiente */
+const INTERVAL_MS = 3200;
 
 export default function AdminScreenCarousel({ compact = false }) {
   const [index, setIndex] = useState(0);
-  const [reduceMotion, setReduceMotion] = useState(false);
+  const [tick, setTick] = useState(0); // reinicia la barra de progreso
 
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduceMotion(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
+  const goTo = useCallback((i) => {
+    setIndex(i);
+    setTick((t) => t + 1);
+  }, []);
+
+  const next = useCallback(() => {
+    setIndex((i) => (i + 1) % SLIDES.length);
+    setTick((t) => t + 1);
   }, []);
 
   useEffect(() => {
-    if (reduceMotion) return undefined;
-    const id = window.setInterval(() => {
-      setIndex((i) => (i + 1) % SLIDES.length);
-    }, INTERVAL_MS);
+    const id = window.setInterval(next, INTERVAL_MS);
     return () => window.clearInterval(id);
-  }, [reduceMotion]);
+  }, [next, tick]);
 
   const active = SLIDES[index];
 
   return (
-    <div className="relative">
-      {/* Badge módulo actual */}
-      <div className="pointer-events-none absolute right-2 top-2 z-20 sm:right-3 sm:top-3">
-        <span className="inline-flex items-center rounded-full border border-paper-300 bg-white/95 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink-700 shadow-soft dark:border-obsidian-600 dark:bg-obsidian-900/95 dark:text-obsidian-200">
-          {active.label}
+    <div className="relative overflow-hidden bg-paper-50 dark:bg-obsidian-950">
+      {/* Pestañas de módulos — siempre visibles */}
+      <div className="flex items-center gap-1 border-b border-paper-200 bg-white px-2 py-1.5 dark:border-obsidian-800 dark:bg-obsidian-900">
+        {SLIDES.map((slide, i) => (
+          <button
+            key={slide.key}
+            type="button"
+            onClick={() => goTo(i)}
+            className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors sm:text-xs ${
+              i === index
+                ? "bg-wine-600 text-white shadow-soft"
+                : "bg-paper-100 text-ink-600 hover:bg-paper-200 dark:bg-obsidian-800 dark:text-obsidian-200 dark:hover:bg-obsidian-700"
+            }`}
+          >
+            {slide.label}
+          </button>
+        ))}
+        <span className="ml-auto hidden text-[10px] font-medium text-ink-400 sm:inline dark:text-obsidian-500">
+          auto · {index + 1}/{SLIDES.length}
         </span>
       </div>
 
-      {/* Stack con fade */}
-      <div className="relative min-h-[280px]">
-        {SLIDES.map((slide, i) => {
-          const isActive = i === index;
-          return (
-            <div
-              key={slide.key}
-              className={`transition-opacity duration-500 ease-in-out ${
-                isActive
-                  ? "relative z-10 opacity-100"
-                  : "pointer-events-none absolute inset-0 z-0 opacity-0"
-              }`}
-              aria-hidden={!isActive}
-            >
-              {slide.render(compact)}
-            </div>
-          );
-        })}
+      {/* Barra de progreso del ciclo */}
+      <div className="h-0.5 w-full bg-paper-200 dark:bg-obsidian-800">
+        <div
+          key={tick}
+          className="h-full bg-wine-600 dark:bg-wine-400"
+          style={{
+            width: "100%",
+            transformOrigin: "left",
+            animation: `admin-carousel-progress ${INTERVAL_MS}ms linear forwards`,
+          }}
+        />
+      </div>
+
+      {/* Pantalla del módulo activo — key fuerza remount + animación de entrada */}
+      <div
+        key={`${active.key}-${tick}`}
+        className="admin-carousel-slide"
+      >
+        {active.render(compact)}
       </div>
 
       {/* Dots */}
-      {!reduceMotion && (
-        <div className="flex items-center justify-center gap-1.5 border-t border-paper-200 bg-paper-50 py-2 dark:border-obsidian-800 dark:bg-obsidian-950">
-          {SLIDES.map((slide, i) => (
-            <button
-              key={slide.key}
-              type="button"
-              aria-label={`Ver ${slide.label}`}
-              onClick={() => setIndex(i)}
-              className={`h-1.5 rounded-full transition-all ${
-                i === index
-                  ? "w-5 bg-wine-600 dark:bg-wine-400"
-                  : "w-1.5 bg-paper-400 hover:bg-ink-400 dark:bg-obsidian-600 dark:hover:bg-obsidian-400"
-              }`}
-            />
-          ))}
-        </div>
-      )}
+      <div className="flex items-center justify-center gap-2 border-t border-paper-200 bg-white py-2 dark:border-obsidian-800 dark:bg-obsidian-900">
+        {SLIDES.map((slide, i) => (
+          <button
+            key={slide.key}
+            type="button"
+            aria-label={`Ver ${slide.label}`}
+            onClick={() => goTo(i)}
+            className={`h-2 rounded-full transition-all ${
+              i === index
+                ? "w-6 bg-wine-600 dark:bg-wine-400"
+                : "w-2 bg-paper-400 hover:bg-ink-400 dark:bg-obsidian-600"
+            }`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
