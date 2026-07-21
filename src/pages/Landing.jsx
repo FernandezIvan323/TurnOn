@@ -1,149 +1,88 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../store/auth";
 import Brand from "../components/Brand";
-import HeroPreview from "../components/HeroPreview";
+import DeviceFrame from "../components/landing/DeviceFrame";
+import MockDashboard from "../components/landing/MockDashboard";
+import MockTables from "../components/landing/MockTables";
+import MockKanban from "../components/landing/MockKanban";
+import MockWaiterPhone from "../components/landing/MockWaiterPhone";
 import {
   ArrowRight,
   BarChart3,
   CheckCircle2,
-  ChevronRight,
-  Clock3,
-  CreditCard,
+  Cloud,
   LayoutDashboard,
-  ReceiptText,
+  MonitorSmartphone,
   ShieldCheck,
   ShoppingBag,
+  Sparkles,
   Truck,
   Utensils,
   WalletCards,
 } from "lucide-react";
 
-const PAD = "px-6 md:px-10 xl:px-16";
+const PAD = "px-5 sm:px-8 md:px-12 xl:px-16";
 const CONTAINER = "mx-auto w-full max-w-screen-2xl";
 
 const navItems = [
   { href: "#resuelve", label: "Beneficios" },
-  { href: "#modulos", label: "Módulos" },
-  { href: "#flujo", label: "Uso" },
+  { href: "#funciones", label: "Funciones" },
+  { href: "#dispositivos", label: "Dispositivos" },
+  { href: "#ventajas", label: "Ventajas" },
 ];
 
-const benefits = [
-  {
-    icon: Utensils,
-    title: "Mesas con turnos claros",
-    text: "Sabés qué mesa sigue sin discusiones ni papeles.",
-  },
-  {
-    icon: Truck,
-    title: "Domicilio y para llevar",
-    text: "Kanban de pedidos: pendiente, en camino o listo.",
-  },
-  {
-    icon: WalletCards,
-    title: "Caja del día confiable",
-    text: "Cobros, gastos y corte sin perder el control.",
-  },
-  {
-    icon: BarChart3,
-    title: "Reportes al cierre",
-    text: "Ventas, productos y horarios pico en un vistazo.",
-  },
+const businessTypes = [
+  "Restaurante",
+  "Bar / café",
+  "Acera y mesas",
+  "Domicilio",
+  "Para llevar",
+  "Food truck",
 ];
 
-const modules = [
+const advantages = [
   {
-    icon: LayoutDashboard,
-    title: "Dashboard",
-    text: "Ventas, ticket y operación del día en tiempo real.",
+    icon: Sparkles,
+    title: "Simple y moderno",
+    text: "Interfaz clara para cajero y mesero. Menos clics, más operación en el turno.",
   },
   {
-    icon: Truck,
-    title: "Domicilios",
-    text: "Asigná repartidores y seguí cada entrega.",
+    icon: MonitorSmartphone,
+    title: "En cualquier dispositivo",
+    text: "Celular del mesero, tablet o PC del cajero. Sin hardware especial.",
   },
   {
-    icon: ShoppingBag,
-    title: "Para llevar",
-    text: "Pedidos rápidos con tiempo estimado y cobro.",
+    icon: Cloud,
+    title: "En la nube",
+    text: "Entrá desde el navegador. Sin instalar programas en cada máquina.",
   },
   {
-    icon: Utensils,
-    title: "Mesas",
-    text: "Estado visual, cuentas abiertas y cobro directo.",
-  },
-  {
-    icon: WalletCards,
-    title: "Caja",
-    text: "Efectivo, tarjeta, transferencia o mixto + corte.",
-  },
-  {
-    icon: BarChart3,
-    title: "Reportes",
-    text: "Resumen, top productos y reporte diario imprimible.",
-  },
-];
-
-const steps = [
-  {
-    n: "01",
-    title: "Entrá con tu PIN",
-    text: "Cada rol ve solo lo que necesita operar.",
-    benefit: "Menos errores de acceso",
     icon: ShieldCheck,
-  },
-  {
-    n: "02",
-    title: "Operá el turno",
-    text: "Mesas, domicilios o para llevar según el flujo.",
-    benefit: "Todo queda registrado",
-    icon: Clock3,
-  },
-  {
-    n: "03",
-    title: "Cobra y cierra",
-    text: "Cerrá cuentas, registrá gastos y hacé el corte.",
-    benefit: "Caja alineada al final del día",
-    icon: CreditCard,
-  },
-  {
-    n: "04",
-    title: "Revisá reportes",
-    text: "Mirá ventas y productos antes del próximo turno.",
-    benefit: "Decisiones con números claros",
-    icon: ReceiptText,
+    title: "Roles y control",
+    text: "Admin/caja y mesero con PIN. Cada uno ve solo lo que necesita.",
   },
 ];
 
-function SectionHead({ eyebrow, title, text, align = "center" }) {
-  const alignCls = align === "left" ? "text-left" : "mx-auto text-center";
+function SectionEyebrow({ children }) {
   return (
-    <div className={`mb-8 max-w-2xl ${alignCls}`}>
-      <p className="mb-2 text-sm font-bold uppercase tracking-widest text-wine-600 dark:text-wine-300">
-        {eyebrow}
-      </p>
-      <h2 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
-        {title}
-      </h2>
-      {text && (
-        <p className="mt-3 text-base leading-relaxed text-ink-700 dark:text-white sm:text-lg">
-          {text}
-        </p>
-      )}
-    </div>
+    <p className="mb-2 text-sm font-bold uppercase tracking-widest text-wine-600 dark:text-wine-300">
+      {children}
+    </p>
   );
 }
 
 export default function Landing() {
   const { user } = useAuth();
   const appPath = user ? "/dashboard" : "/login";
-  const ctaLabel = user ? "Ir al panel" : "Entrar al sistema";
+  const ctaLabel = user ? "Ir al panel" : "Probar ahora";
 
   return (
     <div className="min-h-svh w-full overflow-x-hidden bg-white text-ink-800 dark:bg-obsidian-950 dark:text-white">
+      {/* Header */}
       <header className="sticky top-0 z-40 w-full border-b border-paper-300/80 bg-white/95 backdrop-blur dark:border-obsidian-800 dark:bg-obsidian-950/95">
-        <div className={`${PAD} ${CONTAINER} flex h-16 items-center justify-between gap-4 sm:h-20`}>
+        <div className={`${PAD} ${CONTAINER} flex h-16 items-center justify-between gap-4 sm:h-[4.5rem]`}>
           <Brand />
-          <nav className="hidden items-center gap-6 md:flex lg:gap-8">
+          <nav className="hidden items-center gap-6 lg:flex lg:gap-8">
             {navItems.map((item) => (
               <a
                 key={item.href}
@@ -154,204 +93,361 @@ export default function Landing() {
               </a>
             ))}
           </nav>
-          <Link to={appPath} className="btn-primary h-10 px-4">
-            {ctaLabel}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/login"
+              className="hidden text-sm font-semibold text-ink-700 hover:text-wine-600 dark:text-white sm:inline"
+            >
+              Iniciar sesión
+            </Link>
+            <Link to={appPath} className="btn-primary h-10 px-4">
+              {ctaLabel}
+            </Link>
+          </div>
         </div>
       </header>
 
       <main className="w-full">
-        {/* Hero */}
-        <section className="relative flex w-full min-h-[calc(100svh-5rem)] items-center">
-          <div className={`${PAD} ${CONTAINER} grid w-full items-center gap-10 py-14 lg:grid-cols-12 lg:gap-14 lg:py-20`}>
-            <div className="flex flex-col justify-center space-y-6 lg:col-span-6">
-              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-wine-200 bg-wine-50 px-3 py-1 text-sm font-semibold text-wine-700 dark:border-wine-500/40 dark:bg-wine-900/40 dark:text-wine-300">
-                <Clock3 size={16} className="shrink-0 text-wine-600 dark:text-wine-300" />
-                Turnos · mesas · cobros
-              </div>
-
-              <h1 className="max-w-xl text-4xl font-extrabold leading-[1.08] tracking-tight text-ink-950 dark:text-white sm:text-5xl xl:text-6xl">
-                Cada turno, mesa y cobro en{" "}
-                <span className="text-wine-600 dark:text-wine-300">un solo lugar</span>
+        {/* —— HERO (estilo Fudo) —— */}
+        <section className="relative w-full overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-wine-50/80 via-white to-white dark:from-wine-950/20 dark:via-obsidian-950 dark:to-obsidian-950" />
+          <div className={`${PAD} ${CONTAINER} relative grid items-center gap-12 py-14 lg:grid-cols-12 lg:gap-10 lg:py-20`}>
+            <div className="flex flex-col justify-center lg:col-span-5">
+              <SectionEyebrow>Software para restaurantes</SectionEyebrow>
+              <h1 className="text-4xl font-extrabold leading-[1.08] tracking-tight text-ink-950 dark:text-white sm:text-5xl xl:text-[3.25rem]">
+                Encárgate de la comida.
+                <span className="mt-1 block text-wine-600 dark:text-wine-300">
+                  TurnOn resuelve el resto.
+                </span>
               </h1>
-
-              <p className="max-w-xl text-lg font-light leading-relaxed text-ink-700 dark:text-white sm:text-xl">
-                Mesas, domicilios y caja del restaurante, sin hojas sueltas.
+              <p className="mt-5 max-w-md text-lg leading-relaxed text-ink-700 dark:text-obsidian-200">
+                Mesas, domicilios, para llevar y caja en un solo sistema. Pensado para el
+                ritmo real del local.
               </p>
-
-              <div className="flex flex-col gap-3 pt-1 sm:flex-row">
-                <Link to={appPath} className="btn-primary h-12 px-6 text-base">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Link to={appPath} className="btn-primary h-12 px-7 text-base">
                   {ctaLabel}
                   <ArrowRight size={20} />
                 </Link>
-                <a href="#modulos" className="btn-secondary h-12 px-6 text-base">
-                  Ver módulos
+                <a href="#funciones" className="btn-secondary h-12 px-6 text-base">
+                  Ver funciones
                 </a>
               </div>
-
-              <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1 text-sm font-medium text-ink-700 dark:text-white">
-                {["Mesas", "Domicilios", "Caja diaria"].map((item) => (
-                  <span key={item} className="inline-flex items-center gap-2">
+              <ul className="mt-8 space-y-2 text-sm font-medium text-ink-700 dark:text-obsidian-200">
+                {[
+                  "Turnos FIFO en mesas y pedidos",
+                  "Caja y corte del día sin Excel",
+                  "Mesero en el celular, cajero en la PC",
+                ].map((t) => (
+                  <li key={t} className="flex items-center gap-2">
                     <CheckCircle2 size={18} className="shrink-0 text-wine-600 dark:text-wine-300" />
-                    {item}
-                  </span>
+                    {t}
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
-
-            <div className="lg:col-span-6">
-              <HeroPreview />
+            <div className="lg:col-span-7">
+              <DeviceFrame variant="laptop">
+                <MockDashboard />
+              </DeviceFrame>
             </div>
           </div>
         </section>
 
-        {/* Qué resuelve */}
+        {/* —— Franja resuelve —— */}
         <section
           id="resuelve"
-          className={`w-full border-y border-paper-200 bg-paper-50 py-14 dark:border-obsidian-800 dark:bg-obsidian-900/50 sm:py-16 ${PAD}`}
+          className={`border-y border-paper-200 bg-ink-950 py-14 text-white dark:border-obsidian-800 sm:py-16 ${PAD}`}
+        >
+          <div className={`${CONTAINER} grid gap-10 lg:grid-cols-2 lg:items-center`}>
+            <div>
+              <p className="text-sm font-bold uppercase tracking-widest text-wine-300">
+                TurnOn resuelve
+              </p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                Administrá el negocio desde un solo panel
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-white/80">
+                Menos papel, menos errores y el turno cerrado con números claros.
+                Ideal para restaurantes con mesas y operación a domicilio.
+              </p>
+              <Link
+                to={appPath}
+                className="btn mt-8 h-12 bg-white px-6 font-semibold text-ink-950 hover:bg-paper-100"
+              >
+                Entrar al sistema
+                <ArrowRight size={18} />
+              </Link>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                { icon: Utensils, t: "Mesas", d: "Estado visual y cobro al instante" },
+                { icon: Truck, t: "Domicilios", d: "Kanban y repartidores" },
+                { icon: ShoppingBag, t: "Para llevar", d: "Cola con tiempo estimado" },
+                { icon: WalletCards, t: "Caja", d: "Cobros, deudas y corte Z" },
+              ].map(({ icon: Icon, t, d }) => (
+                <div
+                  key={t}
+                  className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur"
+                >
+                  <Icon size={22} className="text-wine-300" />
+                  <p className="mt-3 font-semibold text-white">{t}</p>
+                  <p className="mt-1 text-sm text-white/70">{d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* —— Funciones alternadas (Fudo style) —— */}
+        <section id="funciones" className="w-full">
+          {/* A: Domicilios */}
+          <div className={`${PAD} border-b border-paper-200 py-16 dark:border-obsidian-800 sm:py-20`}>
+            <div className={`${CONTAINER} grid items-center gap-12 lg:grid-cols-2 lg:gap-16`}>
+              <div>
+                <SectionEyebrow>Pedidos a domicilio</SectionEyebrow>
+                <h2 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
+                  Impulsá tus domicilios y simplificá el seguimiento
+                </h2>
+                <p className="mt-4 text-base leading-relaxed text-ink-700 dark:text-obsidian-200">
+                  Tablero Kanban con turnos FIFO, asignación de repartidores y cobro al
+                  entregar o pre-cobro por transferencia.
+                </p>
+                <ul className="mt-6 space-y-2 text-sm text-ink-700 dark:text-obsidian-200">
+                  {[
+                    "Columnas: pendientes → preparación → en camino → entregados",
+                    "Multi-repartidor con historial de entregas",
+                    "Notas, propina y división de cuenta",
+                  ].map((x) => (
+                    <li key={x} className="flex gap-2">
+                      <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-wine-600" />
+                      {x}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <DeviceFrame variant="laptop">
+                <MockKanban />
+              </DeviceFrame>
+            </div>
+          </div>
+
+          {/* B: Mesas */}
+          <div className={`${PAD} border-b border-paper-200 bg-paper-50 py-16 dark:border-obsidian-800 dark:bg-obsidian-900/40 sm:py-20`}>
+            <div className={`${CONTAINER} grid items-center gap-12 lg:grid-cols-2 lg:gap-16`}>
+              <div className="order-2 lg:order-1">
+                <DeviceFrame variant="laptop">
+                  <MockTables />
+                </DeviceFrame>
+              </div>
+              <div className="order-1 lg:order-2">
+                <SectionEyebrow>Servicio en sala</SectionEyebrow>
+                <h2 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
+                  Cargá pedidos y visualizá mesas en segundos
+                </h2>
+                <p className="mt-4 text-base leading-relaxed text-ink-700 dark:text-obsidian-200">
+                  Colores por estado, turno del siguiente pedido y acceso directo a cobrar.
+                  El mesero opera desde el celular; el cajero cierra en caja.
+                </p>
+                <ul className="mt-6 space-y-2 text-sm text-ink-700 dark:text-obsidian-200">
+                  {[
+                    "Libre · pendiente · cocina · lista para cobrar",
+                    "Asignación de mesas por mesero",
+                    "Historial de trabajo por jornada",
+                  ].map((x) => (
+                    <li key={x} className="flex gap-2">
+                      <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-wine-600" />
+                      {x}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* C: Caja / resultados */}
+          <div className={`${PAD} border-b border-paper-200 py-16 dark:border-obsidian-800 sm:py-20`}>
+            <div className={`${CONTAINER} grid items-center gap-12 lg:grid-cols-2 lg:gap-16`}>
+              <div>
+                <SectionEyebrow>Mejores resultados</SectionEyebrow>
+                <h2 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
+                  Registrá ventas, gastos y el corte del día
+                </h2>
+                <p className="mt-4 text-base leading-relaxed text-ink-700 dark:text-obsidian-200">
+                  Dashboard en tiempo real, deudas, inventario y reportes imprimibles.
+                  El corte de caja avisa si hay pedidos pendientes.
+                </p>
+                <ul className="mt-6 space-y-2 text-sm text-ink-700 dark:text-obsidian-200">
+                  {[
+                    "Efectivo, tarjeta, transferencia y mixto",
+                    "Corte Z con arqueo y hoja imprimible",
+                    "Reportes y top de productos",
+                  ].map((x) => (
+                    <li key={x} className="flex gap-2">
+                      <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-wine-600" />
+                      {x}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <DeviceFrame variant="laptop">
+                <MockDashboard compact />
+              </DeviceFrame>
+            </div>
+          </div>
+        </section>
+
+        {/* —— Tipos de negocio —— */}
+        <section className={`${PAD} py-14 sm:py-16`}>
+          <div className={`${CONTAINER} text-center`}>
+            <SectionEyebrow>Para tu tipo de local</SectionEyebrow>
+            <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
+              Una solución para operar mesas y pedidos a domicilio
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-base text-ink-700 dark:text-obsidian-200">
+              ¿Restaurante de acera, sala con mesas o solo delivery? TurnOn se adapta al flujo
+              de tu equipo.
+            </p>
+            <div className="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-2">
+              {businessTypes.map((b) => (
+                <span
+                  key={b}
+                  className="rounded-full border border-paper-300 bg-paper-50 px-4 py-2 text-sm font-semibold text-ink-800 dark:border-obsidian-700 dark:bg-obsidian-900 dark:text-white"
+                >
+                  {b}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* —— Dispositivos (phone + laptop) —— */}
+        <section
+          id="dispositivos"
+          className={`${PAD} border-y border-paper-200 bg-paper-50 py-16 dark:border-obsidian-800 dark:bg-obsidian-900/40 sm:py-20`}
         >
           <div className={CONTAINER}>
-            <SectionHead
-              eyebrow="Qué resuelve"
-              title="Menos caos, más control del turno"
-              text="Un panel para quien atiende, cobra y cierra el día."
-            />
+            <div className="mx-auto max-w-2xl text-center">
+              <SectionEyebrow>En el local y en movimiento</SectionEyebrow>
+              <h2 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
+                Gestioná pedidos desde tablet, PC o smartphone
+              </h2>
+              <p className="mt-4 text-base text-ink-700 dark:text-obsidian-200">
+                El mesero toma mesas en el celular. El cajero cobra y cierra en la
+                pantalla grande. Misma app, roles distintos.
+              </p>
+            </div>
+
+            <div className="mt-12 grid items-end gap-10 lg:grid-cols-2 lg:gap-8">
+              <div className="flex flex-col items-center">
+                <DeviceFrame variant="phone" label="App mesero">
+                  <MockWaiterPhone />
+                </DeviceFrame>
+                <div className="mt-4 max-w-xs text-center">
+                  <h3 className="font-semibold text-ink-900 dark:text-white">Para meseros</h3>
+                  <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
+                    Mesas asignadas, catálogo y historial de la jornada.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col items-center">
+                <DeviceFrame variant="laptop" label="Panel cajero / admin">
+                  <MockDashboard />
+                </DeviceFrame>
+                <div className="mt-4 max-w-sm text-center">
+                  <h3 className="font-semibold text-ink-900 dark:text-white">Para caja y gestión</h3>
+                  <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
+                    Dashboard, cobros, deudas, personal, inventario y reportes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* —— Ventajas —— */}
+        <section id="ventajas" className={`${PAD} py-16 sm:py-20`}>
+          <div className={CONTAINER}>
+            <div className="mx-auto mb-10 max-w-2xl text-center">
+              <SectionEyebrow>Ventajas</SectionEyebrow>
+              <h2 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
+                Un sistema pensado para el día a día
+              </h2>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {benefits.map(({ icon: Icon, title, text }) => (
+              {advantages.map(({ icon: Icon, title, text }) => (
                 <article
                   key={title}
-                  className="rounded-2xl border border-paper-300 bg-paper-50 p-5 shadow-card transition-colors hover:border-wine-400 dark:border-obsidian-700 dark:bg-obsidian-900 dark:hover:border-wine-500/40"
+                  className="rounded-2xl border border-paper-300 bg-paper-50 p-6 shadow-card transition hover:border-wine-400 dark:border-obsidian-700 dark:bg-obsidian-900 dark:hover:border-wine-500/40"
                 >
-                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-wine-50 text-wine-600 dark:bg-wine-900/40 dark:text-wine-300">
-                    <Icon size={22} />
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-wine-50 text-wine-600 dark:bg-wine-900/40 dark:text-wine-300">
+                    <Icon size={24} />
                   </div>
                   <h3 className="text-lg font-semibold text-ink-900 dark:text-white">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-ink-700 dark:text-white">{text}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-700 dark:text-obsidian-200">
+                    {text}
+                  </p>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Módulos */}
-        <section id="modulos" className={`w-full py-14 sm:py-16 ${PAD}`}>
+        {/* —— Módulos grid corto —— */}
+        <section className={`${PAD} border-t border-paper-200 bg-paper-50 py-14 dark:border-obsidian-800 dark:bg-obsidian-900/40 sm:py-16`}>
           <div className={CONTAINER}>
-            <SectionHead
-              eyebrow="Módulos"
-              title="Lo esencial del restaurante"
-              text="Seis bloques para el día a día. Menú, clientes e inventario también están en el panel."
-            />
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {modules.map(({ icon: Icon, title, text }) => (
-                <article
-                  key={title}
-                  className="rounded-2xl border border-paper-300 bg-paper-50 p-5 shadow-card transition-all hover:-translate-y-0.5 hover:border-wine-400 dark:border-obsidian-700 dark:bg-obsidian-900 dark:hover:border-wine-500/40"
+            <div className="mx-auto mb-8 max-w-2xl text-center">
+              <SectionEyebrow>Módulos</SectionEyebrow>
+              <h2 className="text-2xl font-bold text-ink-900 dark:text-white sm:text-3xl">
+                Todo lo esencial del restaurante
+              </h2>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { icon: LayoutDashboard, t: "Dashboard", d: "Ventas y operación en vivo" },
+                { icon: Truck, t: "Domicilios", d: "Kanban y repartidores" },
+                { icon: ShoppingBag, t: "Para llevar", d: "Cola y cobro rápido" },
+                { icon: Utensils, t: "Mesas", d: "Estado y cuentas abiertas" },
+                { icon: WalletCards, t: "Caja y deudas", d: "Cobros y corte del día" },
+                { icon: BarChart3, t: "Reportes", d: "Productos, horarios y cierre" },
+              ].map(({ icon: Icon, t, d }) => (
+                <div
+                  key={t}
+                  className="flex items-start gap-3 rounded-2xl border border-paper-300 bg-white p-4 dark:border-obsidian-700 dark:bg-obsidian-900"
                 >
-                  <div className="mb-3 flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-wine-50 text-wine-600 dark:bg-wine-900/40 dark:text-wine-300">
-                      <Icon size={20} />
-                    </div>
-                    <h3 className="text-lg font-semibold text-ink-900 dark:text-white">{title}</h3>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-wine-50 text-wine-600 dark:bg-wine-900/40 dark:text-wine-300">
+                    <Icon size={20} />
                   </div>
-                  <p className="text-sm leading-relaxed text-ink-700 dark:text-white">{text}</p>
-                </article>
+                  <div>
+                    <p className="font-semibold text-ink-900 dark:text-white">{t}</p>
+                    <p className="text-sm text-ink-600 dark:text-obsidian-300">{d}</p>
+                  </div>
+                </div>
               ))}
             </div>
-            <p className="mt-6 text-center text-sm text-ink-600 dark:text-white">
-              También: Menú · Clientes · Inventario · Deudas · Personal
-            </p>
           </div>
         </section>
 
-        {/* Flujo */}
-        <section
-          id="flujo"
-          className={`w-full border-y border-paper-200 bg-paper-50 py-14 dark:border-obsidian-800 dark:bg-obsidian-900/50 sm:py-16 ${PAD}`}
-        >
-          <div className={CONTAINER}>
-            <SectionHead
-              eyebrow="Cómo se usa"
-              title="Del login al corte, en cuatro pasos"
-              text="Un flujo simple para operar y cerrar sin perder información."
-            />
-            <ol className="grid grid-cols-1 gap-0 md:grid-cols-4 md:gap-4">
-              {steps.map((step, index) => {
-                const Icon = step.icon;
-                const isLast = index === steps.length - 1;
-                return (
-                  <li key={step.n} className="relative flex gap-4 md:flex-col md:gap-0">
-                    {!isLast && (
-                      <div
-                        className="absolute bottom-0 left-[1.15rem] top-11 w-px bg-wine-300/60 dark:bg-wine-500/30 md:hidden"
-                        aria-hidden
-                      />
-                    )}
-                    <div className="relative z-10 mb-0 flex shrink-0 items-center gap-2 md:mb-4">
-                      <span className="flex size-10 items-center justify-center rounded-full border-2 border-wine-500/50 bg-paper-50 text-sm font-bold tabular-nums text-wine-700 dark:border-wine-400/50 dark:bg-obsidian-950 dark:text-wine-300 md:size-11">
-                        {step.n}
-                      </span>
-                      {!isLast && (
-                        <>
-                          <div
-                            className="ml-1 hidden h-px flex-1 bg-gradient-to-r from-wine-400/60 to-wine-200/20 dark:from-wine-400/40 dark:to-wine-900/10 md:block"
-                            aria-hidden
-                          />
-                          <ChevronRight
-                            className="hidden size-4 shrink-0 text-wine-400 dark:text-wine-400/50 md:block"
-                            aria-hidden
-                          />
-                        </>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1 pb-7 last:pb-0 md:pb-0">
-                      <div className="h-full rounded-2xl border border-paper-300 bg-paper-50 p-5 transition-colors hover:border-wine-400 dark:border-obsidian-700 dark:bg-obsidian-900 dark:hover:border-wine-500/40">
-                        <div className="mb-2.5 flex items-center gap-2.5">
-                          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-wine-200 bg-wine-50 dark:border-wine-500/20 dark:bg-wine-900/30">
-                            <Icon className="size-4 text-wine-600 dark:text-wine-300" />
-                          </span>
-                          <h3 className="text-base font-semibold leading-snug text-ink-900 dark:text-white">
-                            {step.title}
-                          </h3>
-                        </div>
-                        <p className="text-sm leading-relaxed text-ink-700 dark:text-white">
-                          {step.text}
-                        </p>
-                        <div className="mt-3 rounded-lg border border-wine-200 bg-wine-50/80 px-3 py-2.5 dark:border-wine-500/25 dark:bg-wine-900/25">
-                          <p className="text-xs font-bold uppercase tracking-wide text-wine-800 dark:text-wine-300">
-                            Por qué importa
-                          </p>
-                          <p className="mt-1 text-sm leading-snug text-ink-800 dark:text-white">
-                            {step.benefit}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-        </section>
-
-        {/* CTA final */}
-        <section className={`w-full bg-ink-950 py-14 text-white ${PAD}`}>
+        {/* —— CTA final —— */}
+        <section className={`${PAD} bg-ink-950 py-16 text-white sm:py-20`}>
           <div
-            className={`${CONTAINER} flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center`}
+            className={`${CONTAINER} flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center`}
           >
-            <div>
-              <p className="text-sm font-bold uppercase tracking-widest text-wine-200">
+            <div className="max-w-xl">
+              <p className="text-sm font-bold uppercase tracking-widest text-wine-300">
                 Listo para operar
               </p>
-              <h2 className="mt-2 text-3xl font-bold text-white">
-                Entrá y gestioná el turno actual
+              <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
+                Entrá y gestioná el turno de hoy
               </h2>
-              <p className="mt-3 max-w-xl text-base leading-relaxed text-white">
-                Acceso con usuario y PIN. El panel queda listo para mesas, pedidos y caja.
+              <p className="mt-4 text-base leading-relaxed text-white/80">
+                Acceso con usuario y PIN de 4 dígitos. El panel queda listo para mesas,
+                pedidos y caja.
               </p>
             </div>
             <Link
               to={appPath}
-              className="btn h-12 shrink-0 bg-white px-6 text-base font-semibold text-ink-950 hover:bg-paper-100"
+              className="btn h-12 shrink-0 bg-wine-600 px-8 text-base font-semibold text-white hover:bg-wine-700"
             >
               {ctaLabel}
               <ArrowRight size={20} />
@@ -359,6 +455,53 @@ export default function Landing() {
           </div>
         </section>
       </main>
+
+      {/* Footer */}
+      <footer className={`border-t border-paper-200 bg-white py-10 dark:border-obsidian-800 dark:bg-obsidian-950 ${PAD}`}>
+        <div className={`${CONTAINER} flex flex-col gap-8 sm:flex-row sm:justify-between`}>
+          <div>
+            <Brand />
+            <p className="mt-3 max-w-xs text-sm text-ink-600 dark:text-obsidian-400">
+              Sistema de gestión para restaurantes: mesas, domicilios, caja y reportes.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-8 text-sm">
+            <div>
+              <p className="font-semibold text-ink-900 dark:text-white">Producto</p>
+              <ul className="mt-2 space-y-1.5 text-ink-600 dark:text-obsidian-400">
+                <li>
+                  <a href="#funciones" className="hover:text-wine-600">
+                    Funciones
+                  </a>
+                </li>
+                <li>
+                  <a href="#dispositivos" className="hover:text-wine-600">
+                    Dispositivos
+                  </a>
+                </li>
+                <li>
+                  <Link to="/login" className="hover:text-wine-600">
+                    Iniciar sesión
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold text-ink-900 dark:text-white">Acceso</p>
+              <ul className="mt-2 space-y-1.5 text-ink-600 dark:text-obsidian-400">
+                <li>
+                  <Link to={appPath} className="hover:text-wine-600">
+                    {ctaLabel}
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div className={`${CONTAINER} mt-8 border-t border-paper-200 pt-6 text-xs text-ink-500 dark:border-obsidian-800 dark:text-obsidian-500`}>
+          © {new Date().getFullYear()} TurnOn. Gestión del restaurant.
+        </div>
+      </footer>
     </div>
   );
 }
