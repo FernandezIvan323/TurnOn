@@ -2,9 +2,10 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../store/auth";
 import Brand from "../components/Brand";
 import DeviceFrame from "../components/landing/DeviceFrame";
-import MockDashboard from "../components/landing/MockDashboard";
+import AdminScreenCarousel from "../components/landing/AdminScreenCarousel";
 import MockTables from "../components/landing/MockTables";
 import MockKanban from "../components/landing/MockKanban";
+import MockCashClosing from "../components/landing/MockCashClosing";
 import MockWaiterPhone from "../components/landing/MockWaiterPhone";
 import {
   ArrowRight,
@@ -146,7 +147,7 @@ export default function Landing() {
             </div>
             <div className="device-stage lg:col-span-7">
               <DeviceFrame variant="laptop" tilt="left" float>
-                <MockDashboard />
+                <AdminScreenCarousel />
               </DeviceFrame>
             </div>
           </div>
@@ -289,7 +290,7 @@ export default function Landing() {
                 </ul>
               </div>
               <DeviceFrame variant="laptop">
-                <MockDashboard compact />
+                <MockCashClosing />
               </DeviceFrame>
             </div>
           </div>
@@ -336,17 +337,17 @@ export default function Landing() {
               </p>
             </div>
 
-            {/* Escenario 3D: laptop + phone juntos */}
-            <div className="device-stage relative mx-auto mt-12 flex max-w-4xl flex-col items-center justify-center sm:mt-14">
-              <div className="relative flex w-full items-end justify-center gap-2 sm:gap-3 md:gap-4">
-                {/* Laptop (caja) — atrás un poco a la izquierda */}
-                <div className="w-[min(100%,28rem)] shrink-0 sm:w-[min(72%,32rem)] md:w-[34rem]">
+            {/* Escenario 3D: laptop + phone juntos, sin solape */}
+            <div className="device-stage relative mx-auto mt-12 flex max-w-5xl flex-col items-center justify-center sm:mt-14">
+              <div className="flex w-full flex-col items-center justify-center gap-8 sm:flex-row sm:items-end sm:gap-6 md:gap-8 lg:gap-10">
+                {/* Laptop (caja / admin) */}
+                <div className="w-full max-w-xl shrink-0 sm:max-w-md md:max-w-lg lg:max-w-xl">
                   <DeviceFrame variant="laptop" tilt="left" float label="Panel cajero / admin">
-                    <MockDashboard compact />
+                    <AdminScreenCarousel compact />
                   </DeviceFrame>
                 </div>
-                {/* Phone (mesero) — adelante, solapa un poco el laptop */}
-                <div className="relative z-10 -ml-6 w-[min(42%,11rem)] shrink-0 sm:-ml-10 sm:w-[12rem] md:-ml-14 md:w-[13.5rem]">
+                {/* Phone (mesero) — al lado, sin tapar el laptop */}
+                <div className="w-[12rem] shrink-0 sm:w-[12.5rem] md:w-[13rem]">
                   <DeviceFrame
                     variant="phone"
                     tilt="right"
@@ -359,7 +360,7 @@ export default function Landing() {
                 </div>
               </div>
 
-              <div className="mt-8 grid w-full max-w-xl gap-4 text-center sm:grid-cols-2 sm:gap-6">
+              <div className="mt-8 grid w-full max-w-2xl gap-4 text-center sm:grid-cols-2 sm:gap-6">
                 <div>
                   <h3 className="font-semibold text-ink-900 dark:text-white">Para caja y gestión</h3>
                   <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
