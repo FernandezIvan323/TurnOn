@@ -142,6 +142,62 @@
   }
 }
 
+/* —— Landing: escenario 3D de dispositivos —— */
+.device-stage {
+  perspective: 1200px;
+  perspective-origin: 50% 40%;
+}
+
+.device-3d {
+  transition: transform 0.45s ease, box-shadow 0.45s ease;
+  will-change: transform;
+}
+
+.device-tilt-left {
+  transform: rotateY(-7deg) rotateX(5deg);
+}
+
+.device-tilt-right {
+  transform: rotateY(9deg) rotateX(5deg);
+}
+
+.device-stage:hover .device-tilt-left,
+.device-stage:hover .device-tilt-right {
+  transform: rotateY(0deg) rotateX(2deg) translateY(-4px);
+}
+
+.device-float {
+  animation: device-float 5.5s ease-in-out infinite;
+}
+
+.device-float-delay {
+  animation-delay: 0.9s;
+}
+
+@keyframes device-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .device-float {
+    animation: none;
+  }
+  .device-tilt-left,
+  .device-tilt-right {
+    transform: none;
+  }
+  .device-stage:hover .device-tilt-left,
+  .device-stage:hover .device-tilt-right {
+    transform: none;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

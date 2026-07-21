@@ -8,10 +8,8 @@ import MockKanban from "../components/landing/MockKanban";
 import MockWaiterPhone from "../components/landing/MockWaiterPhone";
 import {
   ArrowRight,
-  BarChart3,
   CheckCircle2,
   Cloud,
-  LayoutDashboard,
   MonitorSmartphone,
   ShieldCheck,
   ShoppingBag,
@@ -110,7 +108,7 @@ export default function Landing() {
       <main className="w-full">
         {/* —— HERO (estilo Fudo) —— */}
         <section className="relative w-full overflow-hidden">
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-wine-50/80 via-white to-white dark:from-wine-950/20 dark:via-obsidian-950 dark:to-obsidian-950" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-paper-200/70 via-white to-white dark:from-obsidian-900/50 dark:via-obsidian-950 dark:to-obsidian-950" />
           <div className={`${PAD} ${CONTAINER} relative grid items-center gap-12 py-14 lg:grid-cols-12 lg:gap-10 lg:py-20`}>
             <div className="flex flex-col justify-center lg:col-span-5">
               <SectionEyebrow>Software para restaurantes</SectionEyebrow>
@@ -133,21 +131,21 @@ export default function Landing() {
                   Ver funciones
                 </a>
               </div>
-              <ul className="mt-8 space-y-2 text-sm font-medium text-ink-700 dark:text-obsidian-200">
+              <ul className="mt-8 space-y-3 text-base font-medium text-ink-700 dark:text-obsidian-200 sm:text-lg">
                 {[
                   "Turnos FIFO en mesas y pedidos",
                   "Caja y corte del día sin Excel",
                   "Mesero en el celular, cajero en la PC",
                 ].map((t) => (
-                  <li key={t} className="flex items-center gap-2">
-                    <CheckCircle2 size={18} className="shrink-0 text-wine-600 dark:text-wine-300" />
+                  <li key={t} className="flex items-center gap-3">
+                    <CheckCircle2 size={22} className="shrink-0 text-wine-600 dark:text-wine-300" />
                     {t}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="lg:col-span-7">
-              <DeviceFrame variant="laptop">
+            <div className="device-stage lg:col-span-7">
+              <DeviceFrame variant="laptop" tilt="left" float>
                 <MockDashboard />
               </DeviceFrame>
             </div>
@@ -213,14 +211,14 @@ export default function Landing() {
                   Tablero Kanban con turnos FIFO, asignación de repartidores y cobro al
                   entregar o pre-cobro por transferencia.
                 </p>
-                <ul className="mt-6 space-y-2 text-sm text-ink-700 dark:text-obsidian-200">
+                <ul className="mt-6 space-y-3 text-base text-ink-700 dark:text-obsidian-200">
                   {[
                     "Columnas: pendientes → preparación → en camino → entregados",
                     "Multi-repartidor con historial de entregas",
                     "Notas, propina y división de cuenta",
                   ].map((x) => (
-                    <li key={x} className="flex gap-2">
-                      <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-wine-600" />
+                    <li key={x} className="flex gap-3">
+                      <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-wine-600" />
                       {x}
                     </li>
                   ))}
@@ -249,14 +247,14 @@ export default function Landing() {
                   Colores por estado, turno del siguiente pedido y acceso directo a cobrar.
                   El mesero opera desde el celular; el cajero cierra en caja.
                 </p>
-                <ul className="mt-6 space-y-2 text-sm text-ink-700 dark:text-obsidian-200">
+                <ul className="mt-6 space-y-3 text-base text-ink-700 dark:text-obsidian-200">
                   {[
                     "Libre · pendiente · cocina · lista para cobrar",
                     "Asignación de mesas por mesero",
                     "Historial de trabajo por jornada",
                   ].map((x) => (
-                    <li key={x} className="flex gap-2">
-                      <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-wine-600" />
+                    <li key={x} className="flex gap-3">
+                      <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-wine-600" />
                       {x}
                     </li>
                   ))}
@@ -277,14 +275,14 @@ export default function Landing() {
                   Dashboard en tiempo real, deudas, inventario y reportes imprimibles.
                   El corte de caja avisa si hay pedidos pendientes.
                 </p>
-                <ul className="mt-6 space-y-2 text-sm text-ink-700 dark:text-obsidian-200">
+                <ul className="mt-6 space-y-3 text-base text-ink-700 dark:text-obsidian-200">
                   {[
                     "Efectivo, tarjeta, transferencia y mixto",
                     "Corte Z con arqueo y hoja imprimible",
                     "Reportes y top de productos",
                   ].map((x) => (
-                    <li key={x} className="flex gap-2">
-                      <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-wine-600" />
+                    <li key={x} className="flex gap-3">
+                      <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-wine-600" />
                       {x}
                     </li>
                   ))}
@@ -321,7 +319,7 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* —— Dispositivos (phone + laptop) —— */}
+        {/* —— Dispositivos (phone + laptop, juntos + 3D) —— */}
         <section
           id="dispositivos"
           className={`${PAD} border-y border-paper-200 bg-paper-50 py-16 dark:border-obsidian-800 dark:bg-obsidian-900/40 sm:py-20`}
@@ -338,26 +336,40 @@ export default function Landing() {
               </p>
             </div>
 
-            <div className="mt-12 grid items-end gap-10 lg:grid-cols-2 lg:gap-8">
-              <div className="flex flex-col items-center">
-                <DeviceFrame variant="phone" label="App mesero">
-                  <MockWaiterPhone />
-                </DeviceFrame>
-                <div className="mt-4 max-w-xs text-center">
-                  <h3 className="font-semibold text-ink-900 dark:text-white">Para meseros</h3>
-                  <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
-                    Mesas asignadas, catálogo y historial de la jornada.
-                  </p>
+            {/* Escenario 3D: laptop + phone juntos */}
+            <div className="device-stage relative mx-auto mt-12 flex max-w-4xl flex-col items-center justify-center sm:mt-14">
+              <div className="relative flex w-full items-end justify-center gap-2 sm:gap-3 md:gap-4">
+                {/* Laptop (caja) — atrás un poco a la izquierda */}
+                <div className="w-[min(100%,28rem)] shrink-0 sm:w-[min(72%,32rem)] md:w-[34rem]">
+                  <DeviceFrame variant="laptop" tilt="left" float label="Panel cajero / admin">
+                    <MockDashboard compact />
+                  </DeviceFrame>
+                </div>
+                {/* Phone (mesero) — adelante, solapa un poco el laptop */}
+                <div className="relative z-10 -ml-6 w-[min(42%,11rem)] shrink-0 sm:-ml-10 sm:w-[12rem] md:-ml-14 md:w-[13.5rem]">
+                  <DeviceFrame
+                    variant="phone"
+                    tilt="right"
+                    float
+                    floatDelay
+                    label="App mesero"
+                  >
+                    <MockWaiterPhone />
+                  </DeviceFrame>
                 </div>
               </div>
-              <div className="flex flex-col items-center">
-                <DeviceFrame variant="laptop" label="Panel cajero / admin">
-                  <MockDashboard />
-                </DeviceFrame>
-                <div className="mt-4 max-w-sm text-center">
+
+              <div className="mt-8 grid w-full max-w-xl gap-4 text-center sm:grid-cols-2 sm:gap-6">
+                <div>
                   <h3 className="font-semibold text-ink-900 dark:text-white">Para caja y gestión</h3>
                   <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
                     Dashboard, cobros, deudas, personal, inventario y reportes.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-ink-900 dark:text-white">Para meseros</h3>
+                  <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
+                    Mesas asignadas, catálogo y historial de la jornada.
                   </p>
                 </div>
               </div>
@@ -388,41 +400,6 @@ export default function Landing() {
                     {text}
                   </p>
                 </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* —— Módulos grid corto —— */}
-        <section className={`${PAD} border-t border-paper-200 bg-paper-50 py-14 dark:border-obsidian-800 dark:bg-obsidian-900/40 sm:py-16`}>
-          <div className={CONTAINER}>
-            <div className="mx-auto mb-8 max-w-2xl text-center">
-              <SectionEyebrow>Módulos</SectionEyebrow>
-              <h2 className="text-2xl font-bold text-ink-900 dark:text-white sm:text-3xl">
-                Todo lo esencial del restaurante
-              </h2>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {[
-                { icon: LayoutDashboard, t: "Dashboard", d: "Ventas y operación en vivo" },
-                { icon: Truck, t: "Domicilios", d: "Kanban y repartidores" },
-                { icon: ShoppingBag, t: "Para llevar", d: "Cola y cobro rápido" },
-                { icon: Utensils, t: "Mesas", d: "Estado y cuentas abiertas" },
-                { icon: WalletCards, t: "Caja y deudas", d: "Cobros y corte del día" },
-                { icon: BarChart3, t: "Reportes", d: "Productos, horarios y cierre" },
-              ].map(({ icon: Icon, t, d }) => (
-                <div
-                  key={t}
-                  className="flex items-start gap-3 rounded-2xl border border-paper-300 bg-white p-4 dark:border-obsidian-700 dark:bg-obsidian-900"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-wine-50 text-wine-600 dark:bg-wine-900/40 dark:text-wine-300">
-                    <Icon size={20} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-ink-900 dark:text-white">{t}</p>
-                    <p className="text-sm text-ink-600 dark:text-obsidian-300">{d}</p>
-                  </div>
-                </div>
               ))}
             </div>
           </div>
