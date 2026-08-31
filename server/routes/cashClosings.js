@@ -8,6 +8,13 @@ router.use(authRequired, requireRole("admin"));
 
 // --- helpers -------------------------------------------------------------
 
+/** Zona horaria del negocio (misma que DB_TZ / reportes). Validada contra inyección. */
+function closingTz() {
+  const tz = process.env.DB_TZ || "America/Mexico_City";
+  if (!/^[\w/]+$/.test(tz)) throw new Error(`Timezone inválido: ${tz}`);
+  return tz;
+}
+
 function ymd(input) {
   if (!input) return null;
   // Acepta 'YYYY-MM-DD' o un ISO completo (toma la parte de la fecha).
@@ -48,7 +55,7 @@ async function computeDaySummary(closingDate) {
             COUNT(*) FILTER (WHERE payment_method='transfer')::int AS transfer_count,
             COUNT(*) FILTER (WHERE payment_method='mixed')::int    AS mixed_count
        FROM orders
-      WHERE DATE(closed_at AT TIME ZONE 'America/Mexico_City') = $1
+      WHERE DATE(closed_at AT TIME ZONE '${closingTz()}') = $1
         AND payment_status = 'paid'`,
     [closingDate]
   );
@@ -214,7 +221,7 @@ router.post("/", async (req, res) => {
                 COALESCE(SUM(total) FILTER (WHERE payment_method='transfer'),0)::numeric AS transfer_sales,
                 COALESCE(SUM(total) FILTER (WHERE payment_method='mixed'),0)::numeric    AS mixed_sales
            FROM orders
-          WHERE DATE(closed_at AT TIME ZONE 'America/Mexico_City') = $1
+          WHERE DATE(closed_at AT TIME ZONE '${closingTz()}') = $1
             AND payment_status = 'paid'`,
         [date]
       );
