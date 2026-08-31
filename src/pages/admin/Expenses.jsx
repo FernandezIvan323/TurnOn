@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
+import Modal from "../../components/Modal";
+import { toast } from "../../store/toast";
 import { money, formatTime, dateOnlyUTC } from "../../lib/format";
 import { todayLocalISO } from "../../lib/date";
 import {
-  TrendingDown, Plus, Pencil, Trash2, X, Wallet, ShoppingCart, Zap, Wrench, Package, Sparkles, Receipt,
+  TrendingDown, Plus, Pencil, Trash2, Wallet, ShoppingCart, Zap, Wrench, Package, Sparkles, Receipt,
   Banknote, CreditCard, Building2, Filter, ArrowRight, Search,
 } from "lucide-react";
 
@@ -82,111 +84,98 @@ function ExpenseModal({ open, onClose, onSaved, expense, categories }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50" onClick={onClose}>
-      <div className="card w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 flex items-center gap-2">
-            <TrendingDown size={20}/> {isEdit ? "Editar gasto" : "Nuevo gasto"}
-          </h2>
-          <button onClick={onClose} className="btn-ghost p-1.5"><X size={16}/></button>
+    <Modal open onClose={onClose} title={<span className="flex items-center gap-2"><TrendingDown size={18} /> {isEdit ? "Editar gasto" : "Nuevo gasto"}</span>} size="md">
+      <div className="space-y-3">
+        <div>
+          <label className="label">Fecha</label>
+          <input type="date" className="input" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} max={todayISO()} />
         </div>
-        <div className="space-y-3">
-          <div>
-            <label className="label">Fecha</label>
-            <input type="date" className="input" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} max={todayISO()} />
-          </div>
-          <div>
-            <label className="label">Categoría</label>
-            <select className="input" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="label">Monto</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 text-sm">$</span>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                className="input pl-7"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                autoFocus={!isEdit}
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="label">Descripción (opcional)</label>
-            <textarea
-              className="input min-h-[60px] resize-y"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ej: 2kg de tomates del mercado"
+        <div>
+          <label className="label">Categoría</label>
+          <select className="input" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="label">Monto</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 text-sm">$</span>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              className="input pl-7"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              autoFocus={!isEdit}
+              placeholder="0.00"
             />
           </div>
-          <div>
-            <label className="label">Método de pago (opcional)</label>
-            <div className="grid grid-cols-3 gap-2">
-              {Object.entries(METHOD_LABELS).map(([k, m]) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setMethod(paymentMethod === k ? "" : k)}
-                  className={`px-3 py-2 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5 ${
-                    paymentMethod === k
-                      ? "bg-wine-600 text-white border-wine-600"
-                      : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-100 dark:border-obsidian-700 dark:hover:bg-obsidian-800"
-                  }`}
-                >
-                  <m.icon size={14}/> {m.l}
-                </button>
-              ))}
-            </div>
-          </div>
-          {err && (
-            <div className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
-              {err}
-            </div>
-          )}
-          <div className="flex gap-2 pt-2">
-            <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
-            <button onClick={submit} disabled={busy} className="btn-primary flex-1">
-              {busy ? "Guardando…" : (isEdit ? "Guardar cambios" : "Registrar gasto")}
-            </button>
+        </div>
+        <div>
+          <label className="label">Descripción (opcional)</label>
+          <textarea
+            className="input min-h-[60px] resize-y"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Ej: 2kg de tomates del mercado"
+          />
+        </div>
+        <div>
+          <label className="label">Método de pago (opcional)</label>
+          <div className="grid grid-cols-3 gap-2">
+            {Object.entries(METHOD_LABELS).map(([k, m]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setMethod(paymentMethod === k ? "" : k)}
+                className={`px-3 py-2 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5 ${
+                  paymentMethod === k
+                    ? "bg-wine-600 text-white border-wine-600"
+                    : "bg-paper-50 text-ink-700 border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-100 dark:border-obsidian-700 dark:hover:bg-obsidian-800"
+                }`}
+              >
+                <m.icon size={14}/> {m.l}
+              </button>
+            ))}
           </div>
         </div>
+        {err && (
+          <div className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
+            {err}
+          </div>
+        )}
+        <div className="flex gap-2 pt-2">
+          <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
+          <button onClick={submit} disabled={busy} className="btn-primary flex-1">
+            {busy ? "Guardando…" : (isEdit ? "Guardar cambios" : "Registrar gasto")}
+          </button>
+        </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
 function ConfirmDelete({ expense, onCancel, onConfirm }) {
   if (!expense) return null;
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50" onClick={onCancel}>
-      <div className="card w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-2 flex items-center gap-2">
-          <Trash2 size={20} className="text-rose-600"/> Eliminar gasto
-        </h2>
-        <p className="text-sm text-ink-600 dark:text-obsidian-200 mb-1">
-          ¿Eliminar el gasto de <span className="font-semibold text-ink-800 dark:text-obsidian-50">{money(expense.amount)}</span>?
-        </p>
-        <p className="text-xs text-ink-500 dark:text-obsidian-400 mb-4">
-          {expense.category_name} · {dateOnly(expense.expense_date)}
-          {expense.description && ` · ${expense.description}`}
-        </p>
-        <div className="flex gap-2">
-          <button onClick={onCancel} className="btn-secondary flex-1">Cancelar</button>
-          <button onClick={onConfirm} className="btn-danger flex-1">
-            <Trash2 size={14}/> Eliminar
-          </button>
-        </div>
+    <Modal open onClose={onCancel} title={<span className="flex items-center gap-2"><Trash2 size={18} className="text-rose-500" /> Eliminar gasto</span>} size="sm">
+      <p className="text-sm text-ink-600 dark:text-obsidian-200 mb-1">
+        ¿Eliminar el gasto de <span className="font-semibold text-ink-800 dark:text-obsidian-50">{money(expense.amount)}</span>?
+      </p>
+      <p className="text-xs text-ink-500 dark:text-obsidian-400 mb-4">
+        {expense.category_name} · {dateOnly(expense.expense_date)}
+        {expense.description && ` · ${expense.description}`}
+      </p>
+      <div className="flex gap-2">
+        <button onClick={onCancel} className="btn-secondary flex-1">Cancelar</button>
+        <button onClick={onConfirm} className="btn-danger flex-1">
+          <Trash2 size={14}/> Eliminar
+        </button>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -207,7 +196,6 @@ export default function Expenses() {
   const [modalOpen, setModalOpen]   = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [toast, setToast] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -268,8 +256,7 @@ export default function Expenses() {
 
   const onSaved = () => {
     load();
-    setToast({ type: "ok", msg: editTarget ? "Gasto actualizado" : "Gasto registrado" });
-    setTimeout(() => setToast(null), 2500);
+    toast.success(editTarget ? "Gasto actualizado" : "Gasto registrado");
   };
 
   const onConfirmDelete = async () => {
@@ -277,11 +264,9 @@ export default function Expenses() {
       await api.delete(`/expenses/${deleteTarget.id}`);
       setDeleteTarget(null);
       load();
-      setToast({ type: "ok", msg: "Gasto eliminado" });
-      setTimeout(() => setToast(null), 2500);
+      toast.success("Gasto eliminado");
     } catch (e) {
-      setToast({ type: "err", msg: e.response?.data?.error || e.message });
-      setTimeout(() => setToast(null), 3000);
+      toast.error(e.response?.data?.error || e.message);
     }
   };
 
@@ -543,14 +528,6 @@ export default function Expenses() {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={onConfirmDelete}
       />
-
-      {toast && (
-        <div className={`fixed bottom-4 right-4 z-50 px-4 py-2.5 rounded-xl text-sm shadow-pop ${
-          toast.type === "ok" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
-        }`}>
-          {toast.msg}
-        </div>
-      )}
     </div>
   );
 }

@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import ConfirmModal from "../../components/ConfirmModal";
+import Modal from "../../components/Modal";
 import { useAuth } from "../../store/auth";
+import { toast } from "../../store/toast";
 import { money } from "../../lib/format";
-import { Plus, Edit2, Trash2, X, Tag, ShoppingBag, Search, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Edit2, Trash2, Tag, ShoppingBag, Search, CheckCircle2, XCircle } from "lucide-react";
 
 function CategoryModal({ cat, onClose, onSaved }) {
   const [name, setName] = useState(cat?.name || "");
@@ -16,28 +18,23 @@ function CategoryModal({ cat, onClose, onSaved }) {
     try {
       if (cat) await api.put(`/categories/${cat.id}`, { name, position });
       else await api.post("/categories", { name, position });
+      toast.success(cat ? "Categoría actualizada" : "Categoría creada");
       onSaved(); onClose();
     } catch (e) { setErr(e.response?.data?.error || e.message); }
     finally { setSaving(false); }
   };
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-      <div className="card w-full max-w-md p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">{cat ? "Editar" : "Nueva"} categoría</h2>
-          <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
-        </div>
-        <label className="label">Nombre</label>
-        <input className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-        <label className="label mt-3">Posición (orden)</label>
-        <input className="input" type="number" value={position} onChange={(e) => setPosition(Number(e.target.value))} />
-        {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{err}</div>}
-        <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
-        </div>
+    <Modal open onClose={onClose} title={`${cat ? "Editar" : "Nueva"} categoría`} size="md">
+      <label className="label">Nombre</label>
+      <input className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+      <label className="label mt-3">Posición (orden)</label>
+      <input className="input" type="number" value={position} onChange={(e) => setPosition(Number(e.target.value))} />
+      {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{err}</div>}
+      <div className="mt-4 flex justify-end gap-2">
+        <button onClick={onClose} className="btn-secondary">Cancelar</button>
+        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -57,51 +54,46 @@ function ProductModal({ product, categories, onClose, onSaved }) {
       const payload = { ...form, price: Number(form.price), category_id: form.category_id || null };
       if (product) await api.put(`/products/${product.id}`, payload);
       else await api.post("/products", payload);
+      toast.success(product ? "Producto actualizado" : "Producto creado");
       onSaved(); onClose();
     } catch (e) { setErr(e.response?.data?.error || e.message); }
     finally { setSaving(false); }
   };
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-      <div className="card w-full max-w-lg p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">{product ? "Editar" : "Nuevo"} producto</h2>
-          <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
+    <Modal open onClose={onClose} title={`${product ? "Editar" : "Nuevo"} producto`} size="lg">
+      <div className="space-y-3">
+        <div>
+          <label className="label">Nombre</label>
+          <input className="input" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} />
         </div>
-        <div className="space-y-3">
+        <div>
+          <label className="label">Descripción</label>
+          <input className="input" value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="label">Nombre</label>
-            <input className="input" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} />
+            <label className="label">Precio</label>
+            <input className="input" type="number" step="0.01" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} />
           </div>
           <div>
-            <label className="label">Descripción</label>
-            <input className="input" value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} />
+            <label className="label">Categoría</label>
+            <select className="input" value={form.category_id || ""} onChange={(e) => setForm({...form, category_id: e.target.value ? Number(e.target.value) : null})}>
+              <option value="">— Sin categoría —</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Precio</label>
-              <input className="input" type="number" step="0.01" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} />
-            </div>
-            <div>
-              <label className="label">Categoría</label>
-              <select className="input" value={form.category_id || ""} onChange={(e) => setForm({...form, category_id: e.target.value ? Number(e.target.value) : null})}>
-                <option value="">— Sin categoría —</option>
-                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-          </div>
-          <label className="flex items-center gap-2 text-sm text-ink-600 dark:text-obsidian-200">
-            <input type="checkbox" checked={form.available} onChange={(e) => setForm({...form, available: e.target.checked})} />
-            Disponible para la venta
-          </label>
         </div>
-        {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{err}</div>}
-        <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
-        </div>
+        <label className="flex items-center gap-2 text-sm text-ink-600 dark:text-obsidian-200">
+          <input type="checkbox" checked={form.available} onChange={(e) => setForm({...form, available: e.target.checked})} />
+          Disponible para la venta
+        </label>
       </div>
-    </div>
+      {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{err}</div>}
+      <div className="mt-4 flex justify-end gap-2">
+        <button onClick={onClose} className="btn-secondary">Cancelar</button>
+        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
+      </div>
+    </Modal>
   );
 }
 
@@ -316,6 +308,7 @@ function AdminMenu() {
           icon={Trash2}
           onConfirm={async () => {
             await api.delete(`/products/${confirmDeleteProd.id}`);
+            toast.success("Producto eliminado");
             setConfirmDeleteProd(null);
             load();
           }}
@@ -331,6 +324,7 @@ function AdminMenu() {
           icon={Trash2}
           onConfirm={async () => {
             await api.delete(`/categories/${confirmDeleteCat.id}`);
+            toast.success("Categoría eliminada");
             setConfirmDeleteCat(null);
             load();
           }}

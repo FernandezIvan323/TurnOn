@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
+import Modal from "../../components/Modal";
+import SegmentedControl from "../../components/SegmentedControl";
+import { TableSkeleton } from "../../components/Skeleton";
 import { useAuth } from "../../store/auth";
-import { Search, X, Plus, Minus, History, Package } from "lucide-react";
+import { toast } from "../../store/toast";
+import { Search, Plus, Minus, History, Package } from "lucide-react";
 import { money } from "../../lib/format";
 
 function MovementModal({ product, onClose }) {
@@ -14,35 +18,27 @@ function MovementModal({ product, onClose }) {
       .finally(() => setLoading(false));
   }, [product.id]);
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-      <div className="card w-full max-w-xl max-h-[90vh] flex flex-col">
-        <div className="px-5 py-4 border-b border-paper-300 dark:border-obsidian-800 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 flex items-center gap-2">
-            <History size={18}/> Movimientos · {product.name}
-          </h2>
-          <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
-        </div>
-        <div className="p-5 overflow-y-auto flex-1 space-y-2">
-          {loading && <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>}
-          {!loading && movements.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500">Sin movimientos registrados.</div>}
-          {movements.map((m) => (
-            <div key={m.id} className="flex items-center justify-between card p-3 text-sm">
-              <div>
-                <div className="font-medium text-ink-800 dark:text-obsidian-50 flex items-center gap-1.5">
-                  {m.type === "entry" ? <Plus size={14} className="text-emerald-600"/> :
-                   m.type === "exit" ? <Minus size={14} className="text-rose-600"/> :
-                   <Package size={14} className="text-amber-600"/>}
-                  {m.type === "entry" ? "Entrada" : m.type === "exit" ? "Salida" : "Ajuste"}
-                  <span className="font-bold">{m.quantity}</span>
-                </div>
-                <div className="text-xs text-ink-500 dark:text-obsidian-400">{m.reason || "Sin motivo"}</div>
+    <Modal open onClose={onClose} title={`Movimientos · ${product.name}`} size="xl">
+      <div className="space-y-2">
+        {loading && <TableSkeleton rows={4} cols={3} className="!shadow-none" />}
+        {!loading && movements.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500">Sin movimientos registrados.</div>}
+        {movements.map((m) => (
+          <div key={m.id} className="flex items-center justify-between card p-3 text-sm">
+            <div>
+              <div className="font-medium text-ink-800 dark:text-obsidian-50 flex items-center gap-1.5">
+                {m.type === "entry" ? <Plus size={14} className="text-emerald-600"/> :
+                 m.type === "exit" ? <Minus size={14} className="text-rose-600"/> :
+                 <Package size={14} className="text-amber-600"/>}
+                {m.type === "entry" ? "Entrada" : m.type === "exit" ? "Salida" : "Ajuste"}
+                <span className="font-bold">{m.quantity}</span>
               </div>
-              <div className="text-xs text-ink-400 dark:text-obsidian-500">{new Date(m.created_at).toLocaleString()}</div>
+              <div className="text-xs text-ink-500 dark:text-obsidian-400">{m.reason || "Sin motivo"}</div>
             </div>
-          ))}
-        </div>
+            <div className="text-xs text-ink-400 dark:text-obsidian-500">{new Date(m.created_at).toLocaleString()}</div>
+          </div>
+        ))}
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -73,6 +69,7 @@ function StockModal({ product, onClose, onSaved }) {
           reason: reason || null,
         });
       }
+      toast.success("Stock actualizado");
       onSaved(); onClose();
     } catch (e) {
       setErr(e.response?.data?.error || e.message);
@@ -80,41 +77,39 @@ function StockModal({ product, onClose, onSaved }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-      <div className="card w-full max-w-md p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">{product.name}</h2>
-          <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
-        </div>
+    <Modal open onClose={onClose} title={product.name} size="md">
+      <SegmentedControl
+        className="mb-4"
+        value={type}
+        onChange={setType}
+        options={[
+          { value: "entry", label: "Entrada" },
+          { value: "exit", label: "Salida" },
+          { value: "adjust", label: "Ajustar" },
+        ]}
+      />
 
-        <div className="flex gap-2 mb-4">
-          <button onClick={() => setType("entry")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "entry" ? "bg-wine-600 text-white border-wine-500" : "text-ink-700 dark:text-obsidian-300 dark:border-obsidian-700"}`}>Entrada</button>
-          <button onClick={() => setType("exit")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "exit" ? "bg-wine-600 text-white border-wine-500" : "text-ink-700 dark:text-obsidian-300 dark:border-obsidian-700"}`}>Salida</button>
-          <button onClick={() => setType("adjust")} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${type === "adjust" ? "bg-wine-600 text-white border-wine-500" : "text-ink-700 dark:text-obsidian-300 dark:border-obsidian-700"}`}>Ajustar</button>
-        </div>
-
-        {type === "adjust" ? (
-          <>
-            <label className="label">Stock actual</label>
-            <input className="input" type="number" step="0.01" value={stock} onChange={(e) => setStock(e.target.value)} />
-            <label className="label mt-3">Stock mínimo</label>
-            <input className="input" type="number" step="0.01" value={min_stock} onChange={(e) => setMinStock(e.target.value)} />
-          </>
-        ) : (
-          <>
-            <label className="label">Cantidad</label>
-            <input className="input" type="number" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} autoFocus />
-            <label className="label mt-3">Motivo (opcional)</label>
-            <input className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Compra, merma, ajuste…" />
-          </>
-        )}
-        {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300">{err}</div>}
-        <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button onClick={submit} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
-        </div>
+      {type === "adjust" ? (
+        <>
+          <label className="label">Stock actual</label>
+          <input className="input" type="number" step="0.01" value={stock} onChange={(e) => setStock(e.target.value)} />
+          <label className="label mt-3">Stock mínimo</label>
+          <input className="input" type="number" step="0.01" value={min_stock} onChange={(e) => setMinStock(e.target.value)} />
+        </>
+      ) : (
+        <>
+          <label className="label">Cantidad</label>
+          <input className="input" type="number" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} autoFocus />
+          <label className="label mt-3">Motivo (opcional)</label>
+          <input className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Compra, merma, ajuste…" />
+        </>
+      )}
+      {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300">{err}</div>}
+      <div className="mt-4 flex justify-end gap-2">
+        <button onClick={onClose} className="btn-secondary">Cancelar</button>
+        <button onClick={submit} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -176,7 +171,7 @@ export default function Inventory() {
       </div>
 
       {loading ? (
-        <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
+        <TableSkeleton rows={6} cols={5} />
       ) : (
         <div className="data-table-wrap">
           <div className="data-table-scroll">
@@ -200,8 +195,8 @@ export default function Inventory() {
                     </td>
                     <td className="text-right cell-muted tabular-nums">{p.min_stock}</td>
                     <td className="text-right">
-                      <button onClick={() => setMovements(p)} className="btn-ghost text-xs" title="Historial"><History size={14}/></button>
-                      <button onClick={() => setEditing(p)} className="btn-ghost text-xs" title="Ajustar stock"><Package size={14}/></button>
+                      <button onClick={() => setMovements(p)} className="btn-ghost text-xs" title="Historial" aria-label={`Historial de ${p.name}`}><History size={14}/></button>
+                      <button onClick={() => setEditing(p)} className="btn-ghost text-xs" title="Ajustar stock" aria-label={`Ajustar stock de ${p.name}`}><Package size={14}/></button>
                     </td>
                   </tr>
                 ))}

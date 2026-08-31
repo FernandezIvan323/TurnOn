@@ -3,6 +3,7 @@ import { Outlet, Navigate, Link } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import ServerStatus from "./ServerStatus";
 import ThemeToggle from "./ThemeToggle";
+import Toaster from "./Toaster";
 import { useAuth } from "../store/auth";
 import { Menu } from "lucide-react";
 
@@ -15,6 +16,7 @@ export default function Layout() {
   return (
     <div className="flex min-h-svh app-shell">
       <ServerStatus />
+      <Toaster />
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       <div className="flex min-w-0 flex-1 flex-col">

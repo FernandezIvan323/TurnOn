@@ -5,6 +5,10 @@ import Header from "../../components/Header";
 import { money, formatTime, typeLabels, statusLabels, statusColors, typeColors, assignTurns } from "../../lib/format";
 import { useLiveRefresh } from "../../lib/useLiveRefresh";
 import ReceiptTicket from "../../components/ReceiptTicket";
+import Modal from "../../components/Modal";
+import SegmentedControl from "../../components/SegmentedControl";
+import EmptyState from "../../components/EmptyState";
+import { toast } from "../../store/toast";
 import { CheckCircle2, Receipt, X, Calculator, CreditCard, Wallet, Banknote, Building2, Truck, Utensils, ShoppingBag, ScrollText, Users, AlertTriangle, Printer } from "lucide-react";
 
 const TIP_PRESETS = [0, 10, 15, 20];
@@ -50,6 +54,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
         await api.post(`/orders/${order.id}/close`, { payment_method: method, tip: tipAmount });
         onClosed?.({ payment_method: method, tip: tipAmount });
       }
+      toast.success(isPrepay ? "Pre-cobro registrado" : "Cobro cerrado");
       onClose();
     } catch (e) {
       setErr(e.response?.data?.error || e.message);
@@ -69,11 +74,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
       ];
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-      <div className="card w-full max-w-md p-6">
-        <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-4 flex items-center gap-2">
-          <Receipt size={20}/> {isPrepay ? "Pre-cobrar" : "Cobrar"} pedido #{order.id}
-        </h2>
+    <Modal open onClose={onClose} title={<span className="flex items-center gap-2"><Receipt size={18}/> {isPrepay ? "Pre-cobrar" : "Cobrar"} pedido #{order.id}</span>} size="md">
         <div className="bg-paper-100 dark:bg-obsidian-950 rounded-xl p-4 mb-4 text-center">
           <div className="text-sm text-ink-500 dark:text-obsidian-400">{isPrepay ? "Monto pre-cobrado" : "Total a cobrar"}</div>
           <div className="text-3xl font-bold text-ink-800 dark:text-obsidian-50">{money(grandTotal)}</div>
@@ -197,8 +198,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
             {busy ? "Procesando…" : (isPrepay ? "Confirmar pre-cobro" : "Confirmar cobro")}
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -325,22 +325,14 @@ export default function Cashier() {
         subtitle="Cierre y cobro de pedidos"
         right={
           <div className="flex gap-2 items-center">
-            <div className="flex gap-1 bg-paper-50 dark:bg-obsidian-900 border border-paper-300 dark:border-obsidian-700 rounded-xl p-1">
-              {[
-                { v: "pending",  l: "Por cobrar" },
-                { v: "paid",     l: "Cobrados" },
-              ].map((t) => (
-                <button
-                  key={t.v}
-                  onClick={() => setTab(t.v)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                    tab === t.v ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
-                  }`}
-                >
-                  {t.l}
-                </button>
-              ))}
-            </div>
+            <SegmentedControl
+              value={tab}
+              onChange={setTab}
+              options={[
+                { value: "pending", label: "Por cobrar" },
+                { value: "paid", label: "Cobrados" },
+              ]}
+            />
             <Link to="/cashier/closing" className="btn-primary text-sm">
               <ScrollText size={14}/> Corte de caja
             </Link>
@@ -389,25 +381,17 @@ export default function Cashier() {
       </div>
 
       {/* Filtro por tipo */}
-      <div className="flex flex-wrap gap-1 mb-3">
-        {[
-          { v: "all",      l: "Todos" },
-          { v: "table",    l: "Solo mesas" },
-          { v: "delivery", l: "Solo domicilios" },
-          { v: "pickup",   l: "Solo para llevar" },
-        ].map((t) => (
-          <button
-            key={t.v}
-            onClick={() => setTypeFilter(t.v)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-              typeFilter === t.v
-                ? "bg-ink-800 text-white dark:bg-ink-100 dark:text-ink-900"
-                : "bg-paper-50 text-ink-600 border border-paper-300 hover:bg-paper-200 dark:bg-obsidian-900 dark:text-obsidian-200 dark:border-obsidian-700 dark:hover:bg-obsidian-800"
-            }`}
-          >
-            {t.l}
-          </button>
-        ))}
+      <div className="mb-3">
+        <SegmentedControl
+          value={typeFilter}
+          onChange={setTypeFilter}
+          options={[
+            { value: "all", label: "Todos" },
+            { value: "table", label: "Solo mesas" },
+            { value: "delivery", label: "Solo domicilios" },
+            { value: "pickup", label: "Solo para llevar" },
+          ]}
+        />
       </div>
 
       {tab === "pending" && !loading && (
@@ -417,12 +401,23 @@ export default function Cashier() {
       )}
 
       {loading ? (
-        <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
-      ) : orders.length === 0 ? (
-        <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">
-          <Calculator size={32} className="mx-auto text-ink-300 dark:text-obsidian-300 mb-2"/>
-          No hay pedidos {tab === "pending" ? "listos para cobrar" : "cobrados"}.
+        <div className="space-y-2" aria-hidden="true">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="card flex items-center justify-between gap-4 p-4">
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-1/2 animate-pulse rounded bg-paper-200 dark:bg-obsidian-800" />
+                <div className="h-4 w-1/3 animate-pulse rounded bg-paper-200 dark:bg-obsidian-800" />
+              </div>
+              <div className="h-6 w-20 animate-pulse rounded bg-paper-200 dark:bg-obsidian-800" />
+            </div>
+          ))}
         </div>
+      ) : orders.length === 0 ? (
+        <EmptyState
+          icon={Calculator}
+          title="No hay pedidos"
+          description={tab === "pending" ? "Aún no hay pedidos listos para cobrar." : "Aún no hay pedidos cobrados."}
+        />
       ) : (
         <div className="space-y-2">
           {orders.map((o) => (

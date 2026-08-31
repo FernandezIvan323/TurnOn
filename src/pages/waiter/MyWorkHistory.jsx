@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, CalendarDays, ChevronRight, Utensils } from "lucide-react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
+import { Skeleton } from "../../components/Skeleton";
 import { money, formatTime } from "../../lib/format";
 import { todayLocalISO } from "../../lib/date";
 
@@ -216,7 +217,18 @@ export default function MyWorkHistory() {
       )}
 
       {loading ? (
-        <div className="text-sm text-ink-500">Cargando historial…</div>
+        <div className="space-y-2" aria-hidden="true">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="card flex items-center gap-3 p-4">
+              <Skeleton className="h-11 w-11 shrink-0 rounded-xl" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-3 w-1/3" />
+              </div>
+              <Skeleton className="h-5 w-16" />
+            </div>
+          ))}
+        </div>
       ) : days.length === 0 ? (
         <div className="card border-dashed p-10 text-center">
           <CalendarDays size={32} className="mx-auto mb-2 text-ink-400" />

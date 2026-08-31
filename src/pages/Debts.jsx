@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import Header from "../components/Header";
+import SegmentedControl from "../components/SegmentedControl";
+import EmptyState from "../components/EmptyState";
+import { toast } from "../store/toast";
 import { money, formatDate, formatTime, typeLabels, payMethodLabel } from "../lib/format";
 import {
   AlertTriangle,
@@ -277,10 +280,11 @@ export default function Debts() {
     setPaying(id);
     try {
       await api.post(`/orders/${id}/pay-debt`, { payment_method: "cash" });
+      toast.success("Deuda cobrada");
       setSelectedId(null);
       await load();
     } catch (e) {
-      alert(e.response?.data?.error || e.message);
+      toast.error(e.response?.data?.error || e.message);
     } finally {
       setPaying(null);
     }
@@ -295,26 +299,14 @@ export default function Debts() {
         title="Deudas"
         subtitle={pending ? "Pendientes de cobro · Tocá una para ver el pedido" : "Ya cobradas"}
         right={
-          <div className="flex rounded-xl border border-paper-300 p-0.5 dark:border-obsidian-700">
-            <button
-              type="button"
-              onClick={() => setTab("pending")}
-              className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                pending ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200"
-              }`}
-            >
-              Pendientes
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("settled")}
-              className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                !pending ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200"
-              }`}
-            >
-              Cobradas
-            </button>
-          </div>
+          <SegmentedControl
+            value={tab}
+            onChange={setTab}
+            options={[
+              { value: "pending", label: "Pendientes" },
+              { value: "settled", label: "Cobradas" },
+            ]}
+          />
         }
       />
 
@@ -341,12 +333,21 @@ export default function Debts() {
       )}
 
       {loading ? (
-        <div className="text-sm text-ink-500">Cargando…</div>
-      ) : orders.length === 0 ? (
-        <div className="card p-8 text-center text-ink-500">
-          <CheckCircle2 size={32} className="mx-auto mb-2 text-emerald-400" />
-          {pending ? "No hay deudas pendientes." : "Aún no hay deudas cobradas."}
+        <div className="space-y-2" aria-hidden="true">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="card flex items-center gap-3 p-4">
+              <div className="h-4 w-4 animate-pulse rounded bg-paper-200 dark:bg-obsidian-800" />
+              <div className="h-4 flex-1 animate-pulse rounded bg-paper-200 dark:bg-obsidian-800" />
+              <div className="h-6 w-24 animate-pulse rounded bg-paper-200 dark:bg-obsidian-800" />
+            </div>
+          ))}
         </div>
+      ) : orders.length === 0 ? (
+        <EmptyState
+          icon={pending ? CheckCircle2 : History}
+          title={pending ? "No hay deudas pendientes" : "Aún no hay deudas cobradas"}
+          description={pending ? "Todo al día, la caja está despejada." : "Cuando cobres deudas, aparecerán acá."}
+        />
       ) : (
         <div className="space-y-2">
           {orders.map((o) => {

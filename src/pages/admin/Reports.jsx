@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import BarChart from "../../components/BarChart";
+import SegmentedControl from "../../components/SegmentedControl";
 import { money } from "../../lib/format";
 import { todayLocalISO } from "../../lib/date";
 import {
@@ -219,44 +220,25 @@ export default function Reports() {
       />
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-3 bg-paper-50 dark:bg-obsidian-900 border border-paper-300 dark:border-obsidian-700 rounded-xl p-1 w-fit flex-wrap no-print">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-              tab === t.key ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="mb-3 no-print">
+        <SegmentedControl
+          value={tab}
+          onChange={setTab}
+          options={TABS.map((t) => ({ value: t.key, label: t.label }))}
+        />
       </div>
 
       {/* Rango de fechas (tabs principales) */}
       {tab !== "history" && (
         <div className="flex flex-wrap items-center gap-2 mb-4 no-print">
-          <div className="flex gap-1 bg-paper-50 dark:bg-obsidian-900 border border-paper-300 dark:border-obsidian-700 rounded-xl p-1 w-fit flex-wrap">
-            {RANGE_PRESETS.map((p) => (
-              <button
-                key={p.key}
-                onClick={() => setRangeKey(p.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                  rangeKey === p.key ? "bg-ink-800 text-white dark:bg-obsidian-100 dark:text-obsidian-900" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-            <button
-              onClick={() => setRangeKey("custom")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                rangeKey === "custom" ? "bg-ink-800 text-white dark:bg-obsidian-100 dark:text-obsidian-900" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
-              }`}
-            >
-              Personalizado
-            </button>
-          </div>
+          <SegmentedControl
+            value={rangeKey}
+            onChange={setRangeKey}
+            options={[
+              ...RANGE_PRESETS.map((p) => ({ value: p.key, label: p.label })),
+              { value: "custom", label: "Personalizado" },
+            ]}
+          />
           {rangeKey === "custom" && (
             <div className="flex items-center gap-2 text-sm">
               <input type="date" className="input h-9 text-sm" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
@@ -622,23 +604,15 @@ export default function Reports() {
             <>
               {/* Selector de período */}
               <div className="flex flex-wrap items-center gap-2 mb-4 no-print">
-                <div className="flex gap-1 bg-paper-50 dark:bg-obsidian-900 border border-paper-300 dark:border-obsidian-700 rounded-xl p-1 w-fit">
-                  {[
-                    { v: "week",  l: "Semana" },
-                    { v: "month", l: "Mes" },
-                    { v: "year",  l: "Año" },
-                  ].map((t) => (
-                    <button
-                      key={t.v}
-                      onClick={() => setHistoryPeriod(t.v)}
-                      className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-                        historyPeriod === t.v ? "bg-wine-600 text-white" : "text-ink-600 dark:text-obsidian-200 hover:bg-paper-200 dark:hover:bg-obsidian-800"
-                      }`}
-                    >
-                      {t.l}
-                    </button>
-                  ))}
-                </div>
+                <SegmentedControl
+                  value={historyPeriod}
+                  onChange={setHistoryPeriod}
+                  options={[
+                    { value: "week", label: "Semana" },
+                    { value: "month", label: "Mes" },
+                    { value: "year", label: "Año" },
+                  ]}
+                />
                 <button
                   type="button"
                   onClick={() => nav(`/reports/daily?date=${todayLocalISO()}`)}

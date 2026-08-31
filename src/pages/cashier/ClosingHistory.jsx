@@ -2,6 +2,8 @@
 import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
+import EmptyState from "../../components/EmptyState";
+import { TableSkeleton } from "../../components/Skeleton";
 import { money, dateOnlyUTC } from "../../lib/format";
 import { History, ArrowLeft, Receipt, Printer } from "lucide-react";
 
@@ -61,12 +63,13 @@ export default function ClosingHistory() {
       </div>
 
       {loading ? (
-        <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Cargando…</div>
+        <TableSkeleton rows={5} cols={9} />
       ) : closings.length === 0 ? (
-        <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">
-          <History size={32} className="mx-auto text-ink-300 dark:text-obsidian-300 mb-2"/>
-          No hay cortes registrados todavía.
-        </div>
+        <EmptyState
+          icon={History}
+          title="No hay cortes registrados"
+          description="Cuando realices tu primer cierre Z, aparecerá acá."
+        />
       ) : (
         <div className="data-table-wrap">
           <div className="data-table-scroll">
