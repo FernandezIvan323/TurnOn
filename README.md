@@ -1,5 +1,5 @@
 ![Build](https://img.shields.io/badge/build-passing-brightgreen?logo=github)
-![Version](https://img.shields.io/badge/version-1.3.0-blue?logo=react)
+![Version](https://img.shields.io/badge/version-1.4.0-blue?logo=react)
 ![Node](https://img.shields.io/badge/node-18%2B-339933?logo=nodedotjs)
 ![React](https://img.shields.io/badge/react-19-61DAFB?logo=react)
 ![PostgreSQL](https://img.shields.io/badge/postgresql-18%2B-4169E1?logo=postgresql)
@@ -19,21 +19,23 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 
 ### 🔐 Autenticación y roles
 - Login con **usuario + PIN de 4 dígitos** con teclado numérico táctil.
-- Roles: **admin (cajero)** y **waiter (mesero)**.
+- Roles: **admin (cajero)**, **waiter (mesero)** y **delivery (repartidor)**.
 - Tokens JWT con expiración de 12 horas.
 - Logout con confirmación modal.
-- Creación de meseros desde la interfaz (Personal → Meseros).
+- Creación de meseros y repartidores desde la interfaz (Personal → Meseros / Repartidores).
+- Repartidor puede tener **acceso opcional** al sistema (usuario + PIN) o solo figurar como personal.
 - **Cambio de PIN** desde Personal (admin) sin tocar la base de datos.
-- **Guard de rutas por rol**: un mesero no puede abrir caja/reportes por URL.
+- **Guard de rutas por rol**: cada rol sólo ve sus pantallas autorizadas.
 
 ### 📊 Dashboard
 - **Admin**: ventas del día, comparativa % vs ayer, ticket promedio, gastos del día.
 - **Mesero**: mis mesas asignadas, cuentas abiertas, total en juego, listas para cobrar.
+- **Repartidor**: KPIs de sus pedidos (listos, en calle, entregados hoy, efectivo a rendir).
 - 6 tarjetas de operación en tiempo real (sin asignar, preparación, en camino, mesas activas, por cobrar, stock bajo).
 - Auto-refresca cada 30 segundos.
 
 ### 🛵 Pedidos a domicilio (módulo crítico)
-- **Tablero Kanban** con 4 columnas: Pendientes → En preparación → En camino → Entregados.
+- **Tablero Kanban** con 5 columnas: Pendientes → En preparación → **Listos para salir** → En camino → Entregados.
 - **Turnos FIFO**: resalta el siguiente pedido con badge y borde especial.
 - **Búsqueda predictiva de clientes** por nombre o teléfono con dropdown.
 - **Multi-repartidor**: un repartidor puede llevar varios pedidos simultáneamente. Cada uno muestra sus órdenes activas.
@@ -41,6 +43,11 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 - Cierre con 2 modalidades:
   - **Cobrar al entregar** (efectivo contra entrega).
   - **Pre-cobrar transferencia** (paga antes, sigue en camino).
+- **Pantalla self-service para repartidores** (`/dashboard` cuando rol=delivery):
+  - Listos para llevar (Salí individual / Salí con todos).
+  - En camino con links a Maps y `tel:` para llamar al cliente.
+  - Entregados hoy con monto total cobrado.
+  - "A rendir" muestra el efectivo del día que deben entregar al cierre.
 - Cancelación con motivo obligatorio.
 - Notas de entrega especiales.
 - **Propina**: 0%, 10%, 15% o 20% sobre el total.
@@ -124,6 +131,7 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 - **Modo claro / oscuro** con toggle en el Header (persiste en localStorage, detecta preferencia del SO).
 - **Obsidian Wine** en modo oscuro: paleta `#0b090a` → `#ffffff` con acentos vino tinto `#660708` y rojos vívidos `#BA181B` / `#E5383B`.
 - **Calcite** en modo claro: grises cálidos, naranja vibrante `#FD7B41` y durazno suave `#EDBF9B` sobre fondo `#DDDCDB`.
+- **Toaster** global con éxito/error/info; **Modal** con portal y `Escape`.
 - **Aviso sonoro** de pedido nuevo en Domicilios / Para llevar (silenciable).
 - Diseño responsive optimizado para laptop y tablet.
 - Modales de confirmación personalizados (reemplazan `confirm()` nativo).
@@ -195,11 +203,9 @@ AppTurnos/
 │   ├── store/                    # Zustand stores
 │   │   ├── auth.js
 │   │   ├── theme.js              # Persistente en localStorage
-│   │   ├── products.js
-│   │   ├── orders.js
-│   │   └── resources.js
+│   │   └── toast.js              # Toaster global
 │   ├── components/
-│   │   ├── Layout.jsx            # Layout principal + ServerStatus
+│   │   ├── Layout.jsx            # Layout principal + ServerStatus + Toaster
 │   │   ├── RequireRole.jsx       # Guard de rutas por rol
 │   │   ├── ReceiptTicket.jsx     # Ticket de cobro imprimible
 │   │   ├── Brand.jsx / HeroPreview.jsx
@@ -208,14 +214,21 @@ AppTurnos/
 │   │   ├── ThemeToggle.jsx       # Botón ☀/🌙
 │   │   ├── ServerStatus.jsx      # Banner rojo cuando el server cae
 │   │   ├── LogoutConfirm.jsx     # Modal de confirmación de cierre
+│   │   ├── Modal.jsx             # Modal con portal + Escape + scroll-lock
+│   │   ├── SegmentedControl.jsx  # Tab/segmento unificado
+│   │   ├── EmptyState.jsx        # Estado vacío consistente
+│   │   ├── Skeleton.jsx          # Card / Table / Kpi skeletons
+│   │   ├── Toaster.jsx           # Notificaciones stack
 │   │   └── BarChart.jsx          # Gráfico de barras sin dependencias
 │   └── pages/
 │       ├── Landing.jsx           # Portada pública
 │       ├── Login.jsx             # Login con teclado numérico
-│       ├── Dashboard.jsx         # Admin + Waiter dashboard
+│       ├── Dashboard.jsx         # Admin + Waiter + Driver dashboard (branch por rol)
 │       ├── Debts.jsx             # Control de deudas pendientes
+│       ├── driver/
+│       │   └── DriverHome.jsx    # Pantalla del repartidor (listos / en camino / hoy)
 │       ├── orders/
-│       │   ├── Delivery.jsx      # Kanban + crear pedido + historial
+│       │   ├── Delivery.jsx      # Kanban 5 columnas + crear pedido + historial
 │       │   └── pickup/
 │       │       └── PickupPage.jsx # Kanban pickup + creación + cobro
 │       ├── tables/
@@ -336,6 +349,39 @@ PARA LLEVAR (pickup / walk-in)
 └─────────────────────┘
 ```
 ## 📋 Changelog
+
+### v1.4.0 (2026-09-01) — Repartidor en su celular + UX base
+
+#### Nuevo rol y módulo de repartidores
+- **Rol `delivery`**: los repartidores pueden entrar al sistema con su propio usuario + PIN.
+- **Pantalla de inicio del repartidor** (`/dashboard` para rol delivery):
+  - **Listos para llevar**: cards con botón "Salí" individual y un "Salí con N" para sacarlos en bloque.
+  - **En camino**: cards con link a Google Maps, `tel:` para llamar al cliente, y acciones **Entregado cobré cash / Entregado transfer / No pagó** (genera deuda).
+  - **Entregados hoy**: lista compacta de lo ya cerrado, con total cobrado.
+  - **A rendir**: efectivo del día que deben entregar al cierre.
+- **5ta columna en el Kanban** del admin: **Listos para salir** (estado `assigned`).
+- **Personal → Repartidores**: nueva columna **Acceso** con badge Con/Sin acceso + nombre de usuario. Botón **Crear acceso** genera el usuario+PIN enlazado al repartidor.
+- **Reasignación libre** desde "Listos para salir" (no bloquea si el repartidor está `busy`, sólo si está `offduty`).
+- **Seguridad por servidor**: el endpoint `GET /orders` filtra por repartidor cuando el rol es `delivery`.
+- **Fix bug**: `delivery_persons.status` ya no queda `available` con pedidos activos — se libera sólo si no quedan órdenes activas.
+
+#### UX base (componentes unificados)
+- **Toaster global**: feedback no intrusivo (success / error / info), apilable, dark-aware, `aria-live`.
+- **Modal con portal**: `Escape`, click fuera, scroll-lock, `role="dialog"`, `aria-modal`.
+- **SegmentedControl**: reemplazo de `Tabs` y grids de botones inconsistentes.
+- **EmptyState** + **Skeleton** (Card / Table / Kpi) en todas las listas grandes.
+- **Toasts** cableados en CRUD de Menú, Clientes, Inventario, Gastos, Caja y Staff.
+- **Micro-interacciones**: `.btn` con `active:scale` y focus-visible ring consistente.
+- **Login** pulido: spinner real dentro del botón + animación de shake en error.
+- **Accesibilidad**: `aria-label` en todos los botones solo-icono, `htmlFor`/`id` en inputs, `required` en formularios clave.
+- **Jerarquía dark corregida**: escala `obsidian` reordenada, headers y labels bajan a `obsidian-300`/`100`.
+
+#### Hardening
+- `tmp-login.json` con PIN admin en claro eliminado del repo.
+- Zona horaria consistente con `closingTz()` en `cashClosings.js` (antes era hardcode `America/Mexico_City`).
+- `classnames`, `migrate-*.mjs`, `App.css`, stores muertos: eliminados.
+
+### v1.3.0 — Reportes y hardening
 
 ### v1.2.0 (2026-07-13) — Completitud operativa (bugs, UX, features)
 
