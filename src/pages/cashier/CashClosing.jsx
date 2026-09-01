@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../lib/api";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
 import { money, typeLabels, statusLabels } from "../../lib/format";
 import { todayLocalISO } from "../../lib/date";
@@ -45,7 +46,7 @@ function MethodRow({ icon: Icon, label, value, count }) {
         <span className="truncate">{label}</span>
         {count != null && (
           <span className="shrink-0 text-[11px] font-medium text-ink-500 dark:text-white/70">
-            · {count} {count === 1 ? "pago" : "pagos"}
+            Â· {count} {count === 1 ? "pago" : "pagos"}
           </span>
         )}
       </div>
@@ -56,7 +57,7 @@ function MethodRow({ icon: Icon, label, value, count }) {
   );
 }
 
-/** Panel: lo que debe estar en caja física vs en cuenta/banco */
+/** Panel: lo que debe estar en caja fÃ­sica vs en cuenta/banco */
 function CashVsBankPanel({
   cashSales,
   cashCount,
@@ -82,7 +83,7 @@ function CashVsBankPanel({
               En caja (efectivo)
             </div>
             <div className="text-[11px] text-ink-500 dark:text-white/80">
-              Dinero físico en el cajón
+              Dinero fÃ­sico en el cajÃ³n
             </div>
           </div>
         </div>
@@ -112,7 +113,7 @@ function CashVsBankPanel({
           {money(bankSales)}
         </div>
         <div className="mt-1 text-xs text-ink-600 dark:text-white">
-          {bankCount ?? 0} pago{(bankCount ?? 0) === 1 ? "" : "s"} · no se arquea en efectivo
+          {bankCount ?? 0} pago{(bankCount ?? 0) === 1 ? "" : "s"} Â· no se arquea en efectivo
         </div>
         <div className="mt-3 space-y-1.5 border-t border-paper-200 pt-3 text-xs dark:border-obsidian-700">
           <div className="flex justify-between gap-2 text-ink-700 dark:text-white">
@@ -150,7 +151,7 @@ function CashVsBankPanel({
   );
 }
 
-/** Antigüedad legible a partir de created_at (ej. "hace 3 días", "hoy 14:30"). */
+/** AntigÃ¼edad legible a partir de created_at (ej. "hace 3 dÃ­as", "hoy 14:30"). */
 function orderAgeLabel(createdAt) {
   if (!createdAt) return null;
   const created = new Date(createdAt);
@@ -162,7 +163,7 @@ function orderAgeLabel(createdAt) {
   const time = created.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
   if (dayDiff <= 0) return `hoy ${time}`;
   if (dayDiff === 1) return `ayer ${time}`;
-  return `hace ${dayDiff} días · ${created.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}`;
+  return `hace ${dayDiff} dÃ­as Â· ${created.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}`;
 }
 
 function isStaleOrder(createdAt) {
@@ -186,13 +187,13 @@ function PendingBanner({ orders }) {
       </div>
       <p className="mb-2 text-xs text-amber-900 dark:text-white">
         El corte de caja <strong>no se puede confirmar</strong> mientras haya cuentas abiertas.
-        Cobrá, cancelá o marcá como deuda cada uno (las deudas no bloquean el corte).
+        CobrÃ¡, cancelÃ¡ o marcÃ¡ como deuda cada uno (las deudas no bloquean el corte).
       </p>
       {staleCount > 0 && (
         <p className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-200">
           {staleCount} pedido{staleCount === 1 ? "" : "s"} de{" "}
-          <strong>días anteriores</strong> — probablemente de pruebas u operación olvidada.
-          Resolvelos para dejar el local listo para un nuevo día.
+          <strong>dÃ­as anteriores</strong> â€” probablemente de pruebas u operaciÃ³n olvidada.
+          Resolvelos para dejar el local listo para un nuevo dÃ­a.
         </p>
       )}
       <div className="max-h-48 space-y-1 overflow-y-auto">
@@ -216,7 +217,7 @@ function PendingBanner({ orders }) {
                 <span className="truncate font-medium text-ink-800 dark:text-white">
                   {o.type === "table"
                     ? `Mesa ${o.table_number || "?"}`
-                    : o.customer_name || "—"}
+                    : o.customer_name || "â€”"}
                 </span>
                 {age && (
                   <span
@@ -226,7 +227,7 @@ function PendingBanner({ orders }) {
                         : "bg-paper-200 text-ink-600 dark:bg-obsidian-800 dark:text-obsidian-200"
                     }`}
                   >
-                    {stale ? "Día anterior · " : ""}
+                    {stale ? "DÃ­a anterior Â· " : ""}
                     {age}
                   </span>
                 )}
@@ -295,13 +296,13 @@ function ClosingDetail({ closing, date, onReset }) {
         <div className="mb-5 flex items-start justify-between gap-3 print:hidden">
           <div>
             <div className="text-xs font-semibold uppercase tracking-wide text-ink-600 dark:text-white">
-              Corte del día
+              Corte del dÃ­a
             </div>
             <h2 className="text-2xl font-bold text-ink-900 dark:text-white">{date}</h2>
             <div className="mt-0.5 text-xs text-ink-600 dark:text-white">
               Cerrado por{" "}
-              <span className="font-semibold">{closing.closed_by_name || "—"}</span>
-              {" · "}
+              <span className="font-semibold">{closing.closed_by_name || "â€”"}</span>
+              {" Â· "}
               {closedAtLabel}
             </div>
           </div>
@@ -313,16 +314,16 @@ function ClosingDetail({ closing, date, onReset }) {
               <button
                 onClick={onReset}
                 className="btn-ghost text-sm"
-                title="Elegí otra fecha para ver o hacer su corte. Este cierre no se modifica."
+                title="ElegÃ­ otra fecha para ver o hacer su corte. Este cierre no se modifica."
                 type="button"
               >
-                <CalendarDays size={14} /> Elegir otro día
+                <CalendarDays size={14} /> Elegir otro dÃ­a
               </button>
             )}
           </div>
         </div>
 
-        {/* Cabecera solo impresión: logo + marca */}
+        {/* Cabecera solo impresiÃ³n: logo + marca */}
         <div className="closing-print-header mb-5 hidden border-b border-obsidian-600 pb-4 print:block">
           <div className="flex items-center gap-3">
             <img
@@ -334,16 +335,16 @@ function ClosingDetail({ closing, date, onReset }) {
             />
             <div>
               <div className="text-xl font-bold tracking-tight text-white">TurnOn</div>
-              <div className="text-xs font-medium text-zinc-300">Gestión del restaurant</div>
+              <div className="text-xs font-medium text-zinc-300">GestiÃ³n del restaurant</div>
             </div>
           </div>
           <h1 className="mt-4 text-lg font-bold text-white">Corte de caja</h1>
           <div className="mt-1 text-sm text-zinc-200">
-            Fecha de operación: <strong className="text-white">{date}</strong>
+            Fecha de operaciÃ³n: <strong className="text-white">{date}</strong>
           </div>
           <div className="text-sm text-zinc-200">
-            Cajero: <strong className="text-white">{closing.closed_by_name || "—"}</strong>
-            {" · "}
+            Cajero: <strong className="text-white">{closing.closed_by_name || "â€”"}</strong>
+            {" Â· "}
             Cerrado: {closedAtLabel}
           </div>
         </div>
@@ -368,14 +369,14 @@ function ClosingDetail({ closing, date, onReset }) {
             </div>
             <div className={`mt-1 text-2xl font-bold ${diffColor}`}>{diffLabel}</div>
             <div className="mt-1 text-xs text-ink-600 dark:text-white">
-              Esperado {money(closing.expected_cash)} · Contado {money(closing.counted_cash)}
+              Esperado {money(closing.expected_cash)} Â· Contado {money(closing.counted_cash)}
             </div>
           </div>
         </div>
 
         <div className="mb-5">
           <h3 className="mb-2 text-sm font-semibold text-ink-900 dark:text-white">
-            ¿Dónde está el dinero?
+            Â¿DÃ³nde estÃ¡ el dinero?
           </h3>
           <CashVsBankPanel
             cashSales={closing.cash_sales}
@@ -394,7 +395,7 @@ function ClosingDetail({ closing, date, onReset }) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-paper-300 p-4 dark:border-obsidian-700">
             <h3 className="mb-2 text-sm font-semibold text-ink-900 dark:text-white">
-              Desglose por método
+              Desglose por mÃ©todo
             </h3>
             <MethodRow
               icon={Banknote}
@@ -451,7 +452,7 @@ function ClosingDetail({ closing, date, onReset }) {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-ink-700 dark:text-white">Contado físicamente</span>
+                <span className="text-ink-700 dark:text-white">Contado fÃ­sicamente</span>
                 <span className="font-semibold tabular-nums text-ink-900 dark:text-white">
                   {money(closing.counted_cash)}
                 </span>
@@ -466,7 +467,7 @@ function ClosingDetail({ closing, date, onReset }) {
                 </span>
               </div>
               <p className="pt-1 text-[11px] text-ink-500 dark:text-white/80">
-                Transferencias y tarjeta no entran en este arqueo: ya están en la cuenta.
+                Transferencias y tarjeta no entran en este arqueo: ya estÃ¡n en la cuenta.
               </p>
             </div>
           </div>
@@ -484,7 +485,7 @@ function ClosingDetail({ closing, date, onReset }) {
         )}
 
         <div className="mt-6 hidden border-t border-obsidian-600 pt-4 text-xs text-zinc-400 print:block">
-          Generado el {new Date().toLocaleString("es-MX")} · TurnOn · Documento de cierre Z
+          Generado el {new Date().toLocaleString("es-MX")} Â· TurnOn Â· Documento de cierre Z
         </div>
       </div>
     </div>
@@ -538,10 +539,10 @@ function ClosingForm({ preview, date, onSuccess }) {
 
   return (
     <div className="card space-y-5 p-5 sm:p-6" id="closing-form">
-      {/* Totales del día */}
+      {/* Totales del dÃ­a */}
       <div>
         <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-600 dark:text-white">
-          Resumen del día · {date}
+          Resumen del dÃ­a Â· {date}
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="rounded-xl border border-paper-300 bg-paper-100/70 p-3 dark:border-obsidian-700 dark:bg-obsidian-950">
@@ -566,7 +567,7 @@ function ClosingForm({ preview, date, onSuccess }) {
             </div>
           </div>
           <div className="rounded-xl border border-paper-300 bg-paper-100/70 p-3 dark:border-obsidian-700 dark:bg-obsidian-950">
-            <div className="text-[11px] font-semibold text-ink-600 dark:text-white">Neto del día</div>
+            <div className="text-[11px] font-semibold text-ink-600 dark:text-white">Neto del dÃ­a</div>
             <div
               className={`mt-0.5 text-lg font-bold tabular-nums ${
                 net == null
@@ -580,7 +581,7 @@ function ClosingForm({ preview, date, onSuccess }) {
             </div>
             <div className="text-[10px] text-ink-500 dark:text-white/80">
               {preview.expense_summary
-                ? `Gastos −${money(preview.expense_summary.total_expenses)}`
+                ? `Gastos âˆ’${money(preview.expense_summary.total_expenses)}`
                 : "Informativo"}
             </div>
           </div>
@@ -590,7 +591,7 @@ function ClosingForm({ preview, date, onSuccess }) {
       {/* Caja vs cuenta */}
       <div>
         <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-600 dark:text-white">
-          ¿Dónde está el dinero?
+          Â¿DÃ³nde estÃ¡ el dinero?
         </div>
         <CashVsBankPanel
           cashSales={cashSales}
@@ -614,12 +615,12 @@ function ClosingForm({ preview, date, onSuccess }) {
       {/* Arqueo solo efectivo */}
       <div>
         <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-600 dark:text-white">
-          Arqueo de caja física
+          Arqueo de caja fÃ­sica
         </div>
         <p className="mb-3 text-xs text-ink-600 dark:text-white">
-          Solo contás el efectivo. Las {preview.transfer_count ?? 0} transferencia
+          Solo contÃ¡s el efectivo. Las {preview.transfer_count ?? 0} transferencia
           {(preview.transfer_count ?? 0) === 1 ? "" : "s"} (
-          {money(preview.transfer_sales)}) y la tarjeta ya están en la cuenta.
+          {money(preview.transfer_sales)}) y la tarjeta ya estÃ¡n en la cuenta.
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
@@ -695,7 +696,7 @@ function ClosingForm({ preview, date, onSuccess }) {
         <label className="label text-ink-700 dark:text-white">Observaciones (opcional)</label>
         <textarea
           className="input min-h-[70px] resize-y"
-          placeholder="Ej: Faltante por error en cambio…"
+          placeholder="Ej: Faltante por error en cambioâ€¦"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
@@ -712,11 +713,11 @@ function ClosingForm({ preview, date, onSuccess }) {
               {submitPending.map((o) => (
                 <li key={o.id} className="flex justify-between gap-2">
                   <span>
-                    #{o.id} · {typeLabels[o.type] || o.type}
+                    #{o.id} Â· {typeLabels[o.type] || o.type}
                     {o.table_number
-                      ? ` · Mesa ${o.table_number}`
+                      ? ` Â· Mesa ${o.table_number}`
                       : o.customer_name
-                        ? ` · ${o.customer_name}`
+                        ? ` Â· ${o.customer_name}`
                         : ""}
                   </span>
                   <span className="shrink-0 font-semibold">{money(o.total)}</span>
@@ -739,7 +740,7 @@ function ClosingForm({ preview, date, onSuccess }) {
         <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-300" />
         <div>
           Una vez confirmado, el corte <strong>no se puede modificar ni eliminar</strong>. Queda
-          como registro histórico.
+          como registro histÃ³rico.
         </div>
       </div>
 
@@ -750,13 +751,14 @@ function ClosingForm({ preview, date, onSuccess }) {
         type="button"
       >
         <CheckCircle2 size={18} />
-        {busy ? "Cerrando caja…" : "Confirmar corte de caja"}
+        {busy ? "Cerrando cajaâ€¦" : "Confirmar corte de caja"}
       </button>
     </div>
   );
 }
 
 export default function CashClosing() {
+  useDocumentTitle("Corte de caja");
   const [date, setDate] = useState(todayISO());
   const [preview, setPreview] = useState(null);
   const [closing, setClosing] = useState(null);
@@ -795,7 +797,7 @@ export default function CashClosing() {
   const blocked = preview && preview.pending_count > 0;
   const alreadyClosed = !!closing;
 
-  /** Cambiar a otra fecha de operación (no borra el corte actual). */
+  /** Cambiar a otra fecha de operaciÃ³n (no borra el corte actual). */
   const pickOtherDay = () => {
     const today = todayISO();
     // Si ya estamos en hoy, ir a ayer para que el cambio sea visible
@@ -818,7 +820,7 @@ export default function CashClosing() {
     <div className="mx-auto w-full max-w-4xl">
       <Header
         title="Corte de caja"
-        subtitle="Cierre Z · Caja física vs cuenta bancaria"
+        subtitle="Cierre Z Â· Caja fÃ­sica vs cuenta bancaria"
         right={
           <div className="flex items-center gap-2">
             <input
@@ -831,7 +833,7 @@ export default function CashClosing() {
               title="Fecha del corte"
             />
             <Link to="/cashier/closing/history" className="btn-secondary text-sm">
-              <History size={14} /> Histórico
+              <History size={14} /> HistÃ³rico
             </Link>
           </div>
         }
@@ -841,12 +843,12 @@ export default function CashClosing() {
         {!isToday && !alreadyClosed && (
           <div className="card flex items-center gap-2 border-paper-300 p-3 text-sm text-ink-800 dark:border-obsidian-700 dark:text-white">
             <AlertTriangle size={16} className="shrink-0 text-amber-600 dark:text-amber-300" />
-            Estás cerrando un día anterior ({date}). Confirmá que sea el correcto.
+            EstÃ¡s cerrando un dÃ­a anterior ({date}). ConfirmÃ¡ que sea el correcto.
           </div>
         )}
 
         {loading ? (
-          <div className="card p-8 text-center text-ink-600 dark:text-white">Cargando…</div>
+          <div className="card p-8 text-center text-ink-600 dark:text-white">Cargandoâ€¦</div>
         ) : err ? (
           <div className="card p-4 text-sm text-rose-700 dark:text-white">{err}</div>
         ) : !preview ? null : alreadyClosed ? (
@@ -856,14 +858,14 @@ export default function CashClosing() {
             <PendingBanner orders={preview.pending_orders} />
             <div className="card p-4 text-sm text-ink-700 dark:text-white">
               <Calculator size={18} className="mr-1.5 inline" />
-              Cuando cobres o canceles los pendientes, volvé acá para hacer el corte.
+              Cuando cobres o canceles los pendientes, volvÃ© acÃ¡ para hacer el corte.
             </div>
           </>
         ) : (
           <>
             <div className="card flex items-center gap-2 border-paper-300 p-3 text-sm text-ink-800 dark:border-obsidian-700 dark:text-white">
               <CheckCircle2 size={16} className="shrink-0 text-emerald-600 dark:text-emerald-300" />
-              Sin pedidos pendientes. Podés hacer el corte del {date}.
+              Sin pedidos pendientes. PodÃ©s hacer el corte del {date}.
             </div>
             <ClosingForm preview={preview} date={date} onSuccess={() => load(date)} />
           </>

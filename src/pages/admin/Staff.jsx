@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/api";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
 import Modal from "../../components/Modal";
 import SegmentedControl from "../../components/SegmentedControl";
@@ -33,8 +34,8 @@ function AccessModal({ person, onClose, onSaved }) {
 
   const save = async () => {
     setErr(null);
-    if (!username.trim()) return setErr("Ingresá un usuario");
-    if (!/^\d{4}$/.test(pin)) return setErr("El PIN debe ser 4 dígitos");
+    if (!username.trim()) return setErr("IngresÃ¡ un usuario");
+    if (!/^\d{4}$/.test(pin)) return setErr("El PIN debe ser 4 dÃ­gitos");
     if (pin !== confirm) return setErr("Los PIN no coinciden");
     setSaving(true);
     try {
@@ -56,11 +57,11 @@ function AccessModal({ person, onClose, onSaved }) {
     <Modal
       open
       onClose={onClose}
-      title={<span className="flex items-center gap-2"><KeyRound size={18}/> Crear acceso · {person.name}</span>}
+      title={<span className="flex items-center gap-2"><KeyRound size={18}/> Crear acceso Â· {person.name}</span>}
       size="md"
     >
       <p className="mb-3 text-sm text-ink-500 dark:text-obsidian-400">
-        Generá un usuario y PIN de 4 dígitos para que {person.name} pueda entrar desde su celular.
+        GenerÃ¡ un usuario y PIN de 4 dÃ­gitos para que {person.name} pueda entrar desde su celular.
       </p>
       <label className="label" htmlFor="access-user">Usuario (para login)</label>
       <input id="access-user" className="input" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoFocus required placeholder="ej. luis" maxLength={30} />
@@ -68,7 +69,7 @@ function AccessModal({ person, onClose, onSaved }) {
       <input id="access-name" className="input" value={name} onChange={(e) => setName(e.target.value)} required maxLength={60} />
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div>
-          <label className="label" htmlFor="access-pin">PIN (4 dígitos)</label>
+          <label className="label" htmlFor="access-pin">PIN (4 dÃ­gitos)</label>
           <input id="access-pin" className="input" type="password" inputMode="numeric" pattern="\d{4}" maxLength={4} required value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" />
         </div>
         <div>
@@ -83,7 +84,7 @@ function AccessModal({ person, onClose, onSaved }) {
       )}
       <div className="mt-4 flex justify-end gap-2">
         <button onClick={onClose} className="btn-secondary">Cancelar</button>
-        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Creando…" : "Crear acceso"}</button>
+        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Creandoâ€¦" : "Crear acceso"}</button>
       </div>
     </Modal>
   );
@@ -114,7 +115,7 @@ function DeliveryModal({ person, onClose, onSaved }) {
         </div>
         <label className="label" htmlFor="dp-name">Nombre</label>
         <input id="dp-name" className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus required maxLength={60} />
-        <label className="label mt-3" htmlFor="dp-phone">Teléfono</label>
+        <label className="label mt-3" htmlFor="dp-phone">TelÃ©fono</label>
         <input id="dp-phone" className="input" value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" maxLength={30} />
         {person && (
           <>
@@ -133,7 +134,7 @@ function DeliveryModal({ person, onClose, onSaved }) {
         )}
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
+          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardandoâ€¦" : "Guardar"}</button>
         </div>
       </div>
     </div>
@@ -166,10 +167,10 @@ function TableModal({ table, onClose, onSaved }) {
           <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">{table ? "Editar" : "Nueva"} mesa</h2>
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
-        <label className="label">Número / identificador</label>
-        <input className="input" value={form.number} onChange={(e) => setForm({...form, number: e.target.value})} placeholder="1, 2, P1, B1…" />
+        <label className="label">NÃºmero / identificador</label>
+        <input className="input" value={form.number} onChange={(e) => setForm({...form, number: e.target.value})} placeholder="1, 2, P1, B1â€¦" />
         <label className="label mt-3">Etiqueta (opcional)</label>
-        <input className="input" value={form.label} onChange={(e) => setForm({...form, label: e.target.value})} placeholder="Patio 1, Barra 2…" />
+        <input className="input" value={form.label} onChange={(e) => setForm({...form, label: e.target.value})} placeholder="Patio 1, Barra 2â€¦" />
         <label className="label mt-3">Capacidad</label>
         <input className="input" type="number" value={form.capacity} onChange={(e) => setForm({...form, capacity: e.target.value})} />
         <label className="flex items-center gap-2 text-sm text-ink-600 dark:text-obsidian-200 mt-3">
@@ -183,7 +184,7 @@ function TableModal({ table, onClose, onSaved }) {
         )}
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
+          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardandoâ€¦" : "Guardar"}</button>
         </div>
       </div>
     </div>
@@ -228,7 +229,7 @@ function AddTableModal({ waiter, availableTables, assignedTableIds, allTables, o
         </p>
         {allTables.length === 0 ? (
           <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
-            No hay mesas disponibles para asignar (todas están asignadas a otros meseros).
+            No hay mesas disponibles para asignar (todas estÃ¡n asignadas a otros meseros).
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -263,7 +264,7 @@ function AddTableModal({ waiter, availableTables, assignedTableIds, allTables, o
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
           <button onClick={save} disabled={saving || allTables.length === 0} className="btn-primary">
-            {saving ? "Guardando…" : `Guardar (${selected.size})`}
+            {saving ? "Guardandoâ€¦" : `Guardar (${selected.size})`}
           </button>
         </div>
       </div>
@@ -297,7 +298,7 @@ function WaiterModal({ onClose, onSaved }) {
         <input id="waiter-user" className="input" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoFocus required autoComplete="off" maxLength={30} />
         <label className="label mt-3" htmlFor="waiter-name">Nombre completo</label>
         <input id="waiter-name" className="input" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="off" maxLength={60} />
-        <label className="label mt-3" htmlFor="waiter-pin">PIN (4 dígitos)</label>
+        <label className="label mt-3" htmlFor="waiter-pin">PIN (4 dÃ­gitos)</label>
         <input id="waiter-pin" className="input" type="password" maxLength={4} inputMode="numeric" pattern="[0-9]*" required value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} autoComplete="new-password" />
         {err && (
           <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
@@ -307,7 +308,7 @@ function WaiterModal({ onClose, onSaved }) {
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
           <button onClick={save} disabled={saving || !username || !name || pin.length !== 4} className="btn-primary">
-            {saving ? "Guardando…" : "Crear mesero"}
+            {saving ? "Guardandoâ€¦" : "Crear mesero"}
           </button>
         </div>
       </div>
@@ -354,7 +355,7 @@ function ChangePinModal({ user, onClose, onSaved }) {
                 <span className="font-mono font-bold">@{done}</span>
               </p>
               <p className="mt-1 text-xs opacity-90">
-                El mesero debe entrar con ese usuario (no el nombre completo) y el PIN nuevo de 4 dígitos.
+                El mesero debe entrar con ese usuario (no el nombre completo) y el PIN nuevo de 4 dÃ­gitos.
               </p>
             </div>
             <div className="mt-4 flex justify-end">
@@ -370,13 +371,13 @@ function ChangePinModal({ user, onClose, onSaved }) {
               <span className="font-mono font-medium text-ink-700 dark:text-obsidian-100">
                 @{user.username}
               </span>
-              {" · "}
+              {" Â· "}
               {user.name}
             </p>
             <p className="mb-3 text-xs text-ink-500 dark:text-obsidian-400">
               En el login se usa <strong className="text-ink-700 dark:text-obsidian-200">@{user.username}</strong>, no el nombre.
             </p>
-            <label className="label">Nuevo PIN (4 dígitos)</label>
+            <label className="label">Nuevo PIN (4 dÃ­gitos)</label>
             <input
               className="input"
               type="password"
@@ -414,7 +415,7 @@ function ChangePinModal({ user, onClose, onSaved }) {
                 disabled={saving || pin.length !== 4 || pin2.length !== 4}
                 className="btn-primary w-full sm:w-auto"
               >
-                {saving ? "Guardando…" : "Actualizar PIN"}
+                {saving ? "Guardandoâ€¦" : "Actualizar PIN"}
               </button>
             </div>
           </>
@@ -446,7 +447,7 @@ function AssignmentsTab() {
       {assignments.length === 0 ? (
         <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">
           <UserCog size={32} className="mx-auto text-ink-300 dark:text-obsidian-300 mb-2"/>
-          No hay meseros activos. Crea uno primero desde otro sistema o vía SQL.
+          No hay meseros activos. Crea uno primero desde otro sistema o vÃ­a SQL.
         </div>
       ) : (
         assignments.map((w) => (
@@ -472,7 +473,7 @@ function AssignmentsTab() {
             </div>
             {w.tables.length === 0 ? (
               <div className="text-sm text-ink-400 dark:text-obsidian-500 italic ml-11">
-                Sin mesas asignadas — el mesero no podrá tomar pedidos.
+                Sin mesas asignadas â€” el mesero no podrÃ¡ tomar pedidos.
               </div>
             ) : (
               <div className="flex flex-wrap gap-2 ml-11">
@@ -481,7 +482,7 @@ function AssignmentsTab() {
                     key={t.id}
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-wine-100 text-wine-800 text-sm font-medium dark:bg-wine-900/40 dark:text-wine-300"
                   >
-                    Mesa {t.number}{t.label ? ` · ${t.label}` : ""}
+                    Mesa {t.number}{t.label ? ` Â· ${t.label}` : ""}
                   </span>
                 ))}
               </div>
@@ -573,7 +574,7 @@ function WaiterHistoryModal({ waiter, onClose }) {
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">
-                Historial · {waiter.name}
+                Historial Â· {waiter.name}
               </h2>
               <div className="mt-2 flex flex-wrap gap-2">
                 <span className="rounded-lg bg-paper-100 px-2 py-1 text-xs font-medium dark:bg-obsidian-800">
@@ -594,8 +595,8 @@ function WaiterHistoryModal({ waiter, onClose }) {
           <div className="mt-3 flex gap-1">
             {[
               { k: "all", l: "Todo" },
-              { k: "7", l: "7 días" },
-              { k: "30", l: "30 días" },
+              { k: "7", l: "7 dÃ­as" },
+              { k: "30", l: "30 dÃ­as" },
             ].map((r) => (
               <button
                 key={r.k}
@@ -614,15 +615,15 @@ function WaiterHistoryModal({ waiter, onClose }) {
         </div>
         <div className="flex-1 space-y-4 overflow-y-auto p-4">
           {loading ? (
-            <div className="py-8 text-center text-ink-400 dark:text-obsidian-500">Cargando…</div>
+            <div className="py-8 text-center text-ink-400 dark:text-obsidian-500">Cargandoâ€¦</div>
           ) : error ? (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
               {error}
             </div>
           ) : byDay.length === 0 ? (
             <div className="py-8 text-center text-ink-400 dark:text-obsidian-500">
-              No hay pedidos en este período.
-              <div className="mt-1 text-xs">Asigná mesas en la pestaña Asignar para que tome pedidos.</div>
+              No hay pedidos en este perÃ­odo.
+              <div className="mt-1 text-xs">AsignÃ¡ mesas en la pestaÃ±a Asignar para que tome pedidos.</div>
             </div>
           ) : (
             byDay.map(([day, dayOrders]) => (
@@ -647,9 +648,9 @@ function WaiterHistoryModal({ waiter, onClose }) {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
-                          {" · "}
+                          {" Â· "}
                           {o.type === "table"
-                            ? `Mesa ${o.table_number || "?"}${o.table_label ? ` · ${o.table_label}` : ""}`
+                            ? `Mesa ${o.table_number || "?"}${o.table_label ? ` Â· ${o.table_label}` : ""}`
                             : o.type === "pickup"
                               ? "Para llevar"
                               : "Domicilio"}
@@ -678,7 +679,7 @@ function WaiterHistoryModal({ waiter, onClose }) {
                             {o.items.map((item, i) => (
                               <div key={i} className="flex justify-between gap-2">
                                 <span>
-                                  {item.quantity}× {item.name_snapshot}
+                                  {item.quantity}Ã— {item.name_snapshot}
                                 </span>
                                 <span className="tabular-nums shrink-0">
                                   {moneyFmt(item.unit_price * item.quantity)}
@@ -695,7 +696,7 @@ function WaiterHistoryModal({ waiter, onClose }) {
                                 ? "Tarjeta"
                                 : o.payment_method === "transfer"
                                   ? "Transferencia"
-                                  : o.payment_method || "—"}
+                                  : o.payment_method || "â€”"}
                           </span>
                           <div className="text-right">
                             <span className="font-bold tabular-nums text-ink-800 dark:text-obsidian-50">
@@ -722,6 +723,7 @@ function WaiterHistoryModal({ waiter, onClose }) {
 }
 
 export default function Staff() {
+  useDocumentTitle("Personal");
   const { user } = useAuth();
   const [tab, setTab] = useState("delivery");
   const [delivery, setDelivery] = useState([]);
@@ -741,17 +743,17 @@ export default function Staff() {
   useEffect(() => { load(); }, []);
 
   if (user?.role !== "admin") {
-    return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Esta sección es solo para el administrador.</div>;
+    return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Esta secciÃ³n es solo para el administrador.</div>;
   }
 
   return (
     <div>
       <Header
         title="Personal y mesas"
-        subtitle="Gestión de repartidores, mesas y asignaciones"
+        subtitle="GestiÃ³n de repartidores, mesas y asignaciones"
         right={
           <div className="flex items-center gap-2">
-            <Tabs value={tab} onChange={setTab} />
+            <StaffTabs value={tab} onChange={setTab} />
             {tab !== "assignments" && (
               <button onClick={() => setCreating(true)} className="btn-primary">
                 <Plus size={16}/> Nuevo
@@ -768,7 +770,7 @@ export default function Staff() {
               <thead>
                 <tr>
                   <th>Nombre</th>
-                  <th>Teléfono</th>
+                  <th>TelÃ©fono</th>
                   <th>Estado</th>
                   <th>Acceso</th>
                   <th className="text-right">Acciones</th>
@@ -778,7 +780,7 @@ export default function Staff() {
                 {delivery.map((p) => (
                   <tr key={p.id}>
                     <td className="cell-strong">{p.name}</td>
-                    <td className="cell-muted">{p.phone || "—"}</td>
+                    <td className="cell-muted">{p.phone || "â€”"}</td>
                     <td>
                       <span className={`badge ${
                         p.status === "available" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" :
@@ -795,7 +797,7 @@ export default function Staff() {
                             <KeyRound size={10} className="mr-1 inline" /> Con acceso
                           </span>
                           <span className="mt-0.5 text-[10px] text-ink-500 dark:text-obsidian-500">
-                            @{p.username || "—"}
+                            @{p.username || "â€”"}
                           </span>
                         </div>
                       ) : (
@@ -858,7 +860,7 @@ export default function Staff() {
                         ) : (
                           <div
                             className="flex flex-wrap gap-1"
-                            title={wTables.map((t) => `Mesa ${t.number}${t.label ? ` · ${t.label}` : ""}`).join(", ")}
+                            title={wTables.map((t) => `Mesa ${t.number}${t.label ? ` Â· ${t.label}` : ""}`).join(", ")}
                           >
                             {wTables.map((t) => (
                               <span
@@ -866,7 +868,7 @@ export default function Staff() {
                                 className="inline-flex items-center rounded-md border border-wine-200 bg-wine-100 px-2 py-0.5 text-xs font-semibold text-wine-900 dark:border-wine-600 dark:bg-wine-800 dark:text-wine-50"
                               >
                                 Mesa {t.number}
-                                {t.label ? ` · ${t.label}` : ""}
+                                {t.label ? ` Â· ${t.label}` : ""}
                               </span>
                             ))}
                           </div>
@@ -887,7 +889,7 @@ export default function Staff() {
                 {waiters.length === 0 && (
                   <tr>
                     <td colSpan={5} className="py-8 text-center cell-muted">
-                      No hay meseros. Crea uno con &quot;Nuevo&quot; en esta pestaña.
+                      No hay meseros. Crea uno con &quot;Nuevo&quot; en esta pestaÃ±a.
                     </td>
                   </tr>
                 )}
@@ -903,7 +905,7 @@ export default function Staff() {
             <table className="data-table min-w-[36rem]">
               <thead>
                 <tr>
-                  <th>N°</th>
+                  <th>NÂ°</th>
                   <th>Etiqueta</th>
                   <th>Capacidad</th>
                   <th>Mesero</th>
@@ -915,7 +917,7 @@ export default function Staff() {
                 {tables.map((t) => (
                   <tr key={t.id}>
                     <td className="cell-strong font-bold">{t.number}</td>
-                    <td className="cell-muted">{t.label || "—"}</td>
+                    <td className="cell-muted">{t.label || "â€”"}</td>
                     <td className="cell-muted">{t.capacity}</td>
                     <td>
                       {t.assigned_user_name ? (
@@ -975,7 +977,7 @@ export default function Staff() {
       {confirmDelete?.type === "delivery" && (
         <ConfirmModal
           title="Eliminar repartidor"
-          message={`¿Eliminar a ${confirmDelete.name}? Esta acción no se puede deshacer.`}
+          message={`Â¿Eliminar a ${confirmDelete.name}? Esta acciÃ³n no se puede deshacer.`}
           confirmText="Eliminar"
           onConfirm={async () => { await api.delete(`/delivery/${confirmDelete.id}`); setConfirmDelete(null); load(); }}
           onCancel={() => setConfirmDelete(null)}
@@ -984,7 +986,7 @@ export default function Staff() {
       {confirmDelete?.type === "table" && (
         <ConfirmModal
           title="Eliminar mesa"
-          message={`¿Eliminar ${confirmDelete.name}? Esta acción no se puede deshacer.`}
+          message={`Â¿Eliminar ${confirmDelete.name}? Esta acciÃ³n no se puede deshacer.`}
           confirmText="Eliminar"
           onConfirm={async () => { await api.delete(`/tables/${confirmDelete.id}`); setConfirmDelete(null); load(); }}
           onCancel={() => setConfirmDelete(null)}

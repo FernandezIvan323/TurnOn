@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../lib/api";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
 import BarChart from "../../components/BarChart";
 import SegmentedControl from "../../components/SegmentedControl";
@@ -17,7 +18,7 @@ const TABS = [
   { key: "summary",  label: "Resumen" },
   { key: "products", label: "Productos" },
   { key: "customers", label: "Clientes" },
-  { key: "ops",      label: "Operación" },
+  { key: "ops",      label: "OperaciÃ³n" },
   { key: "drivers",  label: "Repartidores" },
   { key: "history",  label: "Historial" },
 ];
@@ -58,9 +59,9 @@ function lastSundayLocal() {
 
 const RANGE_PRESETS = [
   { key: "today", label: "Hoy", build: () => { const t = todayLocalISO(); return { from: t, to: t, label: "Hoy" }; } },
-  { key: "sunday", label: "Domingo", build: () => { const s = lastSundayLocal(); return { from: s, to: s, label: "Último domingo" }; } },
-  { key: "week", label: "7 días", build: () => ({ from: daysAgoLocal(6), to: todayLocalISO(), label: "Últimos 7 días" }) },
-  { key: "month", label: "30 días", build: () => ({ from: daysAgoLocal(29), to: todayLocalISO(), label: "Últimos 30 días" }) },
+  { key: "sunday", label: "Domingo", build: () => { const s = lastSundayLocal(); return { from: s, to: s, label: "Ãšltimo domingo" }; } },
+  { key: "week", label: "7 dÃ­as", build: () => ({ from: daysAgoLocal(6), to: todayLocalISO(), label: "Ãšltimos 7 dÃ­as" }) },
+  { key: "month", label: "30 dÃ­as", build: () => ({ from: daysAgoLocal(29), to: todayLocalISO(), label: "Ãšltimos 30 dÃ­as" }) },
 ];
 
 const PAYMENT_ICONS = { cash: Wallet, card: CreditCard, transfer: Building2, mixed: Receipt };
@@ -106,6 +107,7 @@ function TrendPill({ current, previous }) {
 }
 
 export default function Reports() {
+  useDocumentTitle("Reportes");
   const nav = useNavigate();
   const [tab, setTab] = useState("summary");
   const [historyPeriod, setHistoryPeriod] = useState("week");
@@ -117,7 +119,7 @@ export default function Reports() {
     if (rangeKey === "custom") {
       const from = customFrom <= customTo ? customFrom : customTo;
       const to = customFrom <= customTo ? customTo : customFrom;
-      return { from, to, label: from === to ? from : `${from} → ${to}` };
+      return { from, to, label: from === to ? from : `${from} â†’ ${to}` };
     }
     const preset = RANGE_PRESETS.find((p) => p.key === rangeKey) || RANGE_PRESETS[0];
     return preset.build();
@@ -242,7 +244,7 @@ export default function Reports() {
           {rangeKey === "custom" && (
             <div className="flex items-center gap-2 text-sm">
               <input type="date" className="input h-9 text-sm" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
-              <span className="text-ink-400">→</span>
+              <span className="text-ink-400">â†’</span>
               <input type="date" className="input h-9 text-sm" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
             </div>
           )}
@@ -261,9 +263,9 @@ export default function Reports() {
               {!hasSales && (
                 <div className="card p-8 text-center mb-4 no-print">
                   <Calendar size={32} className="mx-auto text-ink-300 dark:text-obsidian-500 mb-2" />
-                  <div className="font-medium text-ink-700 dark:text-obsidian-100">Sin ventas en este período</div>
+                  <div className="font-medium text-ink-700 dark:text-obsidian-100">Sin ventas en este perÃ­odo</div>
                   <p className="text-sm text-ink-500 dark:text-obsidian-400 mt-1 mb-4">
-                    Cuando cobres pedidos aparecerán aquí el resumen y los gráficos.
+                    Cuando cobres pedidos aparecerÃ¡n aquÃ­ el resumen y los grÃ¡ficos.
                   </p>
                   <div className="flex justify-center gap-2">
                     <Link to="/cashier" className="btn-primary text-sm">Ir a Caja</Link>
@@ -289,7 +291,7 @@ export default function Reports() {
                   icon={ShoppingBag}
                   label="Pedidos"
                   value={sales?.current?.orders || 0}
-                  sub={`${sales?.current?.delivery_orders || 0} dom · ${sales?.current?.table_orders || 0} mesa · ${sales?.current?.pickup_orders || 0} llevar`}
+                  sub={`${sales?.current?.delivery_orders || 0} dom Â· ${sales?.current?.table_orders || 0} mesa Â· ${sales?.current?.pickup_orders || 0} llevar`}
                   color="bg-amber-50 text-amber-700" darkColor="dark:bg-amber-900/30 dark:text-amber-300"
                 />
                 <StatCard
@@ -315,9 +317,9 @@ export default function Reports() {
                     />
                     <StatCard
                       icon={TrendingUp}
-                      label="Neto del día"
+                      label="Neto del dÃ­a"
                       value={money(dayNet || 0)}
-                      sub="ventas − gastos"
+                      sub="ventas âˆ’ gastos"
                       color="bg-emerald-50 text-emerald-700" darkColor="dark:bg-emerald-900/30 dark:text-emerald-300"
                     />
                   </>
@@ -348,11 +350,11 @@ export default function Reports() {
                 />
               </div>
 
-              {/* Métodos de pago (período completo; fallback suma por día) */}
+              {/* MÃ©todos de pago (perÃ­odo completo; fallback suma por dÃ­a) */}
               {sales && (sales.current?.orders > 0 || sales.days?.length > 0) && (
                 <div className="card p-4 mb-4">
                   <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-3 flex items-center gap-2">
-                    <Receipt size={16}/> Ingresos por método de pago
+                    <Receipt size={16}/> Ingresos por mÃ©todo de pago
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {["cash", "card", "transfer", "mixed"].map((m) => {
@@ -379,16 +381,16 @@ export default function Reports() {
               {sales && (
                 <div className="card p-4">
                   <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-3 flex items-center gap-2">
-                    <TrendingUp size={16}/> Comparativa con período anterior
+                    <TrendingUp size={16}/> Comparativa con perÃ­odo anterior
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <div className="text-xs text-ink-500 dark:text-obsidian-400">Período actual</div>
+                      <div className="text-xs text-ink-500 dark:text-obsidian-400">PerÃ­odo actual</div>
                       <div className="text-xl font-bold text-ink-800 dark:text-obsidian-50">{money(sales.current.sales)}</div>
                       <div className="text-xs text-ink-400">{sales.current.orders} pedidos</div>
                     </div>
                     <div>
-                      <div className="text-xs text-ink-500 dark:text-obsidian-400">Período anterior</div>
+                      <div className="text-xs text-ink-500 dark:text-obsidian-400">PerÃ­odo anterior</div>
                       <div className="text-xl font-bold text-ink-500 dark:text-obsidian-400">{money(sales.previous?.sales || 0)}</div>
                       <div className="text-xs text-ink-400">{sales.previous?.orders || 0} pedidos</div>
                     </div>
@@ -414,7 +416,7 @@ export default function Reports() {
                   Unidades vendidas e ingresos generados (ordenados por ingresos).
                 </p>
                 {topProducts.length === 0 ? (
-                  <div className="py-6 text-center text-sm text-ink-400">Sin ventas en el período.</div>
+                  <div className="py-6 text-center text-sm text-ink-400">Sin ventas en el perÃ­odo.</div>
                 ) : (
                   <div className="data-table-scroll">
                     <table className="data-table-embed">
@@ -422,7 +424,7 @@ export default function Reports() {
                         <tr>
                           <th>#</th>
                           <th>Producto</th>
-                          <th>Categoría</th>
+                          <th>CategorÃ­a</th>
                           <th className="text-right">Unidades</th>
                           <th className="text-right">Ingresos</th>
                         </tr>
@@ -434,7 +436,7 @@ export default function Reports() {
                           <tr key={i}>
                             <td className="cell-muted">{i + 1}</td>
                             <td className="font-medium text-ink-900 dark:text-white">{p.name}</td>
-                            <td className="cell-muted">{p.category || "—"}</td>
+                            <td className="cell-muted">{p.category || "â€”"}</td>
                             <td className="text-right font-semibold tabular-nums">{p.qty}</td>
                             <td className="text-right font-semibold tabular-nums text-wine-600 dark:text-wine-300">
                               {money(p.revenue)}
@@ -453,14 +455,14 @@ export default function Reports() {
                   <AlertCircle size={16}/> Productos nunca vendidos
                 </h3>
                 {neverSold.length === 0 ? (
-                  <div className="text-sm text-emerald-700 dark:text-emerald-300 text-center py-4">¡Todo el catálogo se ha vendido!</div>
+                  <div className="text-sm text-emerald-700 dark:text-emerald-300 text-center py-4">Â¡Todo el catÃ¡logo se ha vendido!</div>
                 ) : (
                   <div className="space-y-1 max-h-64 overflow-y-auto">
                     {neverSold.map((p) => (
                       <div key={p.id} className="flex items-center justify-between text-sm py-1.5 border-b border-paper-200 dark:border-obsidian-800 last:border-0">
                         <div>
                           <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
-                          <div className="text-xs text-ink-500 dark:text-obsidian-400">{p.category || "Sin categoría"}</div>
+                          <div className="text-xs text-ink-500 dark:text-obsidian-400">{p.category || "Sin categorÃ­a"}</div>
                         </div>
                         <span className="text-xs text-ink-500 dark:text-obsidian-400">{money(p.price)}</span>
                       </div>
@@ -475,13 +477,13 @@ export default function Reports() {
           {tab === "customers" && (
             <div className="card p-4">
               <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-1 flex items-center gap-2">
-                <UsersIcon size={16}/> Clientes más frecuentes
+                <UsersIcon size={16}/> Clientes mÃ¡s frecuentes
               </h3>
               <p className="text-[11px] text-ink-500 dark:text-obsidian-400 mb-3">
                 Solo pedidos a domicilio (mesas y para llevar no tienen cliente registrado).
               </p>
               {topCustomers.length === 0 ? (
-                <div className="text-sm text-ink-400 dark:text-obsidian-500 text-center py-6">Sin clientes en el período.</div>
+                <div className="text-sm text-ink-400 dark:text-obsidian-500 text-center py-6">Sin clientes en el perÃ­odo.</div>
               ) : (
                 <div className="space-y-1.5">
                   {topCustomers.map((c, i) => (
@@ -491,7 +493,7 @@ export default function Reports() {
                         <div>
                           <div className="font-medium text-ink-800 dark:text-obsidian-50">{c.name}</div>
                           <div className="text-xs text-ink-500 dark:text-obsidian-400">
-                            {c.orders_count} pedidos {c.neighborhood && `· ${c.neighborhood}`}
+                            {c.orders_count} pedidos {c.neighborhood && `Â· ${c.neighborhood}`}
                           </div>
                         </div>
                       </div>
@@ -505,7 +507,7 @@ export default function Reports() {
             </div>
           )}
 
-          {/* ============ TAB: OPERACIÓN ============ */}
+          {/* ============ TAB: OPERACIÃ“N ============ */}
           {tab === "ops" && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Horarios pico - compacto con barras verticales */}
@@ -513,7 +515,7 @@ export default function Reports() {
                 <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-1 flex items-center gap-2">
                   <Clock size={16}/> Horarios pico
                 </h3>
-                <p className="text-[11px] text-ink-500 dark:text-obsidian-400 mb-3">Pedidos por hora del día</p>
+                <p className="text-[11px] text-ink-500 dark:text-obsidian-400 mb-3">Pedidos por hora del dÃ­a</p>
                 {peakActive.length === 0 ? (
                   <div className="text-sm text-ink-400 dark:text-obsidian-500 text-center py-6">Sin datos de horas.</div>
                 ) : (
@@ -533,19 +535,19 @@ export default function Reports() {
                   <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-ink-500 dark:text-obsidian-400">
                     {peakActive.slice(0, 8).map((h) => (
                       <span key={h.hour} className="px-1.5 py-0.5 rounded bg-paper-100 dark:bg-obsidian-800" title={`${h.orders} pedidos`}>
-                        {String(h.hour).padStart(2, "0")}h · {money(h.sales)}
+                        {String(h.hour).padStart(2, "0")}h Â· {money(h.sales)}
                       </span>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Ventas por categoría */}
+              {/* Ventas por categorÃ­a */}
               <div className="card p-4">
                 <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-1 flex items-center gap-2">
-                  <Tag size={16}/> Ventas por categoría
+                  <Tag size={16}/> Ventas por categorÃ­a
                 </h3>
-                <p className="text-[11px] text-ink-500 dark:text-obsidian-400 mb-3">Ingresos por categoría</p>
+                <p className="text-[11px] text-ink-500 dark:text-obsidian-400 mb-3">Ingresos por categorÃ­a</p>
                 <BarChart
                   data={byCategory.map((c) => ({
                     label: c.category,
@@ -564,11 +566,11 @@ export default function Reports() {
                 <Bike size={16}/> Entregas por repartidor
               </h3>
               <p className="text-[11px] text-ink-500 dark:text-obsidian-400 mb-3">
-                Pedidos a domicilio pagados en el período seleccionado ({range.label}).
+                Pedidos a domicilio pagados en el perÃ­odo seleccionado ({range.label}).
               </p>
               {drivers.length === 0 ? (
                 <div className="text-sm text-ink-400 dark:text-obsidian-500 text-center py-8">
-                  Sin entregas registradas en este período.
+                  Sin entregas registradas en este perÃ­odo.
                 </div>
               ) : (
                 <div className="data-table-scroll">
@@ -577,7 +579,7 @@ export default function Reports() {
                       <tr>
                         <th>#</th>
                         <th>Repartidor</th>
-                        <th>Teléfono</th>
+                        <th>TelÃ©fono</th>
                         <th className="text-right">Entregas</th>
                         <th className="text-right">Ingresos</th>
                       </tr>
@@ -587,7 +589,7 @@ export default function Reports() {
                         <tr key={d.id}>
                           <td className="cell-muted">{i + 1}</td>
                           <td className="font-medium text-ink-900 dark:text-white">{d.name}</td>
-                          <td className="cell-muted">{d.phone || "—"}</td>
+                          <td className="cell-muted">{d.phone || "â€”"}</td>
                           <td className="text-right font-semibold tabular-nums">{d.deliveries}</td>
                           <td className="text-right font-semibold tabular-nums text-wine-600 dark:text-wine-300">{money(d.revenue)}</td>
                         </tr>
@@ -602,7 +604,7 @@ export default function Reports() {
           {/* ============ TAB: HISTORIAL ============ */}
           {tab === "history" && (
             <>
-              {/* Selector de período */}
+              {/* Selector de perÃ­odo */}
               <div className="flex flex-wrap items-center gap-2 mb-4 no-print">
                 <SegmentedControl
                   value={historyPeriod}
@@ -610,7 +612,7 @@ export default function Reports() {
                   options={[
                     { value: "week", label: "Semana" },
                     { value: "month", label: "Mes" },
-                    { value: "year", label: "Año" },
+                    { value: "year", label: "AÃ±o" },
                   ]}
                 />
                 <button
@@ -623,15 +625,15 @@ export default function Reports() {
               </div>
 
               {historyLoading ? (
-                <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando historial…</div>
+                <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando historialâ€¦</div>
               ) : history.length === 0 ? (
                 <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">
                   <Calendar size={32} className="mx-auto text-ink-300 dark:text-obsidian-300 mb-2"/>
-                  No hay actividad registrada en este período.
+                  No hay actividad registrada en este perÃ­odo.
                 </div>
               ) : (
                 <>
-                  {/* Resumen del período */}
+                  {/* Resumen del perÃ­odo */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                     <StatCard
                       icon={DollarSign}
@@ -652,20 +654,20 @@ export default function Reports() {
                     />
                     <StatCard
                       icon={ShoppingBag}
-                      label="Órdenes totales"
+                      label="Ã“rdenes totales"
                       value={history.reduce((s, h) => s + h.orders, 0)}
                       color="bg-amber-50 text-amber-700" darkColor="dark:bg-amber-900/30 dark:text-amber-300"
                     />
                   </div>
 
-                  {/* Tabla de días */}
+                  {/* Tabla de dÃ­as */}
                   <div className="data-table-wrap">
                     <div className="data-table-scroll">
                       <table className="data-table min-w-[48rem]">
                         <thead>
                           <tr>
                             <th>Fecha</th>
-                            <th className="text-right">Órdenes</th>
+                            <th className="text-right">Ã“rdenes</th>
                             <th className="text-right">Ventas</th>
                             <th className="text-right">Gastos</th>
                             <th className="text-right">Neto</th>

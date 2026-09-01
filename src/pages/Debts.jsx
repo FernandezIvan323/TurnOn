@@ -3,6 +3,7 @@ import api from "../lib/api";
 import Header from "../components/Header";
 import SegmentedControl from "../components/SegmentedControl";
 import EmptyState from "../components/EmptyState";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { toast } from "../store/toast";
 import { money, formatDate, formatTime, typeLabels, payMethodLabel } from "../lib/format";
 import {
@@ -254,6 +255,7 @@ function DebtDetailModal({ orderId, pending, onClose, onPay, paying }) {
 }
 
 export default function Debts() {
+  useDocumentTitle("Deudas");
   const [tab, setTab] = useState("pending");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);

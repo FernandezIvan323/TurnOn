@@ -3,6 +3,7 @@ import { ArrowLeft, CalendarDays, ChevronRight, Utensils, Truck, Banknote, Build
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import { money, formatTime, payMethodLabel } from "../../lib/format";
 import { Skeleton } from "../../components/Skeleton";
 import { todayLocalISO } from "../../lib/date";
@@ -512,6 +513,7 @@ function DriverView() {
 }
 
 export default function MyWorkHistory() {
+  useDocumentTitle("Mi historial");
   const { user } = useAuth();
   if (user?.role === "delivery") return <DriverView />;
   return <WaiterView />;

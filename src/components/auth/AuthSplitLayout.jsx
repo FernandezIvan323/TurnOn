@@ -6,6 +6,7 @@ import {
   Utensils,
   WalletCards,
 } from "lucide-react";
+import AnimatedBackdrop from "./AnimatedBackdrop";
 
 const DEFAULT_BULLETS = [
   { icon: Utensils, text: "Mesas y turnos en un solo tablero" },
@@ -65,7 +66,10 @@ export default function AuthSplitLayout({
       {/* Panel marca — negro; único lugar con logo + nombre en desktop */}
       <aside className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-ink-950 p-10 text-white lg:flex xl:p-14 dark:bg-obsidian-950">
         <div className="pointer-events-none absolute inset-0 bg-ink-950 dark:bg-obsidian-950" />
-        <div className="pointer-events-none absolute -bottom-24 -left-16 size-80 rounded-full bg-wine-600/10 blur-[100px]" />
+        {/* Fondo animado */}
+        <AnimatedBackdrop density={26} />
+        {/* Glows sobre las partículas */}
+        <div className="pointer-events-none absolute -bottom-24 -left-16 size-80 rounded-full bg-wine-600/15 blur-[100px]" />
         <div className="pointer-events-none absolute right-0 top-1/4 size-64 rounded-full bg-white/5 blur-[90px]" />
 
         <div className="relative z-10">

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/api";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
 import ConfirmModal from "../../components/ConfirmModal";
 import Modal from "../../components/Modal";
@@ -18,21 +19,21 @@ function CategoryModal({ cat, onClose, onSaved }) {
     try {
       if (cat) await api.put(`/categories/${cat.id}`, { name, position });
       else await api.post("/categories", { name, position });
-      toast.success(cat ? "Categoría actualizada" : "Categoría creada");
+      toast.success(cat ? "CategorÃ­a actualizada" : "CategorÃ­a creada");
       onSaved(); onClose();
     } catch (e) { setErr(e.response?.data?.error || e.message); }
     finally { setSaving(false); }
   };
   return (
-    <Modal open onClose={onClose} title={`${cat ? "Editar" : "Nueva"} categoría`} size="md">
+    <Modal open onClose={onClose} title={`${cat ? "Editar" : "Nueva"} categorÃ­a`} size="md">
       <label className="label" htmlFor="cat-name">Nombre</label>
       <input id="cat-name" className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus required maxLength={60} />
-      <label className="label mt-3" htmlFor="cat-pos">Posición (orden)</label>
+      <label className="label mt-3" htmlFor="cat-pos">PosiciÃ³n (orden)</label>
       <input id="cat-pos" className="input" type="number" value={position} onChange={(e) => setPosition(Number(e.target.value))} min={0} />
       {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{err}</div>}
       <div className="mt-4 flex justify-end gap-2">
         <button onClick={onClose} className="btn-secondary">Cancelar</button>
-        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
+        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardandoâ€¦" : "Guardar"}</button>
       </div>
     </Modal>
   );
@@ -67,7 +68,7 @@ function ProductModal({ product, categories, onClose, onSaved }) {
           <input className="input" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} />
         </div>
         <div>
-          <label className="label">Descripción</label>
+          <label className="label">DescripciÃ³n</label>
           <input className="input" value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -76,9 +77,9 @@ function ProductModal({ product, categories, onClose, onSaved }) {
             <input className="input" type="number" step="0.01" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} />
           </div>
           <div>
-            <label className="label">Categoría</label>
+            <label className="label">CategorÃ­a</label>
             <select className="input" value={form.category_id || ""} onChange={(e) => setForm({...form, category_id: e.target.value ? Number(e.target.value) : null})}>
-              <option value="">— Sin categoría —</option>
+              <option value="">â€” Sin categorÃ­a â€”</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
@@ -91,7 +92,7 @@ function ProductModal({ product, categories, onClose, onSaved }) {
       {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{err}</div>}
       <div className="mt-4 flex justify-end gap-2">
         <button onClick={onClose} className="btn-secondary">Cancelar</button>
-        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
+        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardandoâ€¦" : "Guardar"}</button>
       </div>
     </Modal>
   );
@@ -120,7 +121,7 @@ function ReadOnlyCatalog() {
   return (
     <div>
       <Header
-        title="Catálogo de productos"
+        title="CatÃ¡logo de productos"
         subtitle="Lo que ofrecemos a los clientes"
         right={
           <div className="relative">
@@ -129,7 +130,7 @@ function ReadOnlyCatalog() {
               className="input pl-8 w-64"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar producto…"
+              placeholder="Buscar productoâ€¦"
             />
           </div>
         }
@@ -148,7 +149,7 @@ function ReadOnlyCatalog() {
               <span className="text-xs text-ink-400 dark:text-obsidian-500 font-normal">({c.products.length})</span>
             </h2>
             {c.products.length === 0 ? (
-              <div className="text-sm text-ink-400 dark:text-obsidian-500 italic">Sin productos en esta categoría.</div>
+              <div className="text-sm text-ink-400 dark:text-obsidian-500 italic">Sin productos en esta categorÃ­a.</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {c.products.map((p) => (
@@ -171,7 +172,7 @@ function ReadOnlyCatalog() {
           <div>
             <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-3 flex items-center gap-2">
               <Tag size={16} className="text-ink-400"/>
-              Sin categoría
+              Sin categorÃ­a
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {grouped.noCat.map((p) => (
@@ -191,7 +192,7 @@ function ReadOnlyCatalog() {
         {grouped.totalShown === 0 && (
           <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">
             <ShoppingBag size={32} className="mx-auto text-ink-300 dark:text-obsidian-300 mb-2"/>
-            {search ? `Sin resultados para "${search}"` : "El catálogo está vacío."}
+            {search ? `Sin resultados para "${search}"` : "El catÃ¡logo estÃ¡ vacÃ­o."}
           </div>
         )}
       </div>
@@ -221,12 +222,12 @@ function AdminMenu() {
   return (
     <div>
       <Header
-        title="Menú (catálogo)"
-        subtitle="Productos, categorías y precios"
+        title="MenÃº (catÃ¡logo)"
+        subtitle="Productos, categorÃ­as y precios"
         right={
           <div className="flex gap-2">
             <button onClick={() => setCreatingCat(true)} className="btn-secondary">
-              <Tag size={16}/> Nueva categoría
+              <Tag size={16}/> Nueva categorÃ­a
             </button>
             <button onClick={() => setCreatingProd(true)} className="btn-primary">
               <Plus size={16}/> Nuevo producto
@@ -244,12 +245,12 @@ function AdminMenu() {
                 <span className="text-xs text-ink-400 dark:text-obsidian-500">({c.products.length})</span>
               </div>
               <div className="flex gap-1">
-                <button onClick={() => setEditingCat(c)} className="btn-ghost text-xs" title={`Editar ${c.name}`} aria-label={`Editar categoría ${c.name}`}><Edit2 size={14}/></button>
-                <button onClick={() => setConfirmDeleteCat(c)} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" title={`Eliminar ${c.name}`} aria-label={`Eliminar categoría ${c.name}`}><Trash2 size={14}/></button>
+                <button onClick={() => setEditingCat(c)} className="btn-ghost text-xs" title={`Editar ${c.name}`} aria-label={`Editar categorÃ­a ${c.name}`}><Edit2 size={14}/></button>
+                <button onClick={() => setConfirmDeleteCat(c)} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" title={`Eliminar ${c.name}`} aria-label={`Eliminar categorÃ­a ${c.name}`}><Trash2 size={14}/></button>
               </div>
             </div>
             {c.products.length === 0 ? (
-              <div className="text-sm text-ink-400 dark:text-obsidian-500">Sin productos en esta categoría.</div>
+              <div className="text-sm text-ink-400 dark:text-obsidian-500">Sin productos en esta categorÃ­a.</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {c.products.map((p) => (
@@ -274,7 +275,7 @@ function AdminMenu() {
         ))}
         {noCat.length > 0 && (
           <div className="card p-4">
-            <h3 className="font-semibold text-ink-800 dark:text-obsidian-50 mb-3">Sin categoría</h3>
+            <h3 className="font-semibold text-ink-800 dark:text-obsidian-50 mb-3">Sin categorÃ­a</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {noCat.map((p) => (
                 <div key={p.id} className="card p-3 flex items-center justify-between">
@@ -290,7 +291,7 @@ function AdminMenu() {
         {categories.length === 0 && products.length === 0 && (
           <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">
             <ShoppingBag size={32} className="mx-auto text-ink-300 dark:text-obsidian-300 mb-2"/>
-            Empieza creando una categoría y luego agregando productos.
+            Empieza creando una categorÃ­a y luego agregando productos.
           </div>
         )}
       </div>
@@ -303,7 +304,7 @@ function AdminMenu() {
       {confirmDeleteProd && (
         <ConfirmModal
           title="Eliminar producto"
-          message={`¿Eliminar "${confirmDeleteProd.name}"? Esta acción no se puede deshacer.`}
+          message={`Â¿Eliminar "${confirmDeleteProd.name}"? Esta acciÃ³n no se puede deshacer.`}
           confirmText="Eliminar"
           icon={Trash2}
           onConfirm={async () => {
@@ -318,13 +319,13 @@ function AdminMenu() {
 
       {confirmDeleteCat && (
         <ConfirmModal
-          title="Eliminar categoría"
-          message={`¿Eliminar la categoría "${confirmDeleteCat.name}"? Los productos no se eliminarán, solo quedarán sin categoría.`}
+          title="Eliminar categorÃ­a"
+          message={`Â¿Eliminar la categorÃ­a "${confirmDeleteCat.name}"? Los productos no se eliminarÃ¡n, solo quedarÃ¡n sin categorÃ­a.`}
           confirmText="Eliminar"
           icon={Trash2}
           onConfirm={async () => {
             await api.delete(`/categories/${confirmDeleteCat.id}`);
-            toast.success("Categoría eliminada");
+            toast.success("CategorÃ­a eliminada");
             setConfirmDeleteCat(null);
             load();
           }}
@@ -336,6 +337,7 @@ function AdminMenu() {
 }
 
 export default function Menu() {
+  useDocumentTitle("Menú");
   const { user } = useAuth();
   if (user?.role === "waiter") return <ReadOnlyCatalog />;
   return <AdminMenu />;

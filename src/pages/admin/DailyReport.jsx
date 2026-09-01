@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../lib/api";
 import { useAuth } from "../../store/auth";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import { todayLocalISO } from "../../lib/date";
 import { money } from "../../lib/format";
 import { Printer, ArrowLeft, Wallet, CreditCard, Building2, Receipt } from "lucide-react";
@@ -9,6 +10,7 @@ import { Printer, ArrowLeft, Wallet, CreditCard, Building2, Receipt } from "luci
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export default function DailyReport() {
+  useDocumentTitle("Reporte diario");
   const { user } = useAuth();
   const nav = useNavigate();
   const [searchParams] = useSearchParams();

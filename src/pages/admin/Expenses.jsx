@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import api from "../../lib/api";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
 import Modal from "../../components/Modal";
 import { toast } from "../../store/toast";
@@ -59,7 +60,7 @@ function ExpenseModal({ open, onClose, onSaved, expense, categories }) {
       return;
     }
     if (!categoryId) {
-      setErr("Seleccioná una categoría");
+      setErr("SeleccionÃ¡ una categorÃ­a");
       return;
     }
     setBusy(true);
@@ -91,7 +92,7 @@ function ExpenseModal({ open, onClose, onSaved, expense, categories }) {
           <input type="date" className="input" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} max={todayISO()} />
         </div>
         <div>
-          <label className="label">Categoría</label>
+          <label className="label">CategorÃ­a</label>
           <select className="input" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -117,7 +118,7 @@ function ExpenseModal({ open, onClose, onSaved, expense, categories }) {
           </div>
         </div>
         <div>
-          <label className="label">Descripción (opcional)</label>
+          <label className="label">DescripciÃ³n (opcional)</label>
           <textarea
             className="input min-h-[60px] resize-y"
             value={description}
@@ -126,7 +127,7 @@ function ExpenseModal({ open, onClose, onSaved, expense, categories }) {
           />
         </div>
         <div>
-          <label className="label">Método de pago (opcional)</label>
+          <label className="label">MÃ©todo de pago (opcional)</label>
           <div className="grid grid-cols-3 gap-2">
             {Object.entries(METHOD_LABELS).map(([k, m]) => (
               <button
@@ -152,7 +153,7 @@ function ExpenseModal({ open, onClose, onSaved, expense, categories }) {
         <div className="flex gap-2 pt-2">
           <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1">
-            {busy ? "Guardando…" : (isEdit ? "Guardar cambios" : "Registrar gasto")}
+            {busy ? "Guardandoâ€¦" : (isEdit ? "Guardar cambios" : "Registrar gasto")}
           </button>
         </div>
       </div>
@@ -165,11 +166,11 @@ function ConfirmDelete({ expense, onCancel, onConfirm }) {
   return (
     <Modal open onClose={onCancel} title={<span className="flex items-center gap-2"><Trash2 size={18} className="text-rose-500" /> Eliminar gasto</span>} size="sm">
       <p className="text-sm text-ink-600 dark:text-obsidian-200 mb-1">
-        ¿Eliminar el gasto de <span className="font-semibold text-ink-800 dark:text-obsidian-50">{money(expense.amount)}</span>?
+        Â¿Eliminar el gasto de <span className="font-semibold text-ink-800 dark:text-obsidian-50">{money(expense.amount)}</span>?
       </p>
       <p className="text-xs text-ink-500 dark:text-obsidian-400 mb-4">
-        {expense.category_name} · {dateOnly(expense.expense_date)}
-        {expense.description && ` · ${expense.description}`}
+        {expense.category_name} Â· {dateOnly(expense.expense_date)}
+        {expense.description && ` Â· ${expense.description}`}
       </p>
       <div className="flex gap-2">
         <button onClick={onCancel} className="btn-secondary flex-1">Cancelar</button>
@@ -182,6 +183,7 @@ function ConfirmDelete({ expense, onCancel, onConfirm }) {
 }
 
 export default function Expenses() {
+  useDocumentTitle("Gastos");
   const [params] = useSearchParams();
   const initialDate = params.get("date") || todayISO();
   const [from, setFrom]   = useState("");
@@ -217,7 +219,7 @@ export default function Expenses() {
         const c = await api.get("/expenses/categories");
         setCategories(c.data);
       } catch (e) {
-        console.error("[expenses] Error al cargar categorías:", e);
+        console.error("[expenses] Error al cargar categorÃ­as:", e);
       }
       try {
         // Use filter dates for summary if set, otherwise use initialDate
@@ -282,7 +284,7 @@ export default function Expenses() {
   };
 
   const renderMethod = (m) => {
-    if (!m) return <span className="text-xs text-ink-400">—</span>;
+    if (!m) return <span className="text-xs text-ink-400">â€”</span>;
     const def = METHOD_LABELS[m];
     const Icon = def.icon;
     return (
@@ -295,8 +297,8 @@ export default function Expenses() {
   return (
     <div>
       <Header
-        title="Gastos del día"
-        subtitle="Compras, servicios, sueldos y más"
+        title="Gastos del dÃ­a"
+        subtitle="Compras, servicios, sueldos y mÃ¡s"
         right={
           <button onClick={() => { setEditTarget(null); setModalOpen(true); }} className="btn-primary text-sm">
             <Plus size={14}/> Nuevo gasto
@@ -304,7 +306,7 @@ export default function Expenses() {
         }
       />
 
-      {/* Filtros + búsqueda */}
+      {/* Filtros + bÃºsqueda */}
       <div className="card mb-4 space-y-3 p-3">
         <div className="relative">
           <Search
@@ -314,7 +316,7 @@ export default function Expenses() {
           <input
             type="search"
             className="input py-2 pl-9 text-sm"
-            placeholder="Buscar por descripción, categoría, monto o quien registró…"
+            placeholder="Buscar por descripciÃ³n, categorÃ­a, monto o quien registrÃ³â€¦"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             autoComplete="off"
@@ -333,14 +335,14 @@ export default function Expenses() {
             <input type="date" className="input py-1.5 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
           <div>
-            <label className="label text-xs text-ink-600 dark:text-white">Categoría</label>
+            <label className="label text-xs text-ink-600 dark:text-white">CategorÃ­a</label>
             <select className="input py-1.5 text-sm" value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
               <option value="">Todas</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="label text-xs text-ink-600 dark:text-white">Método</label>
+            <label className="label text-xs text-ink-600 dark:text-white">MÃ©todo</label>
             <select className="input py-1.5 text-sm" value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)}>
               <option value="">Todos</option>
               <option value="cash">Efectivo</option>
@@ -366,39 +368,39 @@ export default function Expenses() {
         </div>
       </div>
 
-      {/* Resumen del día + lista */}
+      {/* Resumen del dÃ­a + lista */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
         <div className="card p-4">
-          <div className="text-xs text-ink-500 dark:text-obsidian-400 mb-1">Total del día {dateOnly(initialDate)}</div>
+          <div className="text-xs text-ink-500 dark:text-obsidian-400 mb-1">Total del dÃ­a {dateOnly(initialDate)}</div>
           <div className="text-2xl font-bold text-rose-700 dark:text-rose-400">{money(summary?.total_expenses || 0)}</div>
           <div className="text-[11px] text-ink-400 dark:text-obsidian-500 mt-1">
             {summary?.expense_count || 0} gasto(s) registrado(s)
           </div>
         </div>
         <div className="card p-4">
-          <div className="text-xs text-ink-500 dark:text-obsidian-400 mb-2">Por método de pago</div>
+          <div className="text-xs text-ink-500 dark:text-obsidian-400 mb-2">Por mÃ©todo de pago</div>
           {summary ? (
             <div className="space-y-1 text-sm">
               <div className="flex justify-between"><span className="text-ink-500 dark:text-obsidian-400">Efectivo</span><span className="font-medium">{money(summary.by_method.cash)}</span></div>
               <div className="flex justify-between"><span className="text-ink-500 dark:text-obsidian-400">Tarjeta</span><span className="font-medium">{money(summary.by_method.card)}</span></div>
               <div className="flex justify-between"><span className="text-ink-500 dark:text-obsidian-400">Transferencia</span><span className="font-medium">{money(summary.by_method.transfer)}</span></div>
             </div>
-          ) : <div className="text-sm text-ink-400">—</div>}
+          ) : <div className="text-sm text-ink-400">â€”</div>}
         </div>
         <div className="card p-4">
-          <div className="text-xs text-ink-500 dark:text-obsidian-400 mb-2">Neto del día</div>
+          <div className="text-xs text-ink-500 dark:text-obsidian-400 mb-2">Neto del dÃ­a</div>
           <div className={`text-2xl font-bold ${(summary?.net || 0) >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}`}>
             {money(summary?.net || 0)}
           </div>
           <div className="text-[11px] text-ink-400 dark:text-obsidian-500 mt-1">
-            Ventas {money(summary?.total_sales || 0)} − Gastos {money(summary?.total_expenses || 0)}
+            Ventas {money(summary?.total_sales || 0)} âˆ’ Gastos {money(summary?.total_expenses || 0)}
           </div>
         </div>
       </div>
 
       {summary && summary.by_category && summary.by_category.length > 0 && (
         <div className="card p-4 mb-4">
-          <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-3">Por categoría (hoy)</h3>
+          <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-3">Por categorÃ­a (hoy)</h3>
           <div className="space-y-2">
             {summary.by_category.map((c) => {
               const Icon = ICON_MAP[c.icon] || Receipt;
@@ -426,7 +428,7 @@ export default function Expenses() {
 
       {/* Tabla */}
       {loading ? (
-        <div className="card p-8 text-center text-ink-600 dark:text-white">Cargando…</div>
+        <div className="card p-8 text-center text-ink-600 dark:text-white">Cargandoâ€¦</div>
       ) : expenses.length === 0 ? (
         <div className="card p-8 text-center text-ink-600 dark:text-white">
           <TrendingDown size={32} className="mx-auto mb-2 text-ink-300 dark:text-white/40"/>
@@ -440,11 +442,11 @@ export default function Expenses() {
       ) : filteredExpenses.length === 0 ? (
         <div className="card p-8 text-center text-ink-600 dark:text-white">
           <Search size={32} className="mx-auto mb-2 text-ink-300 dark:text-white/40"/>
-          Ningún gasto coincide con la búsqueda
-          {search.trim() ? ` “${search.trim()}”` : ""}.
+          NingÃºn gasto coincide con la bÃºsqueda
+          {search.trim() ? ` â€œ${search.trim()}â€` : ""}.
           <div className="mt-2">
             <button onClick={() => setSearch("")} className="btn-secondary text-sm" type="button">
-              Limpiar búsqueda
+              Limpiar bÃºsqueda
             </button>
           </div>
         </div>
@@ -455,10 +457,10 @@ export default function Expenses() {
               <thead>
                 <tr>
                   <th>Fecha</th>
-                  <th>Categoría</th>
-                  <th>Descripción</th>
+                  <th>CategorÃ­a</th>
+                  <th>DescripciÃ³n</th>
                   <th className="text-right">Monto</th>
-                  <th>Método</th>
+                  <th>MÃ©todo</th>
                   <th>Registrado por</th>
                   <th className="text-right"></th>
                 </tr>
@@ -471,10 +473,10 @@ export default function Expenses() {
                       <div className="text-xs cell-muted">{formatTime(e.created_at)}</div>
                     </td>
                     <td>{renderCat({ name: e.category_name, icon: e.category_icon })}</td>
-                    <td className="max-w-xs truncate">{e.description || "—"}</td>
+                    <td className="max-w-xs truncate">{e.description || "â€”"}</td>
                     <td className="text-right font-semibold tabular-nums text-rose-700 dark:text-rose-300">{money(e.amount)}</td>
                     <td>{renderMethod(e.payment_method)}</td>
-                    <td className="text-xs cell-muted">{e.user_name || "—"}</td>
+                    <td className="text-xs cell-muted">{e.user_name || "â€”"}</td>
                     <td className="text-right">
                       <div className="flex justify-end gap-1">
                         <button
@@ -517,7 +519,7 @@ export default function Expenses() {
 
       <div className="mt-4 text-xs text-ink-500 dark:text-obsidian-400 flex items-center gap-1">
         <ArrowRight size={12}/>
-        También podés ver estos datos en el <Link to="/cashier/closing" className="text-wine-600 hover:underline">Corte de caja</Link>.
+        TambiÃ©n podÃ©s ver estos datos en el <Link to="/cashier/closing" className="text-wine-600 hover:underline">Corte de caja</Link>.
       </div>
 
       <ExpenseModal

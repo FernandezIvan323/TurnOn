@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import EmptyState from "../../components/EmptyState";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import { Skeleton } from "../../components/Skeleton";
 import { money, formatTime, payMethodLabel } from "../../lib/format";
 import { useLiveRefresh } from "../../lib/useLiveRefresh";
@@ -210,6 +211,7 @@ function OrderCardOnWay({ order, onUpdated }) {
 }
 
 export default function DriverHome() {
+  useDocumentTitle("Mi turno");
   const { user } = useAuth();
   const [summary, setSummary] = useState(null);
   const [orders, setOrders] = useState([]);

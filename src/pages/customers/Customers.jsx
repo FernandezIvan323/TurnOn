@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import api from "../../lib/api";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
 import Modal from "../../components/Modal";
 import EmptyState from "../../components/EmptyState";
@@ -106,6 +107,7 @@ function HistoryModal({ customer, onClose }) {
 }
 
 export default function Customers() {
+  useDocumentTitle("Clientes");
   const [q, setQ] = useState("");
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);

@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /staff
+Disallow: /menu
+Disallow: /inventory
+Disallow: /expenses
+Disallow: /reports
+Disallow: /customers
+Disallow: /cashier
+Disallow: /cashclosing
+Disallow: /closings
+Disallow: /delivery
+Disallow: /pickup
+Disallow: /tables
+Disallow: /debts
+Disallow: /my-history
+Disallow: /daily-report
+
+Sitemap: https://turnon.app/sitemap.xml

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../../lib/api";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
 import {
@@ -22,7 +23,7 @@ import {
 
 const COLUMNS = [
   { key: "pending",   title: "Pendientes" },
-  { key: "preparing", title: "En preparación" },
+  { key: "preparing", title: "En preparaciÃ³n" },
   { key: "assigned",  title: "Listos para salir" },
   { key: "on_the_way",title: "En camino" },
   { key: "delivered", title: "Entregados" },
@@ -100,7 +101,7 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
             </div>
             {isPaid && (
               <div className="mt-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                ✓ {payMethodLabel(order.payment_method)}
+                âœ“ {payMethodLabel(order.payment_method)}
               </div>
             )}
           </div>
@@ -138,7 +139,7 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
                   onPreparing(order);
                 }}
                 className="inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-blue-600 px-2 text-xs font-semibold text-white transition hover:bg-blue-700"
-                title="Marcar como en preparación"
+                title="Marcar como en preparaciÃ³n"
               >
                 <ChefHat size={14} /> Preparar
               </button>
@@ -219,7 +220,7 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
               }`}
             >
               <CheckCircle2 size={14} />
-              {isPaid ? "Pagado · cerrar al entregar" : "En camino · cobrar al entregar"}
+              {isPaid ? "Pagado Â· cerrar al entregar" : "En camino Â· cobrar al entregar"}
             </div>
           )}
           {order.status === "delivered" && onReopen && (
@@ -265,7 +266,7 @@ function CompletedDeliveryCard({ order, onReopen, onClick }) {
             </div>
             {order.payment_status === "paid" && (
               <span className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                ✓ {payMethodLabel(order.payment_method)}
+                âœ“ {payMethodLabel(order.payment_method)}
               </span>
             )}
             {isDebt && (
@@ -287,7 +288,7 @@ function CompletedDeliveryCard({ order, onReopen, onClick }) {
           </span>
           <div className="min-w-0 space-y-0.5 text-sm">
             <div className="truncate font-semibold text-ink-900 dark:text-white">
-              {order.customer_name || "—"}
+              {order.customer_name || "â€”"}
             </div>
             {order.customer_phone && (
               <div className="flex items-center gap-1 text-xs text-ink-600 dark:text-obsidian-300">
@@ -298,7 +299,7 @@ function CompletedDeliveryCard({ order, onReopen, onClick }) {
               <div className="flex items-start gap-1 text-xs text-ink-500 dark:text-obsidian-400">
                 <MapPin size={11} className="mt-0.5 shrink-0" />
                 <span className="line-clamp-2">
-                  {[order.customer_neighborhood, order.customer_address].filter(Boolean).join(" · ")}
+                  {[order.customer_neighborhood, order.customer_address].filter(Boolean).join(" Â· ")}
                 </span>
               </div>
             )}
@@ -315,13 +316,13 @@ function CompletedDeliveryCard({ order, onReopen, onClick }) {
             Productos
           </div>
           {items.length === 0 ? (
-            <div className="text-xs text-ink-400">Sin detalle de ítems</div>
+            <div className="text-xs text-ink-400">Sin detalle de Ã­tems</div>
           ) : (
             <ul className="max-h-28 space-y-1 overflow-y-auto text-xs text-ink-700 dark:text-obsidian-200">
               {items.map((it, i) => (
                 <li key={i} className="flex justify-between gap-2">
                   <span className="min-w-0">
-                    <b className="tabular-nums text-ink-900 dark:text-white">{it.quantity}×</b>{" "}
+                    <b className="tabular-nums text-ink-900 dark:text-white">{it.quantity}Ã—</b>{" "}
                     {it.name_snapshot}
                   </span>
                   <span className="shrink-0 tabular-nums text-ink-500 dark:text-obsidian-400">
@@ -434,8 +435,8 @@ function NewOrderModal({ onClose, onCreated }) {
   const submit = async () => {
     setError(null);
     if (cart.length === 0) return setError("Agrega al menos un producto");
-    if (!name || !phone) return setError("Nombre y teléfono del cliente son requeridos");
-    if (!address) return setError("Dirección de entrega requerida");
+    if (!name || !phone) return setError("Nombre y telÃ©fono del cliente son requeridos");
+    if (!address) return setError("DirecciÃ³n de entrega requerida");
     setSaving(true);
     try {
       let cust = customer;
@@ -471,7 +472,7 @@ function NewOrderModal({ onClose, onCreated }) {
 
             {!customer && (
               <div className="relative mb-3" ref={searchRef}>
-                <label className="label">Buscar cliente existente (nombre o teléfono)</label>
+                <label className="label">Buscar cliente existente (nombre o telÃ©fono)</label>
                 <div className="relative">
                   <Search size={14} className="absolute left-3 top-3 text-ink-400 dark:text-obsidian-500"/>
                   <input
@@ -480,7 +481,7 @@ function NewOrderModal({ onClose, onCreated }) {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onFocus={() => suggestions.length > 0 && setShowSugg(true)}
                     onBlur={() => setTimeout(() => setShowSugg(false), 180)}
-                    placeholder="Ej. Juan Pérez o 555-1234…"
+                    placeholder="Ej. Juan PÃ©rez o 555-1234â€¦"
                     autoComplete="off"
                   />
                 </div>
@@ -520,7 +521,7 @@ function NewOrderModal({ onClose, onCreated }) {
                       <Phone size={10}/> {customer.phone}
                     </div>
                   </div>
-                  <button onClick={clearCustomer} className="btn-ghost text-xs" title="Quitar selección">
+                  <button onClick={clearCustomer} className="btn-ghost text-xs" title="Quitar selecciÃ³n">
                     <X size={14}/>
                   </button>
                 </div>
@@ -533,14 +534,14 @@ function NewOrderModal({ onClose, onCreated }) {
                 <input id="order-customer-name" className="input" value={name} onChange={(e) => setName(e.target.value)} disabled={!!customer} required maxLength={60} />
               </div>
               <div>
-                <label className="label" htmlFor="order-customer-phone">Teléfono</label>
+                <label className="label" htmlFor="order-customer-phone">TelÃ©fono</label>
                 <div className="relative">
                   <Phone size={14} className="absolute left-3 top-3 text-ink-400 dark:text-obsidian-500" aria-hidden="true"/>
                   <input id="order-customer-phone" className="input pl-8" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={!!customer} type="tel" maxLength={30} />
                 </div>
               </div>
               <div>
-                <label className="label" htmlFor="order-customer-address">Dirección de entrega</label>
+                <label className="label" htmlFor="order-customer-address">DirecciÃ³n de entrega</label>
                 <div className="relative">
                   <MapPin size={14} className="absolute left-3 top-3 text-ink-400 dark:text-obsidian-500" aria-hidden="true"/>
                   <input id="order-customer-address" className="input pl-8" value={address} onChange={(e) => setAddress(e.target.value)} maxLength={160} />
@@ -558,12 +559,12 @@ function NewOrderModal({ onClose, onCreated }) {
               </div>
               <div>
                 <label className="label">Notas de la entrega</label>
-                <textarea rows={2} className="input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej. Tocar timbre 2 veces, trae cambio de 1000…" />
+                <textarea rows={2} className="input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej. Tocar timbre 2 veces, trae cambio de 1000â€¦" />
               </div>
             </div>
 
             <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mt-5 mb-2">Carrito</h3>
-            {cart.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500">Agrega productos del menú →</div>}
+            {cart.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500">Agrega productos del menÃº â†’</div>}
             <div className="space-y-2">
               {cart.map((c) => (
                 <div key={c.product_id} className="flex items-center gap-2 text-sm">
@@ -590,7 +591,7 @@ function NewOrderModal({ onClose, onCreated }) {
           </div>
 
           <div className="p-5 overflow-y-auto bg-paper-100 dark:bg-obsidian-950">
-            <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-3">Menú</h3>
+            <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mb-3">MenÃº</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {products.map((p) => (
                 <button
@@ -598,22 +599,22 @@ function NewOrderModal({ onClose, onCreated }) {
                   onClick={() => addToCart(p)}
                   className="card p-3 text-left hover:border-wine-400 dark:hover:border-wine-500 transition"
                 >
-                  <div className="text-xs text-ink-400 dark:text-obsidian-500">{p.category_name || "Sin categoría"}</div>
+                  <div className="text-xs text-ink-400 dark:text-obsidian-500">{p.category_name || "Sin categorÃ­a"}</div>
                   <div className="font-medium text-ink-800 dark:text-obsidian-50 text-sm">{p.name}</div>
                   <div className="text-wine-600 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
                 </button>
               ))}
-              {products.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500 col-span-full">No hay productos en el menú. Agrega desde "Menú (catálogo)".</div>}
+              {products.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500 col-span-full">No hay productos en el menÃº. Agrega desde "MenÃº (catÃ¡logo)".</div>}
             </div>
           </div>
         </div>
 
         <div className="px-5 py-3 border-t border-paper-300 dark:border-obsidian-800 flex items-center justify-between">
-          <div className="text-sm text-ink-500 dark:text-obsidian-400">{cart.length} productos · {money(total)}</div>
+          <div className="text-sm text-ink-500 dark:text-obsidian-400">{cart.length} productos Â· {money(total)}</div>
           <div className="flex gap-2">
             <button onClick={onClose} className="btn-secondary">Cancelar</button>
             <button onClick={submit} disabled={saving} className="btn-primary">
-              {saving ? "Guardando…" : "Crear pedido"}
+              {saving ? "Guardandoâ€¦" : "Crear pedido"}
             </button>
           </div>
         </div>
@@ -635,9 +636,9 @@ function AssignModal({ order, onClose, onAssigned }) {
     }
   };
   return (
-    <Modal open onClose={onClose} title={`Asignar repartidor · #${order.id}`} size="md">
+    <Modal open onClose={onClose} title={`Asignar repartidor Â· #${order.id}`} size="md">
       <div className="text-sm text-ink-500 dark:text-obsidian-400 mb-3">
-        {order.customer_name} · {order.customer_address}
+        {order.customer_name} Â· {order.customer_address}
       </div>
       {persons.length === 0 && (
         <div className="mb-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
@@ -662,12 +663,12 @@ function AssignModal({ order, onClose, onAssigned }) {
                       <span className="badge bg-rose-100 text-rose-800 text-[10px] dark:bg-rose-900/40 dark:text-rose-300">Fuera de turno</span>
                     )}
                   </div>
-                  <div className="text-xs text-ink-500 dark:text-obsidian-400">{p.phone || "Sin teléfono"}</div>
+                  <div className="text-xs text-ink-500 dark:text-obsidian-400">{p.phone || "Sin telÃ©fono"}</div>
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="text-[10px] uppercase tracking-wide text-ink-400 dark:text-obsidian-500">En la calle</div>
                   <div className="text-sm font-semibold tabular-nums text-indigo-700 dark:text-indigo-300">
-                    {street > 0 ? money(street) : "—"}
+                    {street > 0 ? money(street) : "â€”"}
                   </div>
                   <div className="text-[10px] mt-0.5 text-emerald-700 dark:text-emerald-300">
                     {cashToday > 0 ? `${money(cashToday)} efectivo hoy` : ""}
@@ -711,7 +712,7 @@ function OrderDetailModal({ order, onClose, onChanged }) {
   };
 
   const markDebt = async () => {
-    if (!window.confirm(`¿Confirmás que el pedido #${order.id} se entregó sin cobrar y queda como deuda?`)) return;
+    if (!window.confirm(`Â¿ConfirmÃ¡s que el pedido #${order.id} se entregÃ³ sin cobrar y queda como deuda?`)) return;
     await api.post(`/orders/${order.id}/mark-delivered`);
     onChanged();
     onClose();
@@ -737,16 +738,16 @@ function OrderDetailModal({ order, onClose, onChanged }) {
         <div className="mb-4 grid grid-cols-2 gap-3 text-sm">
           <div>
             <span className="text-ink-400 dark:text-obsidian-500">Cliente:</span>{" "}
-            <b>{order.customer_name || "—"}</b>
+            <b>{order.customer_name || "â€”"}</b>
           </div>
           <div>
-            <span className="text-ink-400 dark:text-obsidian-500">Teléfono:</span>{" "}
-            {order.customer_phone || "—"}
+            <span className="text-ink-400 dark:text-obsidian-500">TelÃ©fono:</span>{" "}
+            {order.customer_phone || "â€”"}
           </div>
           <div className="col-span-2">
-            <span className="text-ink-400 dark:text-obsidian-500">Dirección:</span>{" "}
-            {order.customer_address || "—"}
-            {order.customer_neighborhood ? ` · ${order.customer_neighborhood}` : ""}
+            <span className="text-ink-400 dark:text-obsidian-500">DirecciÃ³n:</span>{" "}
+            {order.customer_address || "â€”"}
+            {order.customer_neighborhood ? ` Â· ${order.customer_neighborhood}` : ""}
           </div>
           {order.customer_reference && (
             <div className="col-span-2">
@@ -779,7 +780,7 @@ function OrderDetailModal({ order, onClose, onChanged }) {
           </div>
         )}
         {loading ? (
-          <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
+          <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargandoâ€¦</div>
         ) : (
           <div className="space-y-1.5">
             {items.length === 0 && (
@@ -794,7 +795,7 @@ function OrderDetailModal({ order, onClose, onChanged }) {
                   <div className="font-medium text-ink-800 dark:text-obsidian-50">
                     {it.name_snapshot}{" "}
                     {it.notes && (
-                      <span className="text-xs text-amber-700 dark:text-amber-400">· {it.notes}</span>
+                      <span className="text-xs text-amber-700 dark:text-amber-400">Â· {it.notes}</span>
                     )}
                   </div>
                   <div className="text-xs text-ink-500 dark:text-obsidian-400">
@@ -888,7 +889,7 @@ function HistoryModal({ onClose }) {
           {!selected && (
             <div className="py-8 text-center text-sm text-ink-400">Selecciona un repartidor</div>
           )}
-          {loading && <div className="text-sm text-ink-500">Cargando…</div>}
+          {loading && <div className="text-sm text-ink-500">Cargandoâ€¦</div>}
           {err && (
             <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
               {err}
@@ -900,7 +901,7 @@ function HistoryModal({ onClose }) {
           {selected && !loading && history.length > 0 && (
             <div>
               <div className="card mb-4 flex items-center justify-between border-wine-200 bg-wine-50/60 p-3 dark:border-wine-800 dark:bg-wine-900/20">
-                <span className="text-sm font-medium">Total entregado · {pname}</span>
+                <span className="text-sm font-medium">Total entregado Â· {pname}</span>
                 <span className="text-lg font-bold text-wine-600 dark:text-wine-300">{money(totalEarned)}</span>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -944,11 +945,11 @@ function ReopenModal({ order, onClose, onReopened }) {
           Reabrir pedido #{order.id}
         </h2>
         <div className="card p-3 bg-amber-50 border-amber-200 mb-3 text-sm text-amber-900 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
-          <b>Esta acción es delicada.</b> Va a:
+          <b>Esta acciÃ³n es delicada.</b> Va a:
           <ul className="list-disc pl-5 mt-1 space-y-0.5">
-            <li>Deshacer el cobro ({money(order.total)} · {order.payment_method || "?"})</li>
-            <li>Devolver el pedido a {order.delivery_person_id ? "En camino (repartidor vuelve a estar ocupado)" : "En preparación"}</li>
-            <li>Si ya se contabilizó en reportes de hoy, no se actualizará</li>
+            <li>Deshacer el cobro ({money(order.total)} Â· {order.payment_method || "?"})</li>
+            <li>Devolver el pedido a {order.delivery_person_id ? "En camino (repartidor vuelve a estar ocupado)" : "En preparaciÃ³n"}</li>
+            <li>Si ya se contabilizÃ³ en reportes de hoy, no se actualizarÃ¡</li>
           </ul>
         </div>
         <label className="label">Escribe <code className="px-1.5 py-0.5 rounded bg-ink-100 dark:bg-obsidian-800 text-amber-700 dark:text-amber-300 font-mono text-xs">{required}</code> para confirmar:</label>
@@ -963,7 +964,7 @@ function ReopenModal({ order, onClose, onReopened }) {
         <div className="mt-4 flex gap-2">
           <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1">
-            {busy ? "Reabriendo…" : "Reabrir pedido"}
+            {busy ? "Reabriendoâ€¦" : "Reabrir pedido"}
           </button>
         </div>
       </div>
@@ -972,6 +973,7 @@ function ReopenModal({ order, onClose, onReopened }) {
 }
 
 export default function Delivery() {
+  useDocumentTitle("Domicilios");
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1071,7 +1073,7 @@ export default function Delivery() {
   };
 
   if (user?.role !== "admin") {
-    return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Esta sección es solo para el cajero/administrador.</div>;
+    return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Esta secciÃ³n es solo para el cajero/administrador.</div>;
   }
 
   return (
@@ -1143,11 +1145,11 @@ export default function Delivery() {
       )}
 
       {loading ? (
-        <div className="text-sm text-ink-600 dark:text-white">Cargando…</div>
+        <div className="text-sm text-ink-600 dark:text-white">Cargandoâ€¦</div>
       ) : filter === "delivered" || filter === "cancelled" ? (
         <div>
           <div className="mb-3 text-sm font-medium text-ink-600 dark:text-obsidian-300">
-            {filter === "delivered" ? "Entregados" : "Cancelados"} · {(enriched.length || filtered.length)} pedido
+            {filter === "delivered" ? "Entregados" : "Cancelados"} Â· {(enriched.length || filtered.length)} pedido
             {(enriched.length || filtered.length) === 1 ? "" : "s"}
           </div>
           {(enriched.length || filtered.length) === 0 ? (
@@ -1218,7 +1220,7 @@ export default function Delivery() {
           <div className="card w-full max-w-md p-5">
             <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-3">Cancelar pedido #{toCancel.id}</h2>
             <label className="label">Motivo</label>
-            <input className="input" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Cliente no contesta, dirección errónea…" />
+            <input className="input" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Cliente no contesta, direcciÃ³n errÃ³neaâ€¦" />
             <div className="mt-4 flex justify-end gap-2">
               <button onClick={() => { setToCancel(null); setCancelReason(""); }} className="btn-secondary">Volver</button>
               <button onClick={cancel} className="btn-danger">Cancelar pedido</button>

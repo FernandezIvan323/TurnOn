@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../store/auth";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 import Brand from "../components/Brand";
 import DeviceFrame from "../components/landing/DeviceFrame";
 import MockDashboard from "../components/landing/MockDashboard";
@@ -7,6 +9,7 @@ import MockTables from "../components/landing/MockTables";
 import MockKanban from "../components/landing/MockKanban";
 import MockCashClosing from "../components/landing/MockCashClosing";
 import MockWaiterPhone from "../components/landing/MockWaiterPhone";
+import MockDriverPhone from "../components/landing/MockDriverPhone";
 import {
   ArrowRight,
   CheckCircle2,
@@ -31,34 +34,68 @@ const navItems = [
 ];
 
 const businessTypes = [
-  "Restaurante",
-  "Bar / café",
-  "Acera y mesas",
-  "Domicilio",
-  "Para llevar",
-  "Food truck",
+  {
+    key: "restaurante",
+    label: "Restaurante",
+    desc: "Servicio en sala con mozos y comandas a cocina.",
+    icon: Utensils,
+  },
+  {
+    key: "bar",
+    label: "Bar / café",
+    desc: "Mesas rápidas, ticket promedio alto y rotación constante.",
+    icon: ShoppingBag,
+  },
+  {
+    key: "acera",
+    label: "Acera y mesas",
+    desc: "Servicio al aire libre con vista en tiempo real de cada mesa.",
+    icon: MonitorSmartphone,
+  },
+  {
+    key: "domicilio",
+    label: "Domicilio",
+    desc: "Recepción de llamadas, asignación de repartidores y seguimiento.",
+    icon: Truck,
+  },
+  {
+    key: "pickup",
+    label: "Para llevar",
+    desc: "Pedidos con tiempo estimado y cobro en mostrador.",
+    icon: ShoppingBag,
+  },
+  {
+    key: "foodtruck",
+    label: "Food truck",
+    desc: "Operación mobile con caja y reportes desde cualquier pantalla.",
+    icon: Sparkles,
+  },
 ];
 
 const advantages = [
   {
     icon: Sparkles,
-    title: "Simple y moderno",
-    text: "Interfaz clara para cajero y mesero. Menos clics, más operación en el turno.",
+    title: "$0 de instalación",
+    text: "Sin hardware especial. Entrás desde el navegador con usuario y PIN.",
+    stat: "$0",
   },
   {
     icon: MonitorSmartphone,
-    title: "En cualquier dispositivo",
-    text: "Celular del mesero, tablet o PC del cajero. Sin hardware especial.",
+    title: "3 roles en simultáneo",
+    text: "Cajero, mesero y domiciliario. Cada uno en su pantalla, misma operación.",
+    stat: "3",
   },
   {
     icon: Cloud,
-    title: "En la nube",
-    text: "Entrá desde el navegador. Sin instalar programas en cada máquina.",
+    title: "1 minuto para empezar",
+    text: "Configurás el menú, las mesas y los repartidores. Listo para el turno.",
+    stat: "1 min",
   },
   {
     icon: ShieldCheck,
-    title: "Roles y control",
-    text: "Admin/caja y mesero con PIN. Cada uno ve solo lo que necesita.",
+    title: "Stock y caja sin Excel",
+    text: "Inventario auto, deudas y corte Z en un click. Cero cuentas a mano.",
+    stat: "0 Excel",
   },
 ];
 
@@ -71,9 +108,11 @@ function SectionEyebrow({ children }) {
 }
 
 export default function Landing() {
+  useDocumentTitle(null);
   const { user } = useAuth();
+  const [hoveredType, setHoveredType] = useState(null);
   const appPath = user ? "/dashboard" : "/login";
-  const ctaLabel = user ? "Ir al panel" : "Probar ahora";
+  const ctaLabel = user ? "Ir al panel" : "Iniciar sesión";
 
   return (
     <div className="min-h-svh w-full overflow-x-hidden bg-white text-ink-800 dark:bg-obsidian-950 dark:text-white">
@@ -206,17 +245,19 @@ export default function Landing() {
               <div>
                 <SectionEyebrow>Pedidos a domicilio</SectionEyebrow>
                 <h2 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
-                  Impulsá tus domicilios y simplificá el seguimiento
+                  Domicilios con el repartidor en su celular
                 </h2>
                 <p className="mt-4 text-base leading-relaxed text-ink-700 dark:text-obsidian-200">
-                  Tablero Kanban con turnos FIFO, asignación de repartidores y cobro al
-                  entregar o pre-cobro por transferencia.
+                  Tablero Kanban de 5 columnas, asignación de repartidores, pantalla propia para
+                  el domiciliario y cobro al entregar o pre-cobro por transferencia.
                 </p>
                 <ul className="mt-6 space-y-3 text-base text-ink-700 dark:text-obsidian-200">
                   {[
-                    "Columnas: pendientes → preparación → en camino → entregados",
-                    "Multi-repartidor con historial de entregas",
-                    "Notas, propina y división de cuenta",
+                    "5 columnas: pendientes → preparación → listos → en camino → entregados",
+                    "El repartidor opera desde su celular con 'Salí' o 'Salí con todos'",
+                    "Links a Maps y tel: para llamar al cliente desde el pedido",
+                    "'A rendir': el sistema calcula el efectivo que debe entregar al cierre",
+                    "Reasignación libre de pedidos entre repartidores",
                   ].map((x) => (
                     <li key={x} className="flex gap-3">
                       <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-wine-600" />
@@ -304,18 +345,56 @@ export default function Landing() {
               Una solución para operar mesas y pedidos a domicilio
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-ink-700 dark:text-obsidian-200">
-              ¿Restaurante de acera, sala con mesas o solo delivery? TurnOn se adapta al flujo
-              de tu equipo.
+              ¿Restaurante de acera, sala con mesas o solo delivery? Tocá un tipo para ver cómo
+              se ajusta TurnOn.
             </p>
-            <div className="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-2">
-              {businessTypes.map((b) => (
-                <span
-                  key={b}
-                  className="rounded-full border border-paper-300 bg-paper-50 px-4 py-2 text-sm font-semibold text-ink-800 dark:border-obsidian-700 dark:bg-obsidian-900 dark:text-white"
-                >
-                  {b}
-                </span>
-              ))}
+            <div
+              className="mx-auto mt-8 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3"
+              onMouseLeave={() => setHoveredType(null)}
+            >
+              {businessTypes.map((b) => {
+                const Icon = b.icon;
+                const isActive = hoveredType === b.key;
+                return (
+                  <button
+                    key={b.key}
+                    type="button"
+                    onMouseEnter={() => setHoveredType(b.key)}
+                    onFocus={() => setHoveredType(b.key)}
+                    onClick={() => setHoveredType(isActive ? null : b.key)}
+                    aria-pressed={isActive}
+                    className={`group flex flex-col items-start gap-2 rounded-2xl border p-4 text-left transition-all ${
+                      isActive
+                        ? "border-wine-500 bg-wine-50 shadow-card dark:border-wine-500/50 dark:bg-wine-900/30"
+                        : "border-paper-300 bg-paper-50 hover:border-wine-300 dark:border-obsidian-700 dark:bg-obsidian-900 dark:hover:border-wine-500/40"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`flex size-9 items-center justify-center rounded-lg transition-colors ${
+                          isActive
+                            ? "bg-wine-600 text-white"
+                            : "bg-wine-50 text-wine-600 dark:bg-wine-900/30 dark:text-wine-300"
+                        }`}
+                      >
+                        <Icon size={18} />
+                      </span>
+                      <span className="text-base font-bold text-ink-900 dark:text-white">
+                        {b.label}
+                      </span>
+                    </div>
+                    <p
+                      className={`text-sm leading-relaxed transition-colors ${
+                        isActive
+                          ? "text-ink-800 dark:text-obsidian-100"
+                          : "text-ink-600 dark:text-obsidian-400"
+                      }`}
+                    >
+                      {b.desc}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -337,17 +416,22 @@ export default function Landing() {
               </p>
             </div>
 
-            {/* Escenario 3D: laptop + phone juntos, sin solape */}
-            <div className="device-stage relative mx-auto mt-12 flex max-w-5xl flex-col items-center justify-center sm:mt-14">
-              <div className="flex w-full flex-col items-center justify-center gap-8 sm:flex-row sm:items-end sm:gap-6 md:gap-8 lg:gap-10">
+            {/* Escenario 3D: laptop + 2 phones */}
+            <div className="device-stage relative mx-auto mt-12 flex max-w-6xl flex-col items-center justify-center sm:mt-14">
+              <div className="flex w-full flex-col items-center justify-center gap-6 sm:flex-row sm:items-end sm:gap-4 md:gap-6 lg:gap-8">
                 {/* Laptop (caja / admin) */}
-                <div className="w-full max-w-xl shrink-0 sm:max-w-md md:max-w-lg lg:max-w-xl">
-                  <DeviceFrame variant="laptop" tilt="left" float label="Panel cajero / admin">
+                <div className="w-full max-w-xl shrink-0 sm:max-w-sm md:max-w-md lg:max-w-lg">
+                  <DeviceFrame
+                    variant="laptop"
+                    tilt="left"
+                    float
+                    label="Panel cajero / admin"
+                  >
                     <MockDashboard compact />
                   </DeviceFrame>
                 </div>
-                {/* Phone (mesero) — al lado, sin tapar el laptop */}
-                <div className="w-[12rem] shrink-0 sm:w-[12.5rem] md:w-[13rem]">
+                {/* Phone (mesero) */}
+                <div className="w-[11rem] shrink-0 sm:w-[11.5rem] md:w-[12rem]">
                   <DeviceFrame
                     variant="phone"
                     tilt="right"
@@ -358,11 +442,25 @@ export default function Landing() {
                     <MockWaiterPhone />
                   </DeviceFrame>
                 </div>
+                {/* Phone (domiciliario) */}
+                <div className="w-[11rem] shrink-0 sm:w-[11.5rem] md:w-[12rem]">
+                  <DeviceFrame
+                    variant="phone"
+                    tilt="left"
+                    float
+                    floatDelay
+                    label="App domiciliario"
+                  >
+                    <MockDriverPhone />
+                  </DeviceFrame>
+                </div>
               </div>
 
-              <div className="mt-8 grid w-full max-w-2xl gap-4 text-center sm:grid-cols-2 sm:gap-6">
+              <div className="mt-8 grid w-full max-w-3xl gap-4 text-center sm:grid-cols-3 sm:gap-6">
                 <div>
-                  <h3 className="font-semibold text-ink-900 dark:text-white">Para caja y gestión</h3>
+                  <h3 className="font-semibold text-ink-900 dark:text-white">
+                    Para caja y gestión
+                  </h3>
                   <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
                     Dashboard, cobros, deudas, personal, inventario y reportes.
                   </p>
@@ -371,6 +469,14 @@ export default function Landing() {
                   <h3 className="font-semibold text-ink-900 dark:text-white">Para meseros</h3>
                   <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
                     Mesas asignadas, catálogo y historial de la jornada.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-ink-900 dark:text-white">
+                    Para domicilarios
+                  </h3>
+                  <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
+                    Salí con todos, Maps y tel:, y resumen a rendir.
                   </p>
                 </div>
               </div>
@@ -388,13 +494,18 @@ export default function Landing() {
               </h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {advantages.map(({ icon: Icon, title, text }) => (
+              {advantages.map(({ icon: Icon, title, text, stat }) => (
                 <article
                   key={title}
-                  className="rounded-2xl border border-paper-300 bg-paper-50 p-6 shadow-card transition hover:border-wine-400 dark:border-obsidian-700 dark:bg-obsidian-900 dark:hover:border-wine-500/40"
+                  className="group relative overflow-hidden rounded-2xl border border-paper-300 bg-paper-50 p-6 shadow-card transition hover:border-wine-400 dark:border-obsidian-700 dark:bg-obsidian-900 dark:hover:border-wine-500/40"
                 >
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-wine-50 text-wine-600 dark:bg-wine-900/40 dark:text-wine-300">
-                    <Icon size={24} />
+                  <div className="mb-4 flex items-start justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-wine-50 text-wine-600 dark:bg-wine-900/40 dark:text-wine-300">
+                      <Icon size={24} />
+                    </div>
+                    <span className="text-3xl font-extrabold tracking-tight text-wine-600/30 transition-colors group-hover:text-wine-600/70 dark:text-wine-300/30 dark:group-hover:text-wine-300/70">
+                      {stat}
+                    </span>
                   </div>
                   <h3 className="text-lg font-semibold text-ink-900 dark:text-white">{title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-ink-700 dark:text-obsidian-200">
@@ -434,6 +545,33 @@ export default function Landing() {
         </section>
       </main>
 
+      {/* Schema.org JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "TurnOn",
+            applicationCategory: "BusinessApplication",
+            applicationSubCategory: "Restaurant Management Software",
+            operatingSystem: "Web",
+            description:
+              "Sistema de gestión para restaurantes con mesas, pedidos a domicilio, para llevar y caja.",
+            url: "https://turnon.app/",
+            offers: {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "USD",
+            },
+            author: {
+              "@type": "Person",
+              name: "Ivan Fernandez",
+            },
+          }),
+        }}
+      />
+
       {/* Footer */}
       <footer className={`border-t border-paper-200 bg-white py-10 dark:border-obsidian-800 dark:bg-obsidian-950 ${PAD}`}>
         <div className={`${CONTAINER} flex flex-col gap-8 sm:flex-row sm:justify-between`}>
@@ -448,17 +586,17 @@ export default function Landing() {
               <p className="font-semibold text-ink-900 dark:text-white">Producto</p>
               <ul className="mt-2 space-y-1.5 text-ink-600 dark:text-obsidian-400">
                 <li>
-                  <a href="#funciones" className="hover:text-wine-600">
+                  <a href="#funciones" className="hover:text-wine-600" aria-label="Ver funciones del producto">
                     Funciones
                   </a>
                 </li>
                 <li>
-                  <a href="#dispositivos" className="hover:text-wine-600">
+                  <a href="#dispositivos" className="hover:text-wine-600" aria-label="Ver dispositivos compatibles">
                     Dispositivos
                   </a>
                 </li>
                 <li>
-                  <Link to="/login" className="hover:text-wine-600">
+                  <Link to="/login" className="hover:text-wine-600" aria-label="Iniciar sesión en TurnOn">
                     Iniciar sesión
                   </Link>
                 </li>
@@ -468,9 +606,39 @@ export default function Landing() {
               <p className="font-semibold text-ink-900 dark:text-white">Acceso</p>
               <ul className="mt-2 space-y-1.5 text-ink-600 dark:text-obsidian-400">
                 <li>
-                  <Link to={appPath} className="hover:text-wine-600">
+                  <Link to={appPath} className="hover:text-wine-600" aria-label={ctaLabel}>
                     {ctaLabel}
                   </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold text-ink-900 dark:text-white">Empresa</p>
+              <ul className="mt-2 space-y-1.5 text-ink-600 dark:text-obsidian-400">
+                <li>
+                  <a href="#" className="cursor-not-allowed opacity-60" aria-label="Acerca de TurnOn (próximamente)">
+                    Acerca de
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="cursor-not-allowed opacity-60" aria-label="Contacto (próximamente)">
+                    Contacto
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold text-ink-900 dark:text-white">Legal</p>
+              <ul className="mt-2 space-y-1.5 text-ink-600 dark:text-obsidian-400">
+                <li>
+                  <a href="#" className="cursor-not-allowed opacity-60" aria-label="Términos y condiciones (próximamente)">
+                    Términos
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="cursor-not-allowed opacity-60" aria-label="Política de privacidad (próximamente)">
+                    Privacidad
+                  </a>
                 </li>
               </ul>
             </div>

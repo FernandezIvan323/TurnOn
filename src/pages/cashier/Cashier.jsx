@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../lib/api";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
 import { money, formatTime, typeLabels, statusLabels, statusColors, typeColors, assignTurns } from "../../lib/format";
 import { useLiveRefresh } from "../../lib/useLiveRefresh";
@@ -32,7 +33,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
         const { data } = await api.get(`/orders/${order.id}`);
         if (!cancelled) setItems(data.items || []);
       } catch {
-        /* lista sin detalle: se muestra vacío */
+        /* lista sin detalle: se muestra vacÃ­o */
       }
     })();
     return () => {
@@ -84,7 +85,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
             </div>
           )}
           <div className="text-xs text-ink-500 dark:text-obsidian-400 mt-1">
-            {order.type === "table" ? `Mesa ${order.table_number}` : `${order.customer_name} · ${order.customer_neighborhood || ""}`}
+            {order.type === "table" ? `Mesa ${order.table_number}` : `${order.customer_name} Â· ${order.customer_neighborhood || ""}`}
           </div>
           {!isPrepay && showSplit && split > 1 && (
             <div className="mt-2 pt-2 border-t border-paper-200 dark:border-obsidian-700 text-sm">
@@ -100,7 +101,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
             Productos
           </div>
           {items.length === 0 ? (
-            <div className="text-xs text-ink-500 dark:text-obsidian-400">Cargando detalle…</div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Cargando detalleâ€¦</div>
           ) : (
             <ul className="max-h-40 space-y-1.5 overflow-y-auto">
               {items.map((it) => (
@@ -110,7 +111,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
                 >
                   <div className="min-w-0">
                     <span className="font-medium text-ink-900 dark:text-white">
-                      {it.quantity}× {it.name_snapshot}
+                      {it.quantity}Ã— {it.name_snapshot}
                     </span>
                     {it.notes && (
                       <div className="text-[11px] text-ink-500 dark:text-obsidian-400">
@@ -129,7 +130,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
 
         {isPrepay && (
           <div className="mb-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
-            El pedido se marcará como pagado y seguirá en camino. El cierre final se hará al entregar.
+            El pedido se marcarÃ¡ como pagado y seguirÃ¡ en camino. El cierre final se harÃ¡ al entregar.
           </div>
         )}
         {!isPrepay && (
@@ -158,7 +159,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
               onClick={() => setShowSplit((s) => !s)}
               className={`flex items-center gap-2 text-sm font-medium ${showSplit ? "text-wine-600 dark:text-wine-300" : "text-ink-500 dark:text-obsidian-400"}`}
             >
-              <Users size={14}/> {showSplit ? "Ocultar división" : "Dividir cuenta"}
+              <Users size={14}/> {showSplit ? "Ocultar divisiÃ³n" : "Dividir cuenta"}
             </button>
             {showSplit && (
               <div className="flex items-center gap-2 mt-2">
@@ -170,7 +171,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
             )}
           </div>
         )}
-        <label className="label">Método de pago</label>
+        <label className="label">MÃ©todo de pago</label>
         <div className="grid grid-cols-2 gap-2 mb-4">
           {methods.map((m) => (
             <button
@@ -195,7 +196,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
         <div className="flex gap-2">
           <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1">
-            {busy ? "Procesando…" : (isPrepay ? "Confirmar pre-cobro" : "Confirmar cobro")}
+            {busy ? "Procesandoâ€¦" : (isPrepay ? "Confirmar pre-cobro" : "Confirmar cobro")}
           </button>
         </div>
     </Modal>
@@ -220,7 +221,7 @@ function OrderRow({ order, turn, onClose, onPrepay, onTicket, highlight = false 
             </span>
           )}
           <span>#{order.id}</span>
-          <span>·</span>
+          <span>Â·</span>
           <span>{formatTime(order.created_at)}</span>
           <span className={`badge inline-flex items-center gap-1 ${typeColors[order.type] || typeColors.table}`}>
             <TypeIcon size={10}/>
@@ -230,13 +231,13 @@ function OrderRow({ order, turn, onClose, onPrepay, onTicket, highlight = false 
         </div>
         <div className="font-semibold text-ink-800 dark:text-obsidian-50 mt-0.5">
           {order.type === "table"
-            ? `Mesa ${order.table_number}` + (order.table_label ? ` · ${order.table_label}` : "")
-            : `${order.customer_name}${order.customer_neighborhood ? " · " + order.customer_neighborhood : ""}`}
+            ? `Mesa ${order.table_number}` + (order.table_label ? ` Â· ${order.table_label}` : "")
+            : `${order.customer_name}${order.customer_neighborhood ? " Â· " + order.customer_neighborhood : ""}`}
         </div>
         {order.notes && <div className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">Nota: {order.notes}</div>}
         {order.payment_status === "paid" && (
           <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">
-            ✓ Pagado ({order.payment_method}){Number(order.tip) > 0 ? ` + ${money(order.tip)} propina` : ""}
+            âœ“ Pagado ({order.payment_method}){Number(order.tip) > 0 ? ` + ${money(order.tip)} propina` : ""}
           </div>
         )}
       </div>
@@ -274,6 +275,7 @@ function OrderRow({ order, turn, onClose, onPrepay, onTicket, highlight = false 
 }
 
 export default function Cashier() {
+  useDocumentTitle("Caja");
   const [tab, setTab] = useState("pending");
   const [typeFilter, setTypeFilter] = useState("all");
   const [orders, setOrders] = useState([]);
@@ -396,7 +398,7 @@ export default function Cashier() {
 
       {tab === "pending" && !loading && (
         <p className="mb-3 text-xs text-ink-600 dark:text-white">
-          Solo pedidos marcados <b>lista para cobrar</b>. Las mesas en preparación no aparecen acá.
+          Solo pedidos marcados <b>lista para cobrar</b>. Las mesas en preparaciÃ³n no aparecen acÃ¡.
         </p>
       )}
 
@@ -416,7 +418,7 @@ export default function Cashier() {
         <EmptyState
           icon={Calculator}
           title="No hay pedidos"
-          description={tab === "pending" ? "Aún no hay pedidos listos para cobrar." : "Aún no hay pedidos cobrados."}
+          description={tab === "pending" ? "AÃºn no hay pedidos listos para cobrar." : "AÃºn no hay pedidos cobrados."}
         />
       ) : (
         <div className="space-y-2">

@@ -5,10 +5,12 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import AuthSplitLayout from "../components/auth/AuthSplitLayout";
 import { AuthLabel } from "../components/auth/AuthLabel";
 import { authInputClassName } from "../components/auth/authInputClassName";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 const PIN_LENGTH = 4;
 
 export default function Login() {
+  useDocumentTitle("Iniciar sesión");
   const { login, user, loading, error } = useAuth();
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState("");

@@ -4,6 +4,7 @@ import api from "../../lib/api";
 import Header from "../../components/Header";
 import EmptyState from "../../components/EmptyState";
 import { TableSkeleton } from "../../components/Skeleton";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import { money, dateOnlyUTC } from "../../lib/format";
 import { History, ArrowLeft, Receipt, Printer } from "lucide-react";
 
@@ -12,6 +13,7 @@ function dateOnly(iso) {
 }
 
 export default function ClosingHistory() {
+  useDocumentTitle("Histórico de cortes");
   const [closings, setClosings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [from, setFrom] = useState("");

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../lib/api";
 import Header from "../components/Header";
 import { useAuth } from "../store/auth";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { money, statusLabels, statusColors } from "../lib/format";
 import { todayLocalISO } from "../lib/date";
 import { useLiveRefresh } from "../lib/useLiveRefresh";
@@ -832,6 +833,7 @@ function WaiterHome() {
 }
 
 export default function Dashboard() {
+  useDocumentTitle("Dashboard");
   const { user } = useAuth();
   if (user?.role === "delivery") return <DriverHome />;
   if (user?.role === "waiter") return <WaiterHome />;

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/api";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
 import Modal from "../../components/Modal";
 import SegmentedControl from "../../components/SegmentedControl";
@@ -18,7 +19,7 @@ function MovementModal({ product, onClose }) {
       .finally(() => setLoading(false));
   }, [product.id]);
   return (
-    <Modal open onClose={onClose} title={`Movimientos · ${product.name}`} size="xl">
+    <Modal open onClose={onClose} title={`Movimientos Â· ${product.name}`} size="xl">
       <div className="space-y-2">
         {loading && <TableSkeleton rows={4} cols={3} className="!shadow-none" />}
         {!loading && movements.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500">Sin movimientos registrados.</div>}
@@ -93,7 +94,7 @@ function StockModal({ product, onClose, onSaved }) {
         <>
           <label className="label">Stock actual</label>
           <input className="input" type="number" step="0.01" value={stock} onChange={(e) => setStock(e.target.value)} />
-          <label className="label mt-3">Stock mínimo</label>
+          <label className="label mt-3">Stock mÃ­nimo</label>
           <input className="input" type="number" step="0.01" value={min_stock} onChange={(e) => setMinStock(e.target.value)} />
         </>
       ) : (
@@ -101,19 +102,20 @@ function StockModal({ product, onClose, onSaved }) {
           <label className="label">Cantidad</label>
           <input className="input" type="number" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} autoFocus />
           <label className="label mt-3">Motivo (opcional)</label>
-          <input className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Compra, merma, ajuste…" />
+          <input className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Compra, merma, ajusteâ€¦" />
         </>
       )}
       {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300">{err}</div>}
       <div className="mt-4 flex justify-end gap-2">
         <button onClick={onClose} className="btn-secondary">Cancelar</button>
-        <button onClick={submit} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
+        <button onClick={submit} disabled={saving} className="btn-primary">{saving ? "Guardandoâ€¦" : "Guardar"}</button>
       </div>
     </Modal>
   );
 }
 
 export default function Inventory() {
+  useDocumentTitle("Inventario");
   const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -138,7 +140,7 @@ export default function Inventory() {
   const lowStock = useMemo(() => products.filter((p) => p.low_stock), [products]);
 
   if (user?.role !== "admin") {
-    return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Esta sección es solo para el administrador.</div>;
+    return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Esta secciÃ³n es solo para el administrador.</div>;
   }
 
   return (
@@ -166,7 +168,7 @@ export default function Inventory() {
       <div className="mb-4 flex items-center gap-2">
         <div className="relative flex-1 max-w-xs">
           <Search size={14} className="absolute left-3 top-2.5 text-ink-400 dark:text-obsidian-500"/>
-          <input className="input pl-8 text-sm" placeholder="Buscar producto…" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <input className="input pl-8 text-sm" placeholder="Buscar productoâ€¦" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
 
@@ -179,7 +181,7 @@ export default function Inventory() {
               <thead>
                 <tr>
                   <th>Producto</th>
-                  <th>Categoría</th>
+                  <th>CategorÃ­a</th>
                   <th className="text-right">Stock</th>
                   <th className="text-right">Min.</th>
                   <th className="text-right">Acciones</th>
@@ -189,7 +191,7 @@ export default function Inventory() {
                 {filtered.map((p) => (
                   <tr key={p.id} className={p.low_stock ? "!bg-rose-50/60 dark:!bg-rose-900/15" : undefined}>
                     <td className="cell-strong">{p.name}</td>
-                    <td className="cell-muted">{p.category_name || "—"}</td>
+                    <td className="cell-muted">{p.category_name || "â€”"}</td>
                     <td className={`text-right font-semibold tabular-nums ${p.low_stock ? "text-rose-700 dark:text-rose-300" : ""}`}>
                       {p.stock}
                     </td>
