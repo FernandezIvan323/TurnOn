@@ -29,10 +29,21 @@ async function getAssignedTableIds(userId) {
   return rows.map((r) => r.table_id);
 }
 
+async function getDeliveryPersonId(userId) {
+  const { rows } = await query(
+    "SELECT id FROM delivery_persons WHERE user_id = $1 LIMIT 1",
+    [userId]
+  );
+  return rows.length ? rows[0].id : null;
+}
+
 async function buildUserPayload(row) {
   const assigned_table_ids = row.role === "waiter"
     ? await getAssignedTableIds(row.id)
     : [];
+  const delivery_person_id = row.role === "delivery"
+    ? await getDeliveryPersonId(row.id)
+    : null;
   return {
     id: row.id,
     username: row.username,
@@ -40,6 +51,7 @@ async function buildUserPayload(row) {
     role: row.role,
     active: row.active,
     assigned_table_ids,
+    delivery_person_id,
   };
 }
 
@@ -102,19 +114,39 @@ router.get("/users", authRequired, requireRole("admin"), async (_req, res) => {
 });
 
 router.post("/users", authRequired, requireRole("admin"), async (req, res) => {
-  const { username, name, pin, role = "waiter" } = req.body || {};
+  const { username, name, pin, role = "waiter", delivery_person_id = null } = req.body || {};
   if (!username || !name || !pin) return res.status(400).json({ error: "Faltan datos" });
-  if (!["admin", "waiter"].includes(role))
+  if (!["admin", "waiter", "delivery"].includes(role))
     return res.status(400).json({ error: "Rol inválido" });
   if (!/^\d{4}$/.test(String(pin)))
     return res.status(400).json({ error: "El PIN debe ser de 4 dígitos" });
   const hash = await bcrypt.hash(String(pin), 10);
   try {
+    if (role === "delivery") {
+      if (!delivery_person_id)
+        return res.status(400).json({ error: "Repartidor requerido para el rol delivery" });
+      const dp = await query(
+        "SELECT id FROM delivery_persons WHERE id = $1 AND user_id IS NULL",
+        [delivery_person_id]
+      );
+      if (dp.rows.length === 0)
+        return res.status(409).json({ error: "Repartidor no existe o ya tiene acceso" });
+    }
     const { rows } = await query(
       "INSERT INTO users (username, name, pin, role) VALUES ($1,$2,$3,$4) RETURNING id, username, name, role, active",
       [username.toLowerCase(), name, hash, role]
     );
-    res.status(201).json(rows[0]);
+    const user = rows[0];
+    if (role === "delivery") {
+      await query(
+        "UPDATE delivery_persons SET user_id = $1 WHERE id = $2",
+        [user.id, delivery_person_id]
+      );
+    }
+    res.status(201).json({
+      ...user,
+      delivery_person_id: role === "delivery" ? Number(delivery_person_id) : null,
+    });
   } catch (e) {
     if (e.code === "23505") return res.status(409).json({ error: "Usuario ya existe" });
     throw e;

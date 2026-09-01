@@ -96,10 +96,64 @@ async function recomputeOrderTotal(client, orderId) {
   return total;
 }
 
+/** Resuelve el id de repartidor vinculado al usuario (rol delivery). */
+async function deliveryPersonIdFor(userId) {
+  if (!userId) return null;
+  const { rows } = await query(
+    "SELECT id FROM delivery_persons WHERE user_id = $1 LIMIT 1",
+    [userId]
+  );
+  return rows.length ? rows[0].id : null;
+}
+
+/**
+ * Libera al repartidor solo si no le quedan pedidos activos.
+ * Reemplaza el UPDATE incondicional a 'available' (antes, con varios pedidos
+ * en la calle, cerrar uno lo dejaba "libre" pese a tener otros).
+ */
+async function freeDriverIfIdle(client, deliveryPersonId) {
+  if (!deliveryPersonId) return;
+  await client.query(
+    `UPDATE delivery_persons
+        SET status = 'available'
+      WHERE id = $1
+        AND NOT EXISTS (
+          SELECT 1 FROM orders o
+           WHERE o.delivery_person_id = $1
+             AND o.status IN ('assigned','on_the_way')
+        )`,
+    [deliveryPersonId]
+  );
+}
+
+/**
+ * Carga un pedido con FOR UPDATE y verifica que sea un domicilio
+ * asignado al repartidor indicado (uso exclusivo del rol delivery).
+ */
+async function assertOwnDeliveryOrder(client, orderId, deliveryPersonId) {
+  const { rows } = await client.query(
+    "SELECT id, status, type, delivery_person_id FROM orders WHERE id = $1 FOR UPDATE",
+    [orderId]
+  );
+  if (rows.length === 0) throw new HttpError(404, "No existe");
+  const o = rows[0];
+  if (o.type !== "delivery") throw new HttpError(403, "Solo pedidos a domicilio");
+  if (o.delivery_person_id !== deliveryPersonId)
+    throw new HttpError(403, "El pedido no está asignado a ti");
+  return o;
+}
+
 router.get("/", authRequired, async (req, res) => {
   const { type, status, payment, from, to, collectible } = req.query;
   const filters = [];
   const params = [];
+  // Un domiciliario solo ve sus propios pedidos (seguridad por servidor)
+  if (req.user.role === "delivery") {
+    const dpId = await deliveryPersonIdFor(req.user.id);
+    if (!dpId) return res.json([]);
+    params.push(dpId);
+    filters.push(`o.delivery_person_id = $${params.length}`);
+  }
   if (type)    { params.push(type);    filters.push(`o.type = $${params.length}`); }
   if (status)  { params.push(status);  filters.push(`o.status = $${params.length}`); }
   if (payment === "debt_settled") {
@@ -353,6 +407,8 @@ router.delete("/:id/items/:itemId", authRequired, async (req, res) => {
 });
 
 // Asignar repartidor (admin)
+// El pedido pasa a 'assigned' (Listo para salir): el domiciliario confirma la salida
+// desde su propia pantalla con POST /:id/start.
 router.post("/:id/assign-delivery", authRequired, requireRole("admin"), async (req, res) => {
   const { delivery_person_id } = req.body;
   if (!delivery_person_id) return res.status(400).json({ error: "Repartidor requerido" });
@@ -364,30 +420,97 @@ router.post("/:id/assign-delivery", authRequired, requireRole("admin"), async (r
         [delivery_person_id]
       );
       if (dp.length === 0) throw new HttpError(404, "Repartidor no existe");
-      if (dp[0].status !== "available") throw new HttpError(409, "Repartidor no disponible");
+      if (dp[0].status === "offduty") throw new HttpError(409, "Repartidor fuera de turno");
 
       const { rows: o } = await client.query(
-        "SELECT status FROM orders WHERE id = $1 FOR UPDATE",
+        "SELECT status, delivery_person_id FROM orders WHERE id = $1 FOR UPDATE",
         [req.params.id]
       );
       if (o.length === 0) throw new HttpError(404, "Pedido no existe");
-      if (!["pending", "preparing"].includes(o[0].status)) {
+      if (!["pending", "preparing", "assigned"].includes(o[0].status)) {
         throw new HttpError(409, `El pedido no se puede asignar en su estado actual (${o[0].status})`);
       }
 
+      const prevDriver = o[0].delivery_person_id;
+
       await client.query(
-        `UPDATE orders SET delivery_person_id = $2, status = 'on_the_way' WHERE id = $1`,
+        `UPDATE orders SET delivery_person_id = $2, status = 'assigned' WHERE id = $1`,
         [req.params.id, delivery_person_id]
       );
       await client.query(
         `UPDATE delivery_persons SET status = 'busy' WHERE id = $1`,
         [delivery_person_id]
       );
+      if (prevDriver && prevDriver !== Number(delivery_person_id)) {
+        await freeDriverIfIdle(client, prevDriver);
+      }
     });
     res.json({ ok: true });
   } catch (e) {
     const status = e.status || 500;
     if (status === 500) console.error(`[orders:POST /:id/assign-delivery]`, e);
+    res.status(status).json({ error: e.message || "Error interno" });
+  }
+});
+
+// Repartidor confirma "salí a entregar" (assigned → on_the_way)
+router.post("/:id/start", authRequired, requireRole("delivery"), async (req, res) => {
+  try {
+    const dpId = await deliveryPersonIdFor(req.user.id);
+    if (!dpId) throw new HttpError(403, "Sin repartidor vinculado a tu cuenta");
+    await withTransaction(async (client) => {
+      const o = await assertOwnDeliveryOrder(client, req.params.id, dpId);
+      if (o.status !== "assigned")
+        throw new HttpError(409, `No podés marcar salida desde "${o.status}"`);
+      await client.query("UPDATE orders SET status = 'on_the_way' WHERE id = $1", [req.params.id]);
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    const status = e.status || 500;
+    if (status === 500) console.error(`[orders:POST /:id/start]`, e);
+    res.status(status).json({ error: e.message || "Error interno" });
+  }
+});
+
+// Repartidor confirma la entrega:
+// collected=true  -> cobró (paid)  -> { collected, method }
+// collected=false -> no pagó (debt)
+router.post("/:id/deliver", authRequired, requireRole("delivery"), async (req, res) => {
+  const { collected = false, method = "cash" } = req.body || {};
+  try {
+    const dpId = await deliveryPersonIdFor(req.user.id);
+    if (!dpId) throw new HttpError(403, "Sin repartidor vinculado a tu cuenta");
+    await withTransaction(async (client) => {
+      const o = await assertOwnDeliveryOrder(client, req.params.id, dpId);
+      if (o.status !== "on_the_way")
+        throw new HttpError(409, `Solo podés entregar pedidos en camino (actual: ${o.status})`);
+      await deductStockForOrder(client, req.params.id);
+      if (collected) {
+        await client.query(
+          `UPDATE orders
+              SET status = 'delivered',
+                  payment_status = 'paid',
+                  payment_method = $2,
+                  closed_at = NOW()
+            WHERE id = $1`,
+          [req.params.id, method]
+        );
+      } else {
+        await client.query(
+          `UPDATE orders
+              SET status = 'delivered',
+                  payment_status = 'debt',
+                  closed_at = NOW()
+            WHERE id = $1`,
+          [req.params.id]
+        );
+      }
+      await freeDriverIfIdle(client, dpId);
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    const status = e.status || 500;
+    if (status === 500) console.error(`[orders:POST /:id/deliver]`, e);
     res.status(status).json({ error: e.message || "Error interno" });
   }
 });
@@ -446,10 +569,7 @@ router.post("/:id/status", authRequired, async (req, res) => {
         throw new HttpError(409, "No se puede cancelar un pedido ya cobrado");
       }
       if (status === "cancelled" && o.delivery_person_id) {
-        await client.query(
-          "UPDATE delivery_persons SET status = 'available' WHERE id = $1",
-          [o.delivery_person_id]
-        );
+        await freeDriverIfIdle(client, o.delivery_person_id);
       }
       if (status === "delivered") {
         await deductStockForOrder(client, req.params.id);
@@ -484,10 +604,7 @@ router.post("/:id/close", authRequired, requireRole("admin"), async (req, res) =
       if (o.status === "cancelled") throw new HttpError(409, "El pedido está cancelado");
       if (o.payment_status === "paid") throw new HttpError(409, "El pedido ya está cobrado");
       if (o.delivery_person_id) {
-        await client.query(
-          "UPDATE delivery_persons SET status = 'available' WHERE id = $1",
-          [o.delivery_person_id]
-        );
+        await freeDriverIfIdle(client, o.delivery_person_id);
       }
       await deductStockForOrder(client, req.params.id);
 
@@ -548,10 +665,7 @@ router.post("/:id/mark-delivered", authRequired, requireRole("admin"), async (re
         throw new HttpError(409, "El pedido ya está marcado como deuda");
       }
       if (o.delivery_person_id) {
-        await client.query(
-          "UPDATE delivery_persons SET status = 'available' WHERE id = $1",
-          [o.delivery_person_id]
-        );
+        await freeDriverIfIdle(client, o.delivery_person_id);
       }
       await deductStockForOrder(client, req.params.id);
       await client.query(
@@ -567,6 +681,30 @@ router.post("/:id/mark-delivered", authRequired, requireRole("admin"), async (re
   } catch (e) {
     const status = e.status || 500;
     if (status === 500) console.error("[orders:POST /:id/mark-delivered]", e);
+    res.status(status).json({ error: e.message || "Error interno" });
+  }
+});
+
+// Repartidor marca "Salí con todos": pasa TODOS sus pedidos asignados a en camino
+router.post("/start-assigned", authRequired, requireRole("delivery"), async (req, res) => {
+  try {
+    const dpId = await deliveryPersonIdFor(req.user.id);
+    if (!dpId) throw new HttpError(403, "Sin repartidor vinculado a tu cuenta");
+    const result = await withTransaction(async (client) => {
+      const { rows } = await client.query(
+        `UPDATE orders
+            SET status = 'on_the_way'
+          WHERE delivery_person_id = $1
+            AND status = 'assigned'
+          RETURNING id`,
+        [dpId]
+      );
+      return rows.length;
+    });
+    res.json({ ok: true, count: result });
+  } catch (e) {
+    const status = e.status || 500;
+    if (status === 500) console.error(`[orders:POST /start-assigned]`, e);
     res.status(status).json({ error: e.message || "Error interno" });
   }
 });

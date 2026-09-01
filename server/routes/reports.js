@@ -145,6 +145,95 @@ router.get("/my-work-days/:date", async (req, res) => {
   });
 });
 
+/** Días con entregas del domiciliario autenticado (self-scope). */
+router.get("/my-deliveries", async (req, res) => {
+  if (req.user.role !== "delivery")
+    return res.status(403).json({ error: "No autorizado" });
+  const dp = await query(
+    "SELECT id FROM delivery_persons WHERE user_id = $1 LIMIT 1",
+    [req.user.id]
+  );
+  if (dp.rows.length === 0) return res.json([]);
+  const dpId = dp.rows[0].id;
+  const day = orderDaySql("o");
+  const { rows } = await query(
+    `SELECT TO_CHAR(${day}, 'YYYY-MM-DD') AS date,
+            COUNT(*)::int AS orders_count,
+            COUNT(*) FILTER (WHERE o.payment_status = 'paid')::int AS paid_count,
+            COALESCE(SUM(o.total) FILTER (WHERE o.payment_status = 'paid'),0)::numeric AS total_sales,
+            COALESCE(SUM(o.total) FILTER (WHERE o.payment_status = 'paid' AND o.payment_method = 'cash'),0)::numeric AS cash_sales,
+            COALESCE(SUM(o.total) FILTER (WHERE o.payment_status = 'paid' AND o.payment_method <> 'cash'),0)::numeric AS transfer_sales
+       FROM orders o
+      WHERE o.delivery_person_id = $1
+        AND o.status = 'delivered'
+      GROUP BY ${day}
+      ORDER BY ${day} DESC`,
+    [dpId]
+  );
+  res.json(rows);
+});
+
+/** Detalle de un día de entregas del domiciliario. */
+router.get("/my-deliveries/:date", async (req, res) => {
+  if (req.user.role !== "delivery")
+    return res.status(403).json({ error: "No autorizado" });
+  const date = req.params.date;
+  if (!DATE_RE.test(date)) return res.status(400).json({ error: "date debe ser YYYY-MM-DD" });
+  const dp = await query(
+    "SELECT id FROM delivery_persons WHERE user_id = $1 LIMIT 1",
+    [req.user.id]
+  );
+  if (dp.rows.length === 0) return res.json({ summary: {}, orders: [] });
+  const dpId = dp.rows[0].id;
+  const day = orderDaySql("o");
+  const orders = await query(
+    `SELECT o.id, o.total, o.tip, o.payment_method, o.payment_status, o.created_at, o.closed_at,
+            c.name AS customer_name, c.phone AS customer_phone,
+            c.address AS customer_address, c.neighborhood AS customer_neighborhood
+       FROM orders o
+       LEFT JOIN customers c ON c.id = o.customer_id
+      WHERE o.delivery_person_id = $1
+        AND ${day} = $2::date
+        AND o.status = 'delivered'
+      ORDER BY o.created_at DESC`,
+    [dpId, date]
+  );
+
+  const orderIds = orders.rows.map((o) => o.id);
+  let itemsByOrder = {};
+  if (orderIds.length > 0) {
+    const items = await query(
+      `SELECT oi.order_id, oi.name_snapshot, oi.unit_price, oi.quantity, oi.notes
+         FROM order_items oi
+        WHERE oi.order_id = ANY($1::int[])
+        ORDER BY oi.order_id, oi.id`,
+      [orderIds]
+    );
+    items.rows.forEach((it) => {
+      if (!itemsByOrder[it.order_id]) itemsByOrder[it.order_id] = [];
+      itemsByOrder[it.order_id].push(it);
+    });
+  }
+
+  const paid = orders.rows.filter((o) => o.payment_status === "paid");
+  const cash = paid.filter((o) => o.payment_method === "cash").reduce((s, o) => s + Number(o.total), 0);
+
+  res.json({
+    date,
+    summary: {
+      orders_count: orders.rows.length,
+      paid_count: paid.length,
+      total_sales: paid.reduce((s, o) => s + Number(o.total), 0),
+      cash_sales: cash,
+      transfer_sales: paid.filter((o) => o.payment_method !== "cash").reduce((s, o) => s + Number(o.total), 0),
+    },
+    orders: orders.rows.map((o) => ({
+      ...o,
+      items: itemsByOrder[o.id] || [],
+    })),
+  });
+});
+
 // ── Admin-only reports below ──────────────────────────────────────────
 router.use(requireRole("admin"));
 
@@ -460,7 +549,8 @@ router.get("/delivery-by-person", async (req, res) => {
   const { rows } = await query(
     `SELECT dp.id, dp.name, dp.phone,
             COUNT(o.id)::int AS deliveries,
-            COALESCE(SUM(o.total),0)::numeric AS revenue
+            COALESCE(SUM(o.total),0)::numeric AS revenue,
+            COALESCE(SUM(o.total) FILTER (WHERE o.payment_method = 'cash'),0)::numeric AS cash_to_settle
        FROM delivery_persons dp
        LEFT JOIN orders o ON o.delivery_person_id = dp.id
                          AND o.payment_status='paid'

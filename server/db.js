@@ -183,6 +183,18 @@ export async function runMigrations() {
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS debt_settled_at TIMESTAMPTZ;
   `);
 
+  // Rol 'delivery' + vínculo repartidor <-> usuario (acceso por PIN desde el celular)
+  await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`);
+  await pool.query(
+    `ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','waiter','delivery'))`
+  );
+  await pool.query(
+    `ALTER TABLE delivery_persons ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id) ON DELETE SET NULL`
+  );
+  await pool.query(
+    `CREATE UNIQUE INDEX IF NOT EXISTS uq_delivery_persons_user ON delivery_persons(user_id) WHERE user_id IS NOT NULL`
+  );
+
   // Fusionar líneas duplicadas 1x+1x → 2x (misma mesa/pedido, mismo producto y nota)
   await pool.query(`
     WITH dups AS (

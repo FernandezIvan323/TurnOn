@@ -4,7 +4,47 @@ import { authRequired } from "../middleware/auth.js";
 
 const router = Router();
 
+function tz() {
+  const t = process.env.DB_TZ || "America/Mexico_City";
+  if (!/^[\w/]+$/.test(t)) throw new Error(`Timezone inválido: ${t}`);
+  return t;
+}
+
 router.get("/summary", authRequired, async (req, res) => {
+  if (req.user.role === "delivery") {
+    const dp = await query(
+      "SELECT id FROM delivery_persons WHERE user_id = $1 LIMIT 1",
+      [req.user.id]
+    );
+    if (dp.rows.length === 0)
+      return res.json({ role: "delivery", my: null, today: null });
+    const dpId = dp.rows[0].id;
+    const my = await query(
+      `SELECT
+         (SELECT COUNT(*)::int FROM orders
+           WHERE delivery_person_id = $1 AND status = 'assigned')            AS ready_count,
+         (SELECT COALESCE(SUM(total),0)::numeric FROM orders
+           WHERE delivery_person_id = $1 AND status = 'assigned')            AS ready_amount,
+         (SELECT COUNT(*)::int FROM orders
+           WHERE delivery_person_id = $1 AND status = 'on_the_way')          AS on_the_way_count,
+         (SELECT COALESCE(SUM(total),0)::numeric FROM orders
+           WHERE delivery_person_id = $1 AND status = 'on_the_way'
+             AND payment_status = 'pending')                                 AS street_amount`,
+      [dpId]
+    );
+    const today = await query(
+      `SELECT COUNT(*)::int AS delivered_count,
+              COALESCE(SUM(total) FILTER (WHERE payment_status = 'paid' AND payment_method = 'cash'),0)::numeric     AS cash_to_settle,
+              COALESCE(SUM(total) FILTER (WHERE payment_status = 'paid' AND payment_method <> 'cash'),0)::numeric    AS transfer_collected
+         FROM orders
+        WHERE delivery_person_id = $1
+          AND status = 'delivered'
+          AND DATE(closed_at AT TIME ZONE '${tz()}') = CURRENT_DATE`,
+      [dpId]
+    );
+    return res.json({ role: "delivery", my: my.rows[0], today: today.rows[0] });
+  }
+
   if (req.user.role === "waiter") {
     const my = await query(
       `SELECT

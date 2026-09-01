@@ -22,10 +22,10 @@ import {
 } from "lucide-react";
 
 const items = [
-  { to: "/dashboard", label: "Inicio", icon: Home, roles: ["admin", "waiter"] },
+  { to: "/dashboard", label: "Inicio", icon: Home, roles: ["admin", "waiter", "delivery"] },
   { to: "/tables", label: "Mesas", icon: Utensils, roles: ["admin", "waiter"] },
   { to: "/menu", labelKey: "catalog", icon: BookOpen, roles: ["admin", "waiter"] },
-  { to: "/my-history", label: "Mi historial", icon: CalendarDays, roles: ["waiter"] },
+  { to: "/my-history", label: "Mi historial", icon: CalendarDays, roles: ["waiter", "delivery"] },
   { to: "/delivery", label: "Domicilios", icon: Truck, roles: ["admin"] },
   { to: "/pickup", label: "Para llevar", icon: ShoppingBag, roles: ["admin"] },
   { to: "/debts", label: "Deudas", icon: AlertTriangle, roles: ["admin"] },
@@ -130,7 +130,11 @@ export default function Sidebar({ open = false, onClose }) {
           Sesión iniciada como
           <div className="text-sm font-semibold text-ink-900 dark:text-white">{user.name}</div>
           <div className="text-xs capitalize text-ink-500 dark:text-obsidian-400">
-            {user.role === "admin" ? "Cajero / Administrador" : "Mesero"}
+            {user.role === "admin"
+              ? "Cajero / Administrador"
+              : user.role === "delivery"
+                ? "Domiciliario"
+                : "Mesero"}
           </div>
           {user.role === "waiter" && (
             <div className="mt-1 text-xs">

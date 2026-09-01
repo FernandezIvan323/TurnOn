@@ -11,6 +11,7 @@ import {
   statusColors,
 } from "../../lib/format";
 import { kanbanColumnClass, KANBAN_COUNT_PILL } from "../../lib/kanbanTones";
+import Modal from "../../components/Modal";
 import { diffNewOrders, playBeep, isNotifyMuted, setNotifyMuted } from "../../lib/notify";
 import {
   Phone, MapPin, Plus, ChevronRight, X, User as UserIcon,
@@ -22,6 +23,7 @@ import {
 const COLUMNS = [
   { key: "pending",   title: "Pendientes" },
   { key: "preparing", title: "En preparación" },
+  { key: "assigned",  title: "Listos para salir" },
   { key: "on_the_way",title: "En camino" },
   { key: "delivered", title: "Entregados" },
 ];
@@ -29,6 +31,7 @@ const COLUMNS = [
 const DELIVERY_STATUS_ACCENT = {
   pending: "border-l-amber-500 bg-gradient-to-br from-amber-50/80 to-white dark:from-amber-950/40 dark:to-obsidian-900",
   preparing: "border-l-blue-500 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-950/40 dark:to-obsidian-900",
+  assigned: "border-l-violet-500 bg-gradient-to-br from-violet-50/80 to-white dark:from-violet-950/40 dark:to-obsidian-900",
   on_the_way: "border-l-indigo-500 bg-gradient-to-br from-indigo-50/80 to-white dark:from-indigo-950/40 dark:to-obsidian-900",
   delivered: "border-l-emerald-500 bg-gradient-to-br from-emerald-50/60 to-white dark:from-emerald-950/30 dark:to-obsidian-900",
 };
@@ -186,6 +189,23 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
               >
                 <ArrowLeft size={15} />
               </button>
+            </>
+          )}
+          {order.status === "assigned" && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAssign(order);
+                }}
+                className="inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-wine-600 px-2 text-xs font-semibold text-white transition hover:bg-wine-700"
+              >
+                <Truck size={14} /> Reasignar
+              </button>
+              <div className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-violet-100 px-2 py-2 text-[11px] font-semibold text-violet-800 dark:bg-violet-900/40 dark:text-violet-200">
+                Esperando que el domiciliario salga
+              </div>
             </>
           )}
           {order.status === "on_the_way" && (
@@ -602,7 +622,7 @@ function NewOrderModal({ onClose, onCreated }) {
 
 function AssignModal({ order, onClose, onAssigned }) {
   const [persons, setPersons] = useState([]);
-  useEffect(() => { api.get("/delivery").then((r) => setPersons(r.data)); }, []);
+  useEffect(() => { api.get("/delivery").then((r) => setPersons(r.data)).catch(() => setPersons([])); }, []);
   const [err, setErr] = useState(null);
   const assign = async (id) => {
     try {
@@ -613,35 +633,54 @@ function AssignModal({ order, onClose, onAssigned }) {
     }
   };
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-      <div className="card w-full max-w-md p-5">
-        <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-3">Asignar repartidor · #{order.id}</h2>
-        <div className="text-sm text-ink-500 dark:text-obsidian-400 mb-3">{order.customer_name} · {order.customer_address}</div>
-        {persons.length === 0 && <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">No hay repartidores registrados.</div>}
-        <div className="space-y-2 max-h-80 overflow-y-auto">
-          {persons.map((p) => (
+    <Modal open onClose={onClose} title={`Asignar repartidor · #${order.id}`} size="md">
+      <div className="text-sm text-ink-500 dark:text-obsidian-400 mb-3">
+        {order.customer_name} · {order.customer_address}
+      </div>
+      {persons.length === 0 && (
+        <div className="mb-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
+          No hay repartidores registrados.
+        </div>
+      )}
+      <div className="space-y-2 max-h-80 overflow-y-auto">
+        {persons.map((p) => {
+          const street = Number(p.street_amount || 0);
+          const cashToday = Number(p.today_cash || 0);
+          return (
             <button
               key={p.id}
               onClick={() => assign(p.id)}
-              className="w-full card p-3 text-left hover:border-wine-400 dark:hover:border-wine-500 flex items-center justify-between transition"
+              className="w-full card p-3 text-left hover:border-wine-400 dark:hover:border-wine-500 transition"
             >
-              <div>
-                <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
-                <div className="text-xs text-ink-500 dark:text-obsidian-400">{p.phone || "Sin teléfono"}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs font-semibold text-ink-600 dark:text-obsidian-200">{p.active_orders} activo{p.active_orders !== 1 ? "s" : ""}</div>
-                <ChevronRight size={18} className="text-ink-400 dark:text-obsidian-500 ml-auto" />
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 font-medium text-ink-800 dark:text-white">
+                    {p.name}
+                    {p.status === "offduty" && (
+                      <span className="badge bg-rose-100 text-rose-800 text-[10px] dark:bg-rose-900/40 dark:text-rose-300">Fuera de turno</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-ink-500 dark:text-obsidian-400">{p.phone || "Sin teléfono"}</div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <div className="text-[10px] uppercase tracking-wide text-ink-400 dark:text-obsidian-500">En la calle</div>
+                  <div className="text-sm font-semibold tabular-nums text-indigo-700 dark:text-indigo-300">
+                    {street > 0 ? money(street) : "—"}
+                  </div>
+                  <div className="text-[10px] mt-0.5 text-emerald-700 dark:text-emerald-300">
+                    {cashToday > 0 ? `${money(cashToday)} efectivo hoy` : ""}
+                  </div>
+                </div>
               </div>
             </button>
-          ))}
-        </div>
-        {err && <div className="mt-2 text-sm text-rose-700 dark:text-rose-300">{err}</div>}
-        <div className="mt-4 flex justify-end">
-          <button onClick={onClose} className="btn-secondary">Cerrar</button>
-        </div>
+          );
+        })}
       </div>
-    </div>
+      {err && <div className="mt-2 text-sm text-rose-700 dark:text-rose-300">{err}</div>}
+      <div className="mt-4 flex justify-end">
+        <button onClick={onClose} className="btn-secondary">Cerrar</button>
+      </div>
+    </Modal>
   );
 }
 

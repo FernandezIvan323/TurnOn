@@ -39,8 +39,8 @@ export default function App() {
         <Route path="/tables" element={<TablesPage />} />
         <Route path="/menu" element={<Menu />} />
 
-        {/* Solo mesero */}
-        <Route path="/my-history" element={<WaiterOnly><MyWorkHistory /></WaiterOnly>} />
+        {/* Mesero y domiciliario */}
+        <Route path="/my-history" element={<RequireRole roles={["waiter", "delivery"]}><MyWorkHistory /></RequireRole>} />
 
         {/* Solo admin / cajero */}
         <Route path="/delivery" element={<AdminOnly><Delivery /></AdminOnly>} />

@@ -5,6 +5,7 @@ export const KANBAN_SHELL =
 export const KANBAN_ACCENT = {
   pending: "border-l-4 border-l-amber-500",
   preparing: "border-l-4 border-l-blue-500",
+  assigned: "border-l-4 border-l-violet-500",
   on_the_way: "border-l-4 border-l-indigo-400",
   ready_to_pay: "border-l-4 border-l-emerald-500",
   delivered: "border-l-4 border-l-emerald-500",

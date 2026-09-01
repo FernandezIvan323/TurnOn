@@ -48,6 +48,7 @@ export const dateOnlyUTC = (iso) => {
 export const statusLabels = {
   pending: "Pendiente",
   preparing: "En preparación",
+  assigned: "Listo para salir",
   on_the_way: "En camino",
   delivered: "Entregado",
   ready_to_pay: "Lista para cobrar",
@@ -58,6 +59,7 @@ export const statusLabels = {
 export const statusColors = {
   pending: "bg-amber-100 text-amber-800 dark:bg-amber-900/80 dark:text-amber-200",
   preparing: "bg-blue-100 text-blue-800 dark:bg-blue-900/80 dark:text-blue-200",
+  assigned: "bg-violet-100 text-violet-800 dark:bg-violet-900/80 dark:text-violet-200",
   on_the_way: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/80 dark:text-indigo-200",
   delivered: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-200",
   ready_to_pay: "bg-sky-100 text-sky-800 dark:bg-sky-900/80 dark:text-sky-200",

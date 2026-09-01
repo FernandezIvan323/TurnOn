@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   username      VARCHAR(40) UNIQUE NOT NULL,
   name          VARCHAR(100) NOT NULL,
   pin           VARCHAR(255) NOT NULL,        -- bcrypt hash
-  role          VARCHAR(20)  NOT NULL CHECK (role IN ('admin','waiter')),
+  role          VARCHAR(20)  NOT NULL CHECK (role IN ('admin','waiter','delivery')),
   active        BOOLEAN      NOT NULL DEFAULT TRUE,
   created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS delivery_persons (
   name   VARCHAR(80) NOT NULL,
   phone  VARCHAR(30),
   status VARCHAR(20) NOT NULL DEFAULT 'available'
-            CHECK (status IN ('available','busy','offduty'))
+            CHECK (status IN ('available','busy','offduty')),
+  user_id INT REFERENCES users(id) ON DELETE SET NULL UNIQUE
 );
 
 -- Estado global de la orden

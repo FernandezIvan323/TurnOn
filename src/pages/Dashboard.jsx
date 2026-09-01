@@ -6,6 +6,7 @@ import { useAuth } from "../store/auth";
 import { money, statusLabels, statusColors } from "../lib/format";
 import { todayLocalISO } from "../lib/date";
 import { useLiveRefresh } from "../lib/useLiveRefresh";
+import DriverHome from "./driver/DriverHome";
 import {
   DollarSign,
   ShoppingBag,
@@ -832,6 +833,7 @@ function WaiterHome() {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  if (user?.role === "delivery") return <DriverHome />;
   if (user?.role === "waiter") return <WaiterHome />;
   return <AdminDashboard />;
 }

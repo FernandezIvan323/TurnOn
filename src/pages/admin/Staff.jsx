@@ -1,32 +1,91 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
+import Modal from "../../components/Modal";
+import SegmentedControl from "../../components/SegmentedControl";
 import { useAuth } from "../../store/auth";
+import { toast } from "../../store/toast";
 import { Plus, Edit2, Trash2, X, Bike, Utensils, UserCog, Check, PlusCircle, XCircle, UserPlus, Clock, KeyRound } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 
-function Tabs({ value, onChange }) {
-  const tabs = [
-    { v: "delivery",     l: "Repartidores", icon: Bike },
-    { v: "waiters",      l: "Meseros",      icon: UserPlus },
-    { v: "tables",       l: "Mesas",        icon: Utensils },
-    { v: "assignments",  l: "Asignar",      icon: UserCog },
-  ];
+function StaffTabs({ value, onChange }) {
   return (
-    <div className="flex max-w-full gap-1 overflow-x-auto rounded-xl border border-paper-300 bg-paper-50 p-1 dark:border-obsidian-700 dark:bg-obsidian-900">
-      {tabs.map((t) => (
-        <button
-          key={t.v}
-          type="button"
-          onClick={() => onChange(t.v)}
-          className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium sm:py-1.5 ${
-            value === t.v ? "bg-wine-600 text-white" : "text-ink-600 hover:bg-paper-200 dark:text-obsidian-200 dark:hover:bg-obsidian-800"
-          }`}
-        >
-          <t.icon size={14}/> {t.l}
-        </button>
-      ))}
-    </div>
+    <SegmentedControl
+      value={value}
+      onChange={onChange}
+      options={[
+        { value: "delivery",    label: "Repartidores", icon: Bike },
+        { value: "waiters",     label: "Meseros",      icon: UserPlus },
+        { value: "tables",      label: "Mesas",        icon: Utensils },
+        { value: "assignments", label: "Asignar",      icon: UserCog },
+      ]}
+    />
+  );
+}
+
+function AccessModal({ person, onClose, onSaved }) {
+  const [username, setUsername] = useState("");
+  const [name, setName] = useState(person.name);
+  const [pin, setPin] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [err, setErr] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setErr(null);
+    if (!username.trim()) return setErr("Ingresá un usuario");
+    if (!/^\d{4}$/.test(pin)) return setErr("El PIN debe ser 4 dígitos");
+    if (pin !== confirm) return setErr("Los PIN no coinciden");
+    setSaving(true);
+    try {
+      await api.post("/auth/users", {
+        username: username.trim(),
+        name: name.trim(),
+        pin,
+        role: "delivery",
+        delivery_person_id: person.id,
+      });
+      toast.success(`Acceso creado para ${person.name}`);
+      onSaved(); onClose();
+    } catch (e) {
+      setErr(e.response?.data?.error || e.message);
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={<span className="flex items-center gap-2"><KeyRound size={18}/> Crear acceso · {person.name}</span>}
+      size="md"
+    >
+      <p className="mb-3 text-sm text-ink-500 dark:text-obsidian-400">
+        Generá un usuario y PIN de 4 dígitos para que {person.name} pueda entrar desde su celular.
+      </p>
+      <label className="label">Usuario (para login)</label>
+      <input className="input" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoFocus placeholder="ej. luis" />
+      <label className="label mt-3">Nombre completo</label>
+      <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <div>
+          <label className="label">PIN (4 dígitos)</label>
+          <input className="input" inputMode="numeric" pattern="\d{4}" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" />
+        </div>
+        <div>
+          <label className="label">Confirmar PIN</label>
+          <input className="input" inputMode="numeric" pattern="\d{4}" value={confirm} onChange={(e) => setConfirm(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" />
+        </div>
+      </div>
+      {err && (
+        <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
+          {err}
+        </div>
+      )}
+      <div className="mt-4 flex justify-end gap-2">
+        <button onClick={onClose} className="btn-secondary">Cancelar</button>
+        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Creando…" : "Crear acceso"}</button>
+      </div>
+    </Modal>
   );
 }
 
@@ -673,6 +732,7 @@ export default function Staff() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [historyWaiter, setHistoryWaiter] = useState(null);
   const [pinUser, setPinUser] = useState(null);
+  const [accessTarget, setAccessTarget] = useState(null);
 
   const load = async () => {
     const [d, w, t] = await Promise.all([api.get("/delivery"), api.get("/auth/users"), api.get("/tables")]);
@@ -704,12 +764,13 @@ export default function Staff() {
       {tab === "delivery" && (
         <div className="data-table-wrap">
           <div className="data-table-scroll">
-            <table className="data-table min-w-[28rem]">
+            <table className="data-table min-w-[36rem]">
               <thead>
                 <tr>
                   <th>Nombre</th>
                   <th>Teléfono</th>
                   <th>Estado</th>
+                  <th>Acceso</th>
                   <th className="text-right">Acciones</th>
                 </tr>
               </thead>
@@ -727,16 +788,41 @@ export default function Staff() {
                         {p.status === "available" ? "Disponible" : p.status === "busy" ? "Ocupado" : "Fuera de turno"}
                       </span>
                     </td>
+                    <td>
+                      {p.user_id ? (
+                        <div className="flex flex-col">
+                          <span className="badge bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                            <KeyRound size={10} className="mr-1 inline" /> Con acceso
+                          </span>
+                          <span className="mt-0.5 text-[10px] text-ink-500 dark:text-obsidian-500">
+                            @{p.username || "—"}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="badge bg-paper-200 text-ink-600 dark:bg-obsidian-800 dark:text-obsidian-300">
+                          Sin acceso
+                        </span>
+                      )}
+                    </td>
                     <td className="text-right">
-                      <button onClick={() => setEditing({ type: "delivery", value: p })} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                      <button onClick={() => setConfirmDelete({ type: "delivery", id: p.id, name: p.name })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
+                      {!p.user_id && (
+                        <button
+                          onClick={() => setAccessTarget(p)}
+                          className="btn-secondary text-xs mr-1"
+                          title={`Crear acceso para ${p.name}`}
+                        >
+                          <KeyRound size={12} /> Crear acceso
+                        </button>
+                      )}
+                      <button onClick={() => setEditing({ type: "delivery", value: p })} className="btn-ghost text-xs" title="Editar"><Edit2 size={14}/></button>
+                      <button onClick={() => setConfirmDelete({ type: "delivery", id: p.id, name: p.name })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" title="Eliminar"><Trash2 size={14}/></button>
                     </td>
                   </tr>
                 ))}
                 {delivery.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center cell-muted">
-                      No hay repartidores. Crea uno con &quot;Nuevo&quot;.
+                    <td colSpan={5} className="py-8 text-center cell-muted">
+                      No hay repartidores. Crea uno con "Nuevo".
                     </td>
                   </tr>
                 )}
@@ -869,6 +955,13 @@ export default function Staff() {
       {creating && tab === "delivery" && <DeliveryModal onClose={() => setCreating(false)} onSaved={load} />}
       {creating && tab === "waiters" && <WaiterModal onClose={() => setCreating(false)} onSaved={load} />}
       {creating && tab === "tables" && <TableModal onClose={() => setCreating(false)} onSaved={load} />}
+      {accessTarget && (
+        <AccessModal
+          person={accessTarget}
+          onClose={() => setAccessTarget(null)}
+          onSaved={load}
+        />
+      )}
       {editing?.type === "delivery" && <DeliveryModal person={editing.value} onClose={() => setEditing(null)} onSaved={load} />}
       {editing?.type === "table" && <TableModal table={editing.value} onClose={() => setEditing(null)} onSaved={load} />}
       {pinUser && (

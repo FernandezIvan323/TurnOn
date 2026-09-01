@@ -5,10 +5,20 @@ import { authRequired, requireRole } from "../middleware/auth.js";
 const router = Router();
 
 router.get("/", authRequired, async (_req, res) => {
+  const tz = process.env.DB_TZ || "America/Mexico_City";
+  if (!/^[\w/]+$/.test(tz)) throw new Error(`Timezone inválido: ${tz}`);
   const { rows } = await query(
-    `SELECT dp.id, dp.name, dp.phone, dp.status,
-       (SELECT COUNT(*) FROM orders o WHERE o.delivery_person_id = dp.id AND o.status = 'on_the_way')::int AS active_orders
-     FROM delivery_persons dp ORDER BY dp.name`
+    `SELECT dp.id, dp.name, dp.phone, dp.status, dp.user_id, u.username,
+       (SELECT COUNT(*) FROM orders o WHERE o.delivery_person_id = dp.id AND o.status = 'on_the_way')::int AS active_orders,
+       (SELECT COALESCE(SUM(o.total),0) FROM orders o
+          WHERE o.delivery_person_id = dp.id AND o.status = 'on_the_way' AND o.payment_status = 'pending')::numeric AS street_amount,
+       (SELECT COALESCE(SUM(o.total),0) FROM orders o
+          WHERE o.delivery_person_id = dp.id AND o.status = 'delivered'
+            AND o.payment_status = 'paid' AND o.payment_method = 'cash'
+            AND DATE(o.closed_at AT TIME ZONE '${tz}') = CURRENT_DATE)::numeric AS today_cash
+     FROM delivery_persons dp
+     LEFT JOIN users u ON u.id = dp.user_id
+     ORDER BY dp.name`
   );
   res.json(rows);
 });
