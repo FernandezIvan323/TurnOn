@@ -8,7 +8,7 @@ export default function Header({ title, subtitle, right }) {
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-0.5 text-sm text-ink-600 dark:text-white">{subtitle}</p>
+          <p className="mt-0.5 text-sm text-ink-600 dark:text-obsidian-300">{subtitle}</p>
         )}
       </div>
       <div className="flex shrink-0 flex-nowrap items-center gap-2">
