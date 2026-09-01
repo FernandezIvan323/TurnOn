@@ -99,13 +99,15 @@ function ExpenseModal({ open, onClose, onSaved, expense, categories }) {
           </select>
         </div>
         <div>
-          <label className="label">Monto</label>
+          <label className="label" htmlFor="exp-amount">Monto</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 text-sm">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 text-sm" aria-hidden="true">$</span>
             <input
+              id="exp-amount"
               type="number"
               step="0.01"
               min="0"
+              required
               className="input pl-7"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -478,7 +480,8 @@ export default function Expenses() {
                         <button
                           onClick={() => { setEditTarget(e); setModalOpen(true); }}
                           className="btn-ghost p-1.5"
-                          title="Editar"
+                          title={`Editar gasto de ${money(e.amount)}`}
+                          aria-label={`Editar gasto de ${money(e.amount)}`}
                           type="button"
                         >
                           <Pencil size={14}/>
@@ -486,7 +489,8 @@ export default function Expenses() {
                         <button
                           onClick={() => setDeleteTarget(e)}
                           className="btn-ghost p-1.5 text-rose-600 dark:text-rose-400"
-                          title="Eliminar"
+                          title={`Eliminar gasto de ${money(e.amount)}`}
+                          aria-label={`Eliminar gasto de ${money(e.amount)}`}
                           type="button"
                         >
                           <Trash2 size={14}/>

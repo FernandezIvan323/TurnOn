@@ -25,10 +25,10 @@ function CategoryModal({ cat, onClose, onSaved }) {
   };
   return (
     <Modal open onClose={onClose} title={`${cat ? "Editar" : "Nueva"} categoría`} size="md">
-      <label className="label">Nombre</label>
-      <input className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-      <label className="label mt-3">Posición (orden)</label>
-      <input className="input" type="number" value={position} onChange={(e) => setPosition(Number(e.target.value))} />
+      <label className="label" htmlFor="cat-name">Nombre</label>
+      <input id="cat-name" className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus required maxLength={60} />
+      <label className="label mt-3" htmlFor="cat-pos">Posición (orden)</label>
+      <input id="cat-pos" className="input" type="number" value={position} onChange={(e) => setPosition(Number(e.target.value))} min={0} />
       {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{err}</div>}
       <div className="mt-4 flex justify-end gap-2">
         <button onClick={onClose} className="btn-secondary">Cancelar</button>
@@ -244,8 +244,8 @@ function AdminMenu() {
                 <span className="text-xs text-ink-400 dark:text-obsidian-500">({c.products.length})</span>
               </div>
               <div className="flex gap-1">
-                <button onClick={() => setEditingCat(c)} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                <button onClick={() => setConfirmDeleteCat(c)} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
+                <button onClick={() => setEditingCat(c)} className="btn-ghost text-xs" title={`Editar ${c.name}`} aria-label={`Editar categoría ${c.name}`}><Edit2 size={14}/></button>
+                <button onClick={() => setConfirmDeleteCat(c)} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" title={`Eliminar ${c.name}`} aria-label={`Eliminar categoría ${c.name}`}><Trash2 size={14}/></button>
               </div>
             </div>
             {c.products.length === 0 ? (
@@ -262,8 +262,8 @@ function AdminMenu() {
                     <div className="flex flex-col items-end gap-1">
                       {!p.available && <span className="badge bg-slate-100 text-slate-500 dark:bg-obsidian-800 dark:text-obsidian-400">No disponible</span>}
                       <div className="flex gap-1">
-                        <button onClick={() => setEditingProd(p)} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                        <button onClick={() => setConfirmDeleteProd(p)} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
+                        <button onClick={() => setEditingProd(p)} className="btn-ghost text-xs" title={`Editar ${p.name}`} aria-label={`Editar producto ${p.name}`}><Edit2 size={14}/></button>
+                        <button onClick={() => setConfirmDeleteProd(p)} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" title={`Eliminar ${p.name}`} aria-label={`Eliminar producto ${p.name}`}><Trash2 size={14}/></button>
                       </div>
                     </div>
                   </div>

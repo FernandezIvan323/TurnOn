@@ -160,11 +160,13 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
                   onCancel(order);
                 }}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-paper-300 bg-white text-ink-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-200 dark:hover:border-rose-800 dark:hover:bg-rose-950/40"
-                title="Cancelar"
+                title={`Cancelar pedido #${order.id}`}
+                aria-label={`Cancelar pedido #${order.id}`}
               >
                 <XCircle size={15} />
               </button>
             </>
+
           )}
           {order.status === "preparing" && (
             <>
@@ -527,21 +529,21 @@ function NewOrderModal({ onClose, onCreated }) {
 
             <div className="space-y-3">
               <div>
-                <label className="label">Nombre</label>
-                <input className="input" value={name} onChange={(e) => setName(e.target.value)} disabled={!!customer} />
+                <label className="label" htmlFor="order-customer-name">Nombre</label>
+                <input id="order-customer-name" className="input" value={name} onChange={(e) => setName(e.target.value)} disabled={!!customer} required maxLength={60} />
               </div>
               <div>
-                <label className="label">Teléfono</label>
+                <label className="label" htmlFor="order-customer-phone">Teléfono</label>
                 <div className="relative">
-                  <Phone size={14} className="absolute left-3 top-3 text-ink-400 dark:text-obsidian-500"/>
-                  <input className="input pl-8" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={!!customer} />
+                  <Phone size={14} className="absolute left-3 top-3 text-ink-400 dark:text-obsidian-500" aria-hidden="true"/>
+                  <input id="order-customer-phone" className="input pl-8" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={!!customer} type="tel" maxLength={30} />
                 </div>
               </div>
               <div>
-                <label className="label">Dirección de entrega</label>
+                <label className="label" htmlFor="order-customer-address">Dirección de entrega</label>
                 <div className="relative">
-                  <MapPin size={14} className="absolute left-3 top-3 text-ink-400 dark:text-obsidian-500"/>
-                  <input className="input pl-8" value={address} onChange={(e) => setAddress(e.target.value)} />
+                  <MapPin size={14} className="absolute left-3 top-3 text-ink-400 dark:text-obsidian-500" aria-hidden="true"/>
+                  <input id="order-customer-address" className="input pl-8" value={address} onChange={(e) => setAddress(e.target.value)} maxLength={160} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -709,6 +711,7 @@ function OrderDetailModal({ order, onClose, onChanged }) {
   };
 
   const markDebt = async () => {
+    if (!window.confirm(`¿Confirmás que el pedido #${order.id} se entregó sin cobrar y queda como deuda?`)) return;
     await api.post(`/orders/${order.id}/mark-delivered`);
     onChanged();
     onClose();

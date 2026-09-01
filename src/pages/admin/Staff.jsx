@@ -62,14 +62,14 @@ function AccessModal({ person, onClose, onSaved }) {
       <p className="mb-3 text-sm text-ink-500 dark:text-obsidian-400">
         Generá un usuario y PIN de 4 dígitos para que {person.name} pueda entrar desde su celular.
       </p>
-      <label className="label">Usuario (para login)</label>
-      <input className="input" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoFocus placeholder="ej. luis" />
-      <label className="label mt-3">Nombre completo</label>
-      <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
+      <label className="label" htmlFor="access-user">Usuario (para login)</label>
+      <input id="access-user" className="input" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoFocus required placeholder="ej. luis" maxLength={30} />
+      <label className="label mt-3" htmlFor="access-name">Nombre completo</label>
+      <input id="access-name" className="input" value={name} onChange={(e) => setName(e.target.value)} required maxLength={60} />
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div>
-          <label className="label">PIN (4 dígitos)</label>
-          <input className="input" inputMode="numeric" pattern="\d{4}" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" />
+          <label className="label" htmlFor="access-pin">PIN (4 dígitos)</label>
+          <input id="access-pin" className="input" type="password" inputMode="numeric" pattern="\d{4}" maxLength={4} required value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" />
         </div>
         <div>
           <label className="label">Confirmar PIN</label>
@@ -112,10 +112,10 @@ function DeliveryModal({ person, onClose, onSaved }) {
           <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">{person ? "Editar" : "Nuevo"} repartidor</h2>
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
-        <label className="label">Nombre</label>
-        <input className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-        <label className="label mt-3">Teléfono</label>
-        <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <label className="label" htmlFor="dp-name">Nombre</label>
+        <input id="dp-name" className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus required maxLength={60} />
+        <label className="label mt-3" htmlFor="dp-phone">Teléfono</label>
+        <input id="dp-phone" className="input" value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" maxLength={30} />
         {person && (
           <>
             <label className="label mt-3">Estado</label>
@@ -293,12 +293,12 @@ function WaiterModal({ onClose, onSaved }) {
           <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Nuevo mesero</h2>
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
-        <label className="label">Usuario</label>
-        <input className="input" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoFocus autoComplete="off" />
-        <label className="label mt-3">Nombre completo</label>
-        <input className="input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" />
-        <label className="label mt-3">PIN (4 dígitos)</label>
-        <input className="input" type="password" maxLength={4} inputMode="numeric" pattern="[0-9]*" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} autoComplete="new-password" />
+        <label className="label" htmlFor="waiter-user">Usuario</label>
+        <input id="waiter-user" className="input" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoFocus required autoComplete="off" maxLength={30} />
+        <label className="label mt-3" htmlFor="waiter-name">Nombre completo</label>
+        <input id="waiter-name" className="input" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="off" maxLength={60} />
+        <label className="label mt-3" htmlFor="waiter-pin">PIN (4 dígitos)</label>
+        <input id="waiter-pin" className="input" type="password" maxLength={4} inputMode="numeric" pattern="[0-9]*" required value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} autoComplete="new-password" />
         {err && (
           <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
             {err}
@@ -814,8 +814,8 @@ export default function Staff() {
                           <KeyRound size={12} /> Crear acceso
                         </button>
                       )}
-                      <button onClick={() => setEditing({ type: "delivery", value: p })} className="btn-ghost text-xs" title="Editar"><Edit2 size={14}/></button>
-                      <button onClick={() => setConfirmDelete({ type: "delivery", id: p.id, name: p.name })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" title="Eliminar"><Trash2 size={14}/></button>
+                      <button onClick={() => setEditing({ type: "delivery", value: p })} className="btn-ghost text-xs" title={`Editar ${p.name}`} aria-label={`Editar ${p.name}`}><Edit2 size={14}/></button>
+                      <button onClick={() => setConfirmDelete({ type: "delivery", id: p.id, name: p.name })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" title={`Eliminar ${p.name}`} aria-label={`Eliminar ${p.name}`}><Trash2 size={14}/></button>
                     </td>
                   </tr>
                 ))}
@@ -878,8 +878,8 @@ export default function Staff() {
                         </span>
                       </td>
                       <td className="space-x-1 text-right">
-                        <button type="button" onClick={() => setPinUser(w)} className="btn-ghost text-xs" title="Cambiar PIN"><KeyRound size={14}/></button>
-                        <button type="button" onClick={() => setHistoryWaiter(w)} className="btn-ghost text-xs" title="Ver historial"><Clock size={14}/></button>
+                        <button type="button" onClick={() => setPinUser(w)} className="btn-ghost text-xs" title={`Cambiar PIN de ${w.name}`} aria-label={`Cambiar PIN de ${w.name}`}><KeyRound size={14}/></button>
+                        <button type="button" onClick={() => setHistoryWaiter(w)} className="btn-ghost text-xs" title={`Ver historial de ${w.name}`} aria-label={`Ver historial de ${w.name}`}><Clock size={14}/></button>
                       </td>
                     </tr>
                   );
@@ -932,8 +932,8 @@ export default function Staff() {
                       )}
                     </td>
                     <td className="text-right">
-                      <button onClick={() => setEditing({ type: "table", value: t })} className="btn-ghost text-xs"><Edit2 size={14}/></button>
-                      <button onClick={() => setConfirmDelete({ type: "table", id: t.id, name: `mesa ${t.number}` })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400"><Trash2 size={14}/></button>
+                        <button onClick={() => setEditing({ type: "table", value: t })} className="btn-ghost text-xs" title={`Editar mesa ${t.number}`} aria-label={`Editar mesa ${t.number}`}><Edit2 size={14}/></button>
+                        <button onClick={() => setConfirmDelete({ type: "table", id: t.id, name: `mesa ${t.number}` })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" title={`Eliminar mesa ${t.number}`} aria-label={`Eliminar mesa ${t.number}`}><Trash2 size={14}/></button>
                     </td>
                   </tr>
                 ))}
