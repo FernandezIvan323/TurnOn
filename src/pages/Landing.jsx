@@ -12,8 +12,10 @@ import MockWaiterPhone from "../components/landing/MockWaiterPhone";
 import MockDriverPhone from "../components/landing/MockDriverPhone";
 import {
   ArrowRight,
+  Bike,
   CheckCircle2,
   Cloud,
+  Mail,
   MonitorSmartphone,
   ShieldCheck,
   ShoppingBag,
@@ -412,9 +414,9 @@ export default function Landing() {
 
             {/* Escenario 3D: laptop + 2 phones, texto debajo de cada uno */}
             <div className="device-stage relative mx-auto mt-12 flex max-w-6xl flex-col items-center justify-center sm:mt-14">
-              <div className="flex w-full flex-col items-center gap-8 sm:flex-row sm:items-start sm:gap-4 md:gap-6 lg:gap-8">
+              <div className="flex w-full flex-col items-center gap-8 sm:flex-row sm:items-end sm:gap-4 md:gap-6 lg:gap-8">
                 {/* Laptop (caja / admin) */}
-                <div className="flex w-full max-w-xl shrink-0 flex-col items-center gap-3 sm:max-w-sm md:max-w-md lg:max-w-lg">
+                <div className="flex w-full max-w-xl shrink-0 flex-col items-center gap-3 sm:max-w-sm md:max-w-md lg:max-w-lg lg:flex-1">
                   <DeviceFrame
                     variant="laptop"
                     tilt="left"
@@ -424,16 +426,17 @@ export default function Landing() {
                     <MockDashboard compact />
                   </DeviceFrame>
                   <div className="max-w-[16rem] text-center">
-                    <h3 className="font-semibold text-ink-900 dark:text-white">
+                    <h3 className="flex items-center justify-center gap-2 text-base font-bold text-ink-900 dark:text-white">
+                      <MonitorSmartphone size={16} className="text-wine-600 dark:text-wine-300" />
                       Para caja y gestión
                     </h3>
-                    <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
+                    <p className="mt-1 text-sm leading-relaxed text-ink-600 dark:text-obsidian-300">
                       Dashboard, cobros, deudas, personal, inventario y reportes.
                     </p>
                   </div>
                 </div>
                 {/* Phone (mesero) */}
-                <div className="flex w-[11rem] shrink-0 flex-col items-center gap-3 sm:w-[11.5rem] md:w-[12rem]">
+                <div className="flex w-[12rem] shrink-0 flex-col items-center gap-3 sm:w-[12rem] md:w-[12rem] lg:flex-1">
                   <DeviceFrame
                     variant="phone"
                     tilt="right"
@@ -443,15 +446,18 @@ export default function Landing() {
                   >
                     <MockWaiterPhone />
                   </DeviceFrame>
-                  <div className="max-w-[12rem] text-center">
-                    <h3 className="font-semibold text-ink-900 dark:text-white">Para meseros</h3>
-                    <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
-                      Mesas asignadas, catálogo y historial de la jornada.
+                  <div className="max-w-[13rem] text-center">
+                    <h3 className="flex items-center justify-center gap-2 text-base font-bold text-ink-900 dark:text-white">
+                      <Utensils size={16} className="text-wine-600 dark:text-wine-300" />
+                      Para meseros
+                    </h3>
+                    <p className="mt-1 text-sm leading-relaxed text-ink-600 dark:text-obsidian-300">
+                      Mesas asignadas, catálogo e historial de la jornada.
                     </p>
                   </div>
                 </div>
                 {/* Phone (domiciliario) */}
-                <div className="flex w-[11rem] shrink-0 flex-col items-center gap-3 sm:w-[11.5rem] md:w-[12rem]">
+                <div className="flex w-[12rem] shrink-0 flex-col items-center gap-3 sm:w-[12rem] md:w-[12rem] lg:flex-1">
                   <DeviceFrame
                     variant="phone"
                     tilt="left"
@@ -461,11 +467,12 @@ export default function Landing() {
                   >
                     <MockDriverPhone />
                   </DeviceFrame>
-                  <div className="max-w-[12rem] text-center">
-                    <h3 className="font-semibold text-ink-900 dark:text-white">
+                  <div className="max-w-[13rem] text-center">
+                    <h3 className="flex items-center justify-center gap-2 text-base font-bold text-ink-900 dark:text-white">
+                      <Bike size={16} className="text-wine-600 dark:text-wine-300" />
                       Para domicilarios
                     </h3>
-                    <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
+                    <p className="mt-1 text-sm leading-relaxed text-ink-600 dark:text-obsidian-300">
                       Salí con todos y resumen a rendir.
                     </p>
                   </div>
@@ -526,10 +533,11 @@ export default function Landing() {
               </p>
               <Link
                 to="/contacto"
-                className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-wine-300 hover:text-white"
+                className="mt-6 inline-flex items-center gap-2 text-base font-semibold text-wine-300 hover:text-white"
               >
+                <Mail size={18} />
                 ¿Tenés dudas? Escribinos por contacto
-                <ArrowRight size={16} />
+                <ArrowRight size={20} />
               </Link>
             </div>
             <Link

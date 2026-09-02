@@ -105,7 +105,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
     };
   }, [table.id, table.current_order_id, applyItems]);
 
-  // Mientras el modal estÃ¡ abierto: pedido en vivo (otro dispositivo agrega/cobra)
+  // Mientras el modal está abierto: pedido en vivo (otro dispositivo agrega/cobra)
   useLiveRefresh(
     useCallback(async () => {
       if (busy) return;
@@ -127,7 +127,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
     return t?.current_order_id || null;
   };
 
-  /** Suma 1 en pantalla al instante (misma lÃ­nea = 2x, no otra fila 1x). */
+  /** Suma 1 en pantalla al instante (misma línea = 2x, no otra fila 1x). */
   const bumpLocalQty = (productId) => {
     const p = products.find((x) => x.id === productId);
     setItems((prev) => {
@@ -204,7 +204,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
 
   const addItem = (productId) => {
     if (!orderId) return createOrder(productId);
-    // Cola: doble toque no se pierde y siempre suma cantidad en la misma lÃ­nea
+    // Cola: doble toque no se pierde y siempre suma cantidad en la misma línea
     bumpLocalQty(productId);
     setError(null);
     setBusy(true);
@@ -309,7 +309,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
               {order && (
                 <>
                   {" "}
-                  Â· Pedido #{order.id} Â· abierto {formatTime(order.created_at)} Â· hace{" "}
+                  · Pedido #{order.id} · abierto {formatTime(order.created_at)} · hace{" "}
                   {timeAgo(order.created_at)}
                 </>
               )}
@@ -326,7 +326,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
               <Receipt size={14} />
               {isAdmin
                 ? "Cuenta lista para cobrar"
-                : "Lista para cobrar â€” avisÃ¡ al cajero"}
+                : "Lista para cobrar â€” avisá al cajero"}
             </div>
             {isAdmin && (
               <div className="flex gap-2">
@@ -369,7 +369,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-ink-500 dark:text-obsidian-400">NÃºmero</dt>
+                    <dt className="text-xs text-ink-500 dark:text-obsidian-400">Número</dt>
                     <dd className="font-medium text-ink-900 dark:text-white">{table.number}</dd>
                   </div>
                   <div>
@@ -399,7 +399,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
           ) : (
             <div className="overflow-y-auto p-4 sm:p-5">
               <p className="mb-3 text-sm text-ink-600 dark:text-white">
-                Mesa libre. TocÃ¡ el primer producto para abrir la cuenta.
+                Mesa libre. Tocá el primer producto para abrir la cuenta.
               </p>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                 {products.map((p) => (
@@ -450,7 +450,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
               </div>
               {items.length === 0 && (
                 <div className="text-sm text-ink-500 dark:text-obsidian-400">
-                  {isAdmin ? "Sin productos aÃºn" : "Sin productos â€” agregÃ¡ del menÃº"}
+                  {isAdmin ? "Sin productos aún" : "Sin productos â€” agregá del menú"}
                 </div>
               )}
               <div className="space-y-1.5">
@@ -479,7 +479,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
                           <Minus size={14} />
                         </button>
                         <span className="min-w-[2.25rem] text-center text-base font-bold tabular-nums text-ink-900 dark:text-white">
-                          {it.quantity}Ã—
+                          {it.quantity}—
                         </span>
                         <button
                           type="button"
@@ -492,7 +492,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
                         </button>
                       </div>
                     ) : (
-                      <div className="font-semibold tabular-nums">{it.quantity}Ã—</div>
+                      <div className="font-semibold tabular-nums">{it.quantity}—</div>
                     )}
                   </div>
                 ))}
@@ -509,7 +509,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
                 <h3 className="mb-3 font-semibold text-ink-800 dark:text-white">
                   {order.status === "ready_to_pay"
                     ? "Cuenta cerrada para cocina"
-                    : "Agregar del menÃº"}
+                    : "Agregar del menú"}
                 </h3>
                 {order.status === "ready_to_pay" ? (
                   <p className="text-sm text-ink-600 dark:text-white">
@@ -542,8 +542,8 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
             )}
             {isAdmin && order.status !== "ready_to_pay" && (
               <div className="border-t border-paper-300 bg-paper-200/40 px-4 py-3 text-sm text-ink-600 dark:border-obsidian-800 dark:bg-obsidian-950 dark:text-obsidian-200 sm:px-5">
-                Solo el mesero gestiona productos y cocina. Cuando la cuenta estÃ© lista para
-                cobrar, podÃ©s cobrar desde aquÃ­ o desde Caja.
+                Solo el mesero gestiona productos y cocina. Cuando la cuenta esté lista para
+                cobrar, podés cobrar desde aquí o desde Caja.
               </div>
             )}
           </div>
@@ -554,7 +554,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
             {!isAdmin && order.status === "pending" && (
               <>
                 <span className="mr-auto text-xs text-ink-600 dark:text-white">
-                  Cuando termines de anotar, enviÃ¡ a cocina y avisÃ¡ lo pedido.
+                  Cuando termines de anotar, enviá a cocina y avisá lo pedido.
                 </span>
                 <button
                   type="button"
@@ -569,7 +569,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
             {!isAdmin && order.status === "preparing" && (
               <>
                 <span className="mr-auto text-xs text-ink-600 dark:text-white">
-                  Cocina prepara. Cuando lleves el pedido, marcÃ¡ listo para cobrar.
+                  Cocina prepara. Cuando lleves el pedido, marcá listo para cobrar.
                 </span>
                 <button
                   type="button"
@@ -593,7 +593,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
             {order.status === "ready_to_pay" && (
               <span className="mr-auto text-xs text-ink-600 dark:text-white">
                 {isAdmin
-                  ? "CobrÃ¡ desde Caja o con el botÃ³n de arriba."
+                  ? "Cobrá desde Caja o con el botón de arriba."
                   : "El cajero cobra esta cuenta â€” no hace falta que el cajero marque cocina."}
               </span>
             )}
@@ -665,7 +665,7 @@ function TableHistoryModal({ onClose }) {
           </div>
           {!selectedTable && (
             <div className="py-8 text-center text-sm text-ink-500">
-              SeleccionÃ¡ una mesa
+              Seleccioná una mesa
             </div>
           )}
           {loading && (
@@ -688,7 +688,7 @@ function TableHistoryModal({ onClose }) {
                       #{o.id}
                     </div>
                     <div className="text-xs text-ink-500">
-                      {o.user_name && `por ${o.user_name}`} Â·{" "}
+                      {o.user_name && `por ${o.user_name}`} ·{" "}
                       {o.closed_at
                         ? new Date(o.closed_at).toLocaleDateString()
                         : new Date(o.created_at).toLocaleDateString()}
@@ -750,7 +750,7 @@ export default function TablesPage() {
     load({ silent: false });
   }, [load]);
 
-  // ActualizaciÃ³n en vivo entre PC y celulares (~3.5s + al volver a la pestaÃ±a)
+  // Actualización en vivo entre PC y celulares (~3.5s + al volver a la pestaña)
   useLiveRefresh(load, { intervalMs: 3500 });
 
   // Desde dashboard del mesero: /tables?open=ID â†’ abrir esa mesa al toque
@@ -762,7 +762,7 @@ export default function TablesPage() {
     if (t) {
       openHandledId.current = openId;
       setSelected(t);
-      // limpiar query para que atrÃ¡s/cerrar no reabra
+      // limpiar query para que atrás/cerrar no reabra
       setSearchParams({}, { replace: true });
     }
   }, [tables, searchParams, setSearchParams]);
@@ -924,7 +924,7 @@ export default function TablesPage() {
         title={user?.role === "waiter" ? "Mis mesas" : "Mesas"}
         subtitle={
           user?.role === "waiter"
-            ? "AbrÃ­ la mesa, pedÃ­, enviÃ¡ a cocina y cobrÃ¡ con el cajero"
+            ? "Abrí la mesa, pedí, enviá a cocina y cobrá con el cajero"
             : "Por mesero â€” solo el mesero abre mesas; cajero cobra en Caja"
         }
         right={
@@ -965,7 +965,7 @@ export default function TablesPage() {
                 </h3>
                 <span className="text-xs text-ink-500 dark:text-obsidian-400">
                   {g.tables.length} mesa{g.tables.length === 1 ? "" : "s"}
-                  {" Â· "}
+                  {" · "}
                   {g.tables.filter((t) => t.current_order_id).length} ocupada
                   {g.tables.filter((t) => t.current_order_id).length === 1 ? "" : "s"}
                 </span>

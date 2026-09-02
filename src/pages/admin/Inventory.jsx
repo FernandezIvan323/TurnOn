@@ -19,7 +19,7 @@ function MovementModal({ product, onClose }) {
       .finally(() => setLoading(false));
   }, [product.id]);
   return (
-    <Modal open onClose={onClose} title={`Movimientos Â· ${product.name}`} size="xl">
+    <Modal open onClose={onClose} title={`Movimientos · ${product.name}`} size="xl">
       <div className="space-y-2">
         {loading && <TableSkeleton rows={4} cols={3} className="!shadow-none" />}
         {!loading && movements.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500">Sin movimientos registrados.</div>}
@@ -94,7 +94,7 @@ function StockModal({ product, onClose, onSaved }) {
         <>
           <label className="label">Stock actual</label>
           <input className="input" type="number" step="0.01" value={stock} onChange={(e) => setStock(e.target.value)} />
-          <label className="label mt-3">Stock mÃ­nimo</label>
+          <label className="label mt-3">Stock mínimo</label>
           <input className="input" type="number" step="0.01" value={min_stock} onChange={(e) => setMinStock(e.target.value)} />
         </>
       ) : (
@@ -140,7 +140,7 @@ export default function Inventory() {
   const lowStock = useMemo(() => products.filter((p) => p.low_stock), [products]);
 
   if (user?.role !== "admin") {
-    return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Esta secciÃ³n es solo para el administrador.</div>;
+    return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Esta sección es solo para el administrador.</div>;
   }
 
   return (
@@ -181,7 +181,7 @@ export default function Inventory() {
               <thead>
                 <tr>
                   <th>Producto</th>
-                  <th>CategorÃ­a</th>
+                  <th>Categoría</th>
                   <th className="text-right">Stock</th>
                   <th className="text-right">Min.</th>
                   <th className="text-right">Acciones</th>

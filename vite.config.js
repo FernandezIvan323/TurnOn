@@ -19,6 +19,31 @@ export default defineConfig({
       },
     },
   },
+  plugins: [
+    {
+      name: "charset-on-js",
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (/\.(jsx?|tsx?|css)(\?|$)/.test(req.url || "")) {
+            // Intercepta el método setHeader para agregar charset a text/*
+            const origSetHeader = res.setHeader.bind(res);
+            res.setHeader = function (name, value) {
+              if (
+                name.toLowerCase() === "content-type" &&
+                typeof value === "string" &&
+                value.startsWith("text/") &&
+                !value.includes("charset")
+              ) {
+                value = `${value}; charset=utf-8`;
+              }
+              return origSetHeader(name, value);
+            };
+          }
+          next();
+        });
+      },
+    },
+  ],
   optimizeDeps: {
     include: ["react", "react-dom", "react-router-dom", "zustand", "axios", "lucide-react"],
   },

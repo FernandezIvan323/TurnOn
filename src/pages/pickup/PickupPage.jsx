@@ -18,7 +18,7 @@ import {
 
 const COLUMNS = [
   { key: "pending",      title: "Pendientes",         icon: Clock },
-  { key: "preparing",    title: "En preparaciÃ³n",     icon: ChefHat },
+  { key: "preparing",    title: "En preparación",     icon: ChefHat },
   { key: "ready_to_pay", title: "Listo para recoger", icon: CheckCircle2 },
 ];
 
@@ -254,7 +254,7 @@ function NewPickupModal({ onClose, onCreated }) {
 
   const submit = async () => {
     setError(null);
-    if (cart.length === 0) return setError("AgregÃ¡ al menos un producto");
+    if (cart.length === 0) return setError("Agregá al menos un producto");
     setSaving(true);
     try {
       await onCreated({
@@ -337,7 +337,7 @@ function NewPickupModal({ onClose, onCreated }) {
 
             {cart.length === 0 ? (
               <div className="flex-1 flex items-center justify-center text-sm text-ink-400 dark:text-obsidian-500">
-                SeleccionÃ¡ productos del menÃº
+                Seleccioná productos del menú
               </div>
             ) : (
               <div className="space-y-2 flex-1">
@@ -457,7 +457,7 @@ function PayModal({ order, onClose, onPaid }) {
           <div className="text-sm text-ink-500 dark:text-obsidian-400">Total a cobrar</div>
           <div className="text-3xl font-bold text-ink-800 dark:text-obsidian-50">{money(order.total)}</div>
         </div>
-        <label className="label">MÃ©todo de pago</label>
+        <label className="label">Método de pago</label>
         <div className="grid grid-cols-3 gap-2 mb-4">
           {Object.entries(METHOD_LABELS).map(([k, m]) => {
             const Icon = m.icon;
@@ -531,7 +531,7 @@ export default function PickupPage() {
     return () => clearInterval(t);
   }, []);
 
-  // Ordenar FIFO (mÃ¡s viejo primero) y asignar turnos
+  // Ordenar FIFO (más viejo primero) y asignar turnos
   const sorted = useMemo(() => {
     const byDate = [...orders].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     return assignTurns(byDate);
@@ -546,7 +546,7 @@ export default function PickupPage() {
 
   const byStatus = (s) => filtered.filter((o) => o.status === s);
 
-  // El "siguiente" es el pending mÃ¡s viejo
+  // El "siguiente" es el pending más viejo
   const nextOrder = useMemo(
     () => sorted.find((o) => o.status === "pending"),
     [sorted]
@@ -596,14 +596,14 @@ export default function PickupPage() {
   };
 
   if (user?.role !== "admin") {
-    return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Esta secciÃ³n es solo para el cajero/administrador.</div>;
+    return <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">Esta sección es solo para el cajero/administrador.</div>;
   }
 
   return (
     <div>
       <Header
         title="Para llevar"
-        subtitle="Pedidos walk-in Â· Turnos y cola de atenciÃ³n"
+        subtitle="Pedidos walk-in · Turnos y cola de atención"
         right={
           <div className="flex items-center gap-2">
             {newFlash > 0 && (
@@ -669,7 +669,7 @@ export default function PickupPage() {
       ) : filter === "paid" || filter === "cancelled" ? (
         <div>
           <div className="mb-3 text-sm font-medium text-ink-600 dark:text-obsidian-300">
-            {filter === "paid" ? "Cobrados / recogidos" : "Cancelados"} Â· {(enriched.length || filtered.length)}{" "}
+            {filter === "paid" ? "Cobrados / recogidos" : "Cancelados"} · {(enriched.length || filtered.length)}{" "}
             pedido{(enriched.length || filtered.length) === 1 ? "" : "s"}
           </div>
           {(enriched.length || filtered.length) === 0 ? (
@@ -745,7 +745,7 @@ export default function PickupPage() {
                             {o.items.map((it, i) => (
                               <li key={i} className="flex justify-between gap-2">
                                 <span>
-                                  <b className="tabular-nums">{it.quantity}Ã—</b> {it.name_snapshot}
+                                  <b className="tabular-nums">{it.quantity}—</b> {it.name_snapshot}
                                 </span>
                                 <span className="shrink-0 tabular-nums text-ink-500">
                                   {money(Number(it.unit_price) * Number(it.quantity))}
