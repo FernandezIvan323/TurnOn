@@ -19,6 +19,7 @@ import Inventory from "./pages/admin/Inventory";
 import DailyReport from "./pages/admin/DailyReport";
 import PickupPage from "./pages/pickup/PickupPage";
 import MyWorkHistory from "./pages/waiter/MyWorkHistory";
+import Contact from "./pages/Contact";
 
 function AdminOnly({ children }) {
   return <RequireRole roles={["admin"]}>{children}</RequireRole>;
@@ -33,6 +34,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/contacto" element={<Contact />} />
       <Route element={<Layout />}>
         {/* Compartido admin + mesero */}
         <Route path="/dashboard" element={<Dashboard />} />

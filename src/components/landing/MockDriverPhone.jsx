@@ -1,4 +1,4 @@
-import { Bike, MapPin, Phone, Wallet } from "lucide-react";
+import { Bike, Wallet } from "lucide-react";
 
 const readyOrders = [
   { id: "21", name: "Mariana G.", addr: "Av. Mitre 432", turn: 1, next: true },
@@ -101,10 +101,6 @@ export default function MockDriverPhone() {
             <p className="truncate text-[9px] text-ink-500 dark:text-obsidian-400">
               {o.addr}
             </p>
-            <div className="mt-1.5 flex items-center gap-1.5">
-              <MapPin size={9} className="text-indigo-600 dark:text-indigo-300" />
-              <Phone size={9} className="text-emerald-600 dark:text-emerald-300" />
-            </div>
           </div>
         ))}
       </div>

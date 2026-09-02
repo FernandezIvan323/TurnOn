@@ -16,13 +16,13 @@ function makeParticle(width, height, reduceMotion) {
   return {
     x: Math.random() * width,
     y: Math.random() * height,
-    vx: (Math.random() - 0.5) * (reduceMotion ? 0.1 : 0.35),
-    vy: (Math.random() - 0.5) * (reduceMotion ? 0.1 : 0.25),
+    vx: (Math.random() - 0.5) * (reduceMotion ? 0.1 : 0.45),
+    vy: (Math.random() - 0.5) * (reduceMotion ? 0.1 : 0.32),
     size: 18 + Math.random() * 14,
     icon: ICONS[Math.floor(Math.random() * ICONS.length)],
     alpha: 0.18 + Math.random() * 0.32,
     rot: Math.random() * Math.PI * 2,
-    vr: (Math.random() - 0.5) * (reduceMotion ? 0 : 0.01),
+    vr: (Math.random() - 0.5) * (reduceMotion ? 0 : 0.013),
   };
 }
 

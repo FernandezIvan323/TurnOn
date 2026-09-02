@@ -31,6 +31,7 @@ const navItems = [
   { href: "#funciones", label: "Funciones" },
   { href: "#dispositivos", label: "Dispositivos" },
   { href: "#ventajas", label: "Ventajas" },
+  { href: "/contacto", label: "Contacto" },
 ];
 
 const businessTypes = [
@@ -132,12 +133,6 @@ export default function Landing() {
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <Link
-              to="/login"
-              className="hidden text-sm font-semibold text-ink-700 hover:text-wine-600 dark:text-white sm:inline"
-            >
-              Iniciar sesión
-            </Link>
             <Link to={appPath} className="btn-primary h-10 px-4">
               {ctaLabel}
             </Link>
@@ -255,7 +250,6 @@ export default function Landing() {
                   {[
                     "5 columnas: pendientes → preparación → listos → en camino → entregados",
                     "El repartidor opera desde su celular con 'Salí' o 'Salí con todos'",
-                    "Links a Maps y tel: para llamar al cliente desde el pedido",
                     "'A rendir': el sistema calcula el efectivo que debe entregar al cierre",
                     "Reasignación libre de pedidos entre repartidores",
                   ].map((x) => (
@@ -416,11 +410,11 @@ export default function Landing() {
               </p>
             </div>
 
-            {/* Escenario 3D: laptop + 2 phones */}
+            {/* Escenario 3D: laptop + 2 phones, texto debajo de cada uno */}
             <div className="device-stage relative mx-auto mt-12 flex max-w-6xl flex-col items-center justify-center sm:mt-14">
-              <div className="flex w-full flex-col items-center justify-center gap-6 sm:flex-row sm:items-end sm:gap-4 md:gap-6 lg:gap-8">
+              <div className="flex w-full flex-col items-center gap-8 sm:flex-row sm:items-start sm:gap-4 md:gap-6 lg:gap-8">
                 {/* Laptop (caja / admin) */}
-                <div className="w-full max-w-xl shrink-0 sm:max-w-sm md:max-w-md lg:max-w-lg">
+                <div className="flex w-full max-w-xl shrink-0 flex-col items-center gap-3 sm:max-w-sm md:max-w-md lg:max-w-lg">
                   <DeviceFrame
                     variant="laptop"
                     tilt="left"
@@ -429,9 +423,17 @@ export default function Landing() {
                   >
                     <MockDashboard compact />
                   </DeviceFrame>
+                  <div className="max-w-[16rem] text-center">
+                    <h3 className="font-semibold text-ink-900 dark:text-white">
+                      Para caja y gestión
+                    </h3>
+                    <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
+                      Dashboard, cobros, deudas, personal, inventario y reportes.
+                    </p>
+                  </div>
                 </div>
                 {/* Phone (mesero) */}
-                <div className="w-[11rem] shrink-0 sm:w-[11.5rem] md:w-[12rem]">
+                <div className="flex w-[11rem] shrink-0 flex-col items-center gap-3 sm:w-[11.5rem] md:w-[12rem]">
                   <DeviceFrame
                     variant="phone"
                     tilt="right"
@@ -441,9 +443,15 @@ export default function Landing() {
                   >
                     <MockWaiterPhone />
                   </DeviceFrame>
+                  <div className="max-w-[12rem] text-center">
+                    <h3 className="font-semibold text-ink-900 dark:text-white">Para meseros</h3>
+                    <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
+                      Mesas asignadas, catálogo y historial de la jornada.
+                    </p>
+                  </div>
                 </div>
                 {/* Phone (domiciliario) */}
-                <div className="w-[11rem] shrink-0 sm:w-[11.5rem] md:w-[12rem]">
+                <div className="flex w-[11rem] shrink-0 flex-col items-center gap-3 sm:w-[11.5rem] md:w-[12rem]">
                   <DeviceFrame
                     variant="phone"
                     tilt="left"
@@ -453,31 +461,14 @@ export default function Landing() {
                   >
                     <MockDriverPhone />
                   </DeviceFrame>
-                </div>
-              </div>
-
-              <div className="mt-8 grid w-full max-w-3xl gap-4 text-center sm:grid-cols-3 sm:gap-6">
-                <div>
-                  <h3 className="font-semibold text-ink-900 dark:text-white">
-                    Para caja y gestión
-                  </h3>
-                  <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
-                    Dashboard, cobros, deudas, personal, inventario y reportes.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-ink-900 dark:text-white">Para meseros</h3>
-                  <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
-                    Mesas asignadas, catálogo y historial de la jornada.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-ink-900 dark:text-white">
-                    Para domicilarios
-                  </h3>
-                  <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
-                    Salí con todos, Maps y tel:, y resumen a rendir.
-                  </p>
+                  <div className="max-w-[12rem] text-center">
+                    <h3 className="font-semibold text-ink-900 dark:text-white">
+                      Para domicilarios
+                    </h3>
+                    <p className="mt-1 text-sm text-ink-600 dark:text-obsidian-300">
+                      Salí con todos y resumen a rendir.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -533,6 +524,13 @@ export default function Landing() {
                 Acceso con usuario y PIN de 4 dígitos. El panel queda listo para mesas,
                 pedidos y caja.
               </p>
+              <Link
+                to="/contacto"
+                className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-wine-300 hover:text-white"
+              >
+                ¿Tenés dudas? Escribinos por contacto
+                <ArrowRight size={16} />
+              </Link>
             </div>
             <Link
               to={appPath}
@@ -621,9 +619,9 @@ export default function Landing() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="cursor-not-allowed opacity-60" aria-label="Contacto (próximamente)">
+                  <Link to="/contacto" className="hover:text-wine-600" aria-label="Ir a la página de contacto">
                     Contacto
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
