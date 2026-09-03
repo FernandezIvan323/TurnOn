@@ -1,5 +1,5 @@
 ![Build](https://img.shields.io/badge/build-passing-brightgreen?logo=github)
-![Version](https://img.shields.io/badge/version-1.4.0-blue?logo=react)
+![Version](https://img.shields.io/badge/version-1.5.0-blue?logo=react)
 ![Node](https://img.shields.io/badge/node-18%2B-339933?logo=nodedotjs)
 ![React](https://img.shields.io/badge/react-19-61DAFB?logo=react)
 ![PostgreSQL](https://img.shields.io/badge/postgresql-18%2B-4169E1?logo=postgresql)
@@ -136,6 +136,15 @@ Diseñado para que cualquier persona con una computadora pueda operarlo — sin 
 - Diseño responsive optimizado para laptop y tablet.
 - Modales de confirmación personalizados (reemplazan `confirm()` nativo).
 - Componentes con Tailwind CSS y lucide-react.
+
+### 🌐 Landing pública y SEO
+- **Página de Contacto** (`/contacto`) sin auth — formulario con nombre, email, teléfono opcional y mensaje. Honeypot anti-spam, contador 0/1000, validación inline, estado `done` con agradecimiento.
+- **Sección "Dispositivos"** de la Landing con tres mocks en paralelo (laptop caja + phone mesero + phone domiciliario), alineados por la base (`items-end`) con icono lucide debajo de cada uno (`MonitorSmartphone` / `Utensils` / `Bike`).
+- **Fondo animado** del login y la Landing (`AnimatedBackdrop`): partículas emoji en Canvas 2D con movimiento browniano + drift, respeta `prefers-reduced-motion`, ResizeObserver y RAF con cleanup.
+- **SEO completo**: meta description / keywords / author / robots / canonical, Open Graph + Twitter Card, JSON-LD `Schema.org/SoftwareApplication`.
+- **OG image** generado con `scripts/gen-og-image.mjs` (1200×630, sharp + SVG).
+- **robots.txt** y **sitemap.xml** públicos.
+- **Hook `useDocumentTitle`** aplicado en 19 páginas para títulos dinámicos.
 
 ---
 
@@ -349,6 +358,43 @@ PARA LLEVAR (pickup / walk-in)
 └─────────────────────┘
 ```
 ## 📋 Changelog
+
+### v1.5.0 (2026-09-02) — Landing renovada, Contacto, SEO y fixes de encoding
+
+#### Landing pública
+- **Tercer dispositivo en `#dispositivos`**: nuevo `MockDriverPhone.jsx` (KPI A rendir, pedidos Listos con badge violeta, En camino con link a Maps + `tel:`, Entregados hoy con monto total).
+- **MockKanban actualizado**: 5 columnas (Pendientes → En preparación → **Listos para salir** → En camino → Entregados).
+- **Sección Pedidos a domicilio** reescrita (4 bullets sobre el flujo domiciliario).
+- **Tipos de negocio** ahora son cards interactivas: hover/click resalta el seleccionado.
+- **Sección Ventajas** con stats destacados (`$0` licencias / `3` dispositivos / `1 min` setup / `0` Excel).
+- **Footer** con columnas Empresa y Legal (placeholders).
+- **CTA "Probar ahora" eliminado** (single-tenant): sólo quedan "Iniciar sesión" / "Ir al panel".
+- **Layout dispositivos**: `items-end` + `flex-1` por columna, títulos con icono + `text-base font-bold`.
+- **Animaciones +25% más ágiles** (partículas del fondo: `vx 0.45` / `vy 0.32` / `vr 0.013`; toast-in `0.14s`; spin `0.6s`; device-float `4.1s`).
+
+#### Página de Contacto
+- Nueva ruta **`/contacto`** sin autenticación con `AuthSplitLayout` + `AnimatedBackdrop`.
+- Campos: nombre, email, teléfono opcional, mensaje (con contador 0/1000 y validación inline).
+- Honeypot anti-spam (`website`).
+- Estado `done` con tarjeta de agradecimiento y botón "Enviar otra consulta".
+- Submit con `setTimeout` de 800 ms (frontend-only, sin backend).
+- CTA "Listo para operar" del Landing apunta a `/contacto`.
+- Bullets de la columna izquierda customizados al contexto de contacto (respuesta < 24 h, sin compromiso, etc.).
+- Link "contacto@turnon.app" en el footer.
+
+#### SEO + metadata
+- `index.html`: descripción, keywords, author, robots, canonical, Open Graph completo, Twitter Card.
+- `public/robots.txt` (bloquea `/api` y rutas privadas).
+- `public/sitemap.xml` (`/` + `/login`).
+- `public/og-image.png` generado por `scripts/gen-og-image.mjs` (1200×630).
+- JSON-LD `Schema.org/SoftwareApplication` con ofertas y ratings.
+- Hook `useDocumentTitle` aplicado a 19 páginas (Mesas, Caja, Domicilios, etc.).
+
+#### Fixes de encoding (UTF-8)
+- **Bug crítico resuelto**: `vite.config.js` tenía dos bloques `plugins` que sobreescribían el plugin `react()` → esbuild caía al runtime clásico de JSX (`React.createElement`) sin inyectar el `import React`, lanzando `ReferenceError: React is not defined`. Se fusionaron los plugins y Vite usa el runtime automático (`jsxDEV`).
+- Header `Content-Type: text/javascript; charset=utf-8` para módulos JS/JSX/CSS en dev (vía plugin custom `charset-on-js` que monkey-patchea `res.setHeader`).
+- Cache-bust `?t=6b7c795` en `main.jsx` para forzar reload del navegador tras los fixes.
+- Mojibake triplemente codificado (PowerShell `Set-Content -Encoding UTF8` mal aplicado) corregido en 10 archivos: `TablesPage.jsx` (import faltante de `useDocumentTitle` y ~70 caracteres mojibake), `admin/{Expenses,Inventory,Menu,Reports,Staff}.jsx`, `cashier/{CashClosing,Cashier}.jsx`, `orders/Delivery.jsx`, `pickup/PickupPage.jsx`. Total: ~110 secuencias corregidas.
 
 ### v1.4.0 (2026-09-01) — Repartidor en su celular + UX base
 
