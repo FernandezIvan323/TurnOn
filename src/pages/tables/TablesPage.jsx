@@ -5,12 +5,13 @@ import Header from "../../components/Header";
 import { useAuth } from "../../store/auth";
 import { money, formatTime, statusLabels, statusColors } from "../../lib/format";
 import { useLiveRefresh } from "../../lib/useLiveRefresh";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import {
   X, Minus, Plus, CheckCircle2, Receipt, Clock, ChefHat, ArrowLeft, Utensils, History, AlertTriangle,
 } from "lucide-react";
 
 function timeAgo(iso) {
-  if (!iso) return "â€”";
+  if (!iso) return "—";
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
   if (m < 1) return "ahora";
   if (m < 60) return `${m} min`;
@@ -148,7 +149,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
         {
           id: `tmp-${productId}-${Date.now()}`,
           product_id: productId,
-          name_snapshot: p?.name || "â€¦",
+          name_snapshot: p?.name || "…",
           unit_price: p?.price ?? 0,
           quantity: 1,
           notes: null,
@@ -284,7 +285,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
         <div className="card p-8 text-ink-500 dark:text-obsidian-400">
-          Cargando mesaâ€¦
+          Cargando mesa…
         </div>
       </div>
     );
@@ -326,7 +327,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
               <Receipt size={14} />
               {isAdmin
                 ? "Cuenta lista para cobrar"
-                : "Lista para cobrar â€” avisá al cajero"}
+                : "Lista para cobrar — avisá al cajero"}
             </div>
             {isAdmin && (
               <div className="flex gap-2">
@@ -411,7 +412,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
                     className="card p-3 text-left transition hover:border-wine-400 disabled:opacity-60 dark:hover:border-wine-500"
                   >
                     <div className="text-xs text-ink-400 dark:text-obsidian-500">
-                      {p.category_name || "â€”"}
+                      {p.category_name || "—"}
                     </div>
                     <div className="text-sm font-medium text-ink-900 dark:text-white">
                       {p.name}
@@ -450,7 +451,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
               </div>
               {items.length === 0 && (
                 <div className="text-sm text-ink-500 dark:text-obsidian-400">
-                  {isAdmin ? "Sin productos aún" : "Sin productos â€” agregá del menú"}
+                  {isAdmin ? "Sin productos aún" : "Sin productos — agregá del menú"}
                 </div>
               )}
               <div className="space-y-1.5">
@@ -526,7 +527,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
                         className="card p-3 text-left transition hover:border-wine-400 disabled:opacity-60 dark:hover:border-wine-500"
                       >
                         <div className="text-xs text-ink-400 dark:text-obsidian-500">
-                          {p.category_name || "â€”"}
+                          {p.category_name || "—"}
                         </div>
                         <div className="text-sm font-medium text-ink-900 dark:text-white">
                           {p.name}
@@ -594,7 +595,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
               <span className="mr-auto text-xs text-ink-600 dark:text-white">
                 {isAdmin
                   ? "Cobrá desde Caja o con el botón de arriba."
-                  : "El cajero cobra esta cuenta â€” no hace falta que el cajero marque cocina."}
+                  : "El cajero cobra esta cuenta — no hace falta que el cajero marque cocina."}
               </span>
             )}
             <button type="button" onClick={onClose} className="btn-secondary">
@@ -669,7 +670,7 @@ function TableHistoryModal({ onClose }) {
             </div>
           )}
           {loading && (
-            <div className="text-sm text-ink-500">Cargandoâ€¦</div>
+            <div className="text-sm text-ink-500">Cargando…</div>
           )}
           {selectedTable && !loading && history.length === 0 && (
             <div className="py-8 text-center text-sm text-ink-500">
@@ -753,7 +754,7 @@ export default function TablesPage() {
   // Actualización en vivo entre PC y celulares (~3.5s + al volver a la pestaña)
   useLiveRefresh(load, { intervalMs: 3500 });
 
-  // Desde dashboard del mesero: /tables?open=ID â†’ abrir esa mesa al toque
+  // Desde dashboard del mesero: /tables?open=ID → abrir esa mesa al toque
   useEffect(() => {
     const openId = Number(searchParams.get("open"));
     if (!openId || tables.length === 0) return;
@@ -925,7 +926,7 @@ export default function TablesPage() {
         subtitle={
           user?.role === "waiter"
             ? "Abrí la mesa, pedí, enviá a cocina y cobrá con el cajero"
-            : "Por mesero â€” solo el mesero abre mesas; cajero cobra en Caja"
+            : "Por mesero — solo el mesero abre mesas; cajero cobra en Caja"
         }
         right={
           isAdmin ? (
@@ -947,13 +948,13 @@ export default function TablesPage() {
             No tienes mesas asignadas
           </div>
           <p className="mt-1 text-sm text-ink-600 dark:text-white">
-            Pedile al cajero que te asigne mesas en <b>Personal â†’ Asignaciones</b>.
+            Pedile al cajero que te asigne mesas en <b>Personal → Asignaciones</b>.
           </p>
         </div>
       )}
 
       {loading && tables.length === 0 ? (
-        <div className="text-sm text-ink-500">Cargando mesasâ€¦</div>
+        <div className="text-sm text-ink-500">Cargando mesas…</div>
       ) : isAdmin && waiterGroups ? (
         <div className="space-y-6">
           {waiterGroups.map((g) => (

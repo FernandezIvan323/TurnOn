@@ -153,7 +153,7 @@ function ExpenseModal({ open, onClose, onSaved, expense, categories }) {
         <div className="flex gap-2 pt-2">
           <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1">
-            {busy ? "Guardandoâ€¦" : (isEdit ? "Guardar cambios" : "Registrar gasto")}
+            {busy ? "Guardando…" : (isEdit ? "Guardar cambios" : "Registrar gasto")}
           </button>
         </div>
       </div>
@@ -284,7 +284,7 @@ export default function Expenses() {
   };
 
   const renderMethod = (m) => {
-    if (!m) return <span className="text-xs text-ink-400">â€”</span>;
+    if (!m) return <span className="text-xs text-ink-400">—</span>;
     const def = METHOD_LABELS[m];
     const Icon = def.icon;
     return (
@@ -316,7 +316,7 @@ export default function Expenses() {
           <input
             type="search"
             className="input py-2 pl-9 text-sm"
-            placeholder="Buscar por descripción, categoría, monto o quien registróâ€¦"
+            placeholder="Buscar por descripción, categoría, monto o quien registró…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             autoComplete="off"
@@ -385,7 +385,7 @@ export default function Expenses() {
               <div className="flex justify-between"><span className="text-ink-500 dark:text-obsidian-400">Tarjeta</span><span className="font-medium">{money(summary.by_method.card)}</span></div>
               <div className="flex justify-between"><span className="text-ink-500 dark:text-obsidian-400">Transferencia</span><span className="font-medium">{money(summary.by_method.transfer)}</span></div>
             </div>
-          ) : <div className="text-sm text-ink-400">â€”</div>}
+          ) : <div className="text-sm text-ink-400">—</div>}
         </div>
         <div className="card p-4">
           <div className="text-xs text-ink-500 dark:text-obsidian-400 mb-2">Neto del día</div>
@@ -428,7 +428,7 @@ export default function Expenses() {
 
       {/* Tabla */}
       {loading ? (
-        <div className="card p-8 text-center text-ink-600 dark:text-white">Cargandoâ€¦</div>
+        <div className="card p-8 text-center text-ink-600 dark:text-white">Cargando…</div>
       ) : expenses.length === 0 ? (
         <div className="card p-8 text-center text-ink-600 dark:text-white">
           <TrendingDown size={32} className="mx-auto mb-2 text-ink-300 dark:text-white/40"/>
@@ -443,7 +443,7 @@ export default function Expenses() {
         <div className="card p-8 text-center text-ink-600 dark:text-white">
           <Search size={32} className="mx-auto mb-2 text-ink-300 dark:text-white/40"/>
           Ningún gasto coincide con la búsqueda
-          {search.trim() ? ` â€œ${search.trim()}”` : ""}.
+          {search.trim() ? ` “${search.trim()}”` : ""}.
           <div className="mt-2">
             <button onClick={() => setSearch("")} className="btn-secondary text-sm" type="button">
               Limpiar búsqueda
@@ -473,10 +473,10 @@ export default function Expenses() {
                       <div className="text-xs cell-muted">{formatTime(e.created_at)}</div>
                     </td>
                     <td>{renderCat({ name: e.category_name, icon: e.category_icon })}</td>
-                    <td className="max-w-xs truncate">{e.description || "â€”"}</td>
+                    <td className="max-w-xs truncate">{e.description || "—"}</td>
                     <td className="text-right font-semibold tabular-nums text-rose-700 dark:text-rose-300">{money(e.amount)}</td>
                     <td>{renderMethod(e.payment_method)}</td>
-                    <td className="text-xs cell-muted">{e.user_name || "â€”"}</td>
+                    <td className="text-xs cell-muted">{e.user_name || "—"}</td>
                     <td className="text-right">
                       <div className="flex justify-end gap-1">
                         <button

@@ -102,13 +102,13 @@ function StockModal({ product, onClose, onSaved }) {
           <label className="label">Cantidad</label>
           <input className="input" type="number" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} autoFocus />
           <label className="label mt-3">Motivo (opcional)</label>
-          <input className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Compra, merma, ajusteâ€¦" />
+          <input className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Compra, merma, ajuste…" />
         </>
       )}
       {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300">{err}</div>}
       <div className="mt-4 flex justify-end gap-2">
         <button onClick={onClose} className="btn-secondary">Cancelar</button>
-        <button onClick={submit} disabled={saving} className="btn-primary">{saving ? "Guardandoâ€¦" : "Guardar"}</button>
+        <button onClick={submit} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
       </div>
     </Modal>
   );
@@ -168,7 +168,7 @@ export default function Inventory() {
       <div className="mb-4 flex items-center gap-2">
         <div className="relative flex-1 max-w-xs">
           <Search size={14} className="absolute left-3 top-2.5 text-ink-400 dark:text-obsidian-500"/>
-          <input className="input pl-8 text-sm" placeholder="Buscar productoâ€¦" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <input className="input pl-8 text-sm" placeholder="Buscar producto…" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
 
@@ -191,7 +191,7 @@ export default function Inventory() {
                 {filtered.map((p) => (
                   <tr key={p.id} className={p.low_stock ? "!bg-rose-50/60 dark:!bg-rose-900/15" : undefined}>
                     <td className="cell-strong">{p.name}</td>
-                    <td className="cell-muted">{p.category_name || "â€”"}</td>
+                    <td className="cell-muted">{p.category_name || "—"}</td>
                     <td className={`text-right font-semibold tabular-nums ${p.low_stock ? "text-rose-700 dark:text-rose-300" : ""}`}>
                       {p.stock}
                     </td>

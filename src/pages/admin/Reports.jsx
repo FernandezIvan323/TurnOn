@@ -119,7 +119,7 @@ export default function Reports() {
     if (rangeKey === "custom") {
       const from = customFrom <= customTo ? customFrom : customTo;
       const to = customFrom <= customTo ? customTo : customFrom;
-      return { from, to, label: from === to ? from : `${from} â†’ ${to}` };
+      return { from, to, label: from === to ? from : `${from} →��’ ${to}` };
     }
     const preset = RANGE_PRESETS.find((p) => p.key === rangeKey) || RANGE_PRESETS[0];
     return preset.build();
@@ -244,7 +244,7 @@ export default function Reports() {
           {rangeKey === "custom" && (
             <div className="flex items-center gap-2 text-sm">
               <input type="date" className="input h-9 text-sm" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
-              <span className="text-ink-400">â†’</span>
+              <span className="text-ink-400">→��’</span>
               <input type="date" className="input h-9 text-sm" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
             </div>
           )}
@@ -436,7 +436,7 @@ export default function Reports() {
                           <tr key={i}>
                             <td className="cell-muted">{i + 1}</td>
                             <td className="font-medium text-ink-900 dark:text-white">{p.name}</td>
-                            <td className="cell-muted">{p.category || "â€”"}</td>
+                            <td className="cell-muted">{p.category || "—"}</td>
                             <td className="text-right font-semibold tabular-nums">{p.qty}</td>
                             <td className="text-right font-semibold tabular-nums text-wine-600 dark:text-wine-300">
                               {money(p.revenue)}
@@ -589,7 +589,7 @@ export default function Reports() {
                         <tr key={d.id}>
                           <td className="cell-muted">{i + 1}</td>
                           <td className="font-medium text-ink-900 dark:text-white">{d.name}</td>
-                          <td className="cell-muted">{d.phone || "â€”"}</td>
+                          <td className="cell-muted">{d.phone || "—"}</td>
                           <td className="text-right font-semibold tabular-nums">{d.deliveries}</td>
                           <td className="text-right font-semibold tabular-nums text-wine-600 dark:text-wine-300">{money(d.revenue)}</td>
                         </tr>
@@ -625,7 +625,7 @@ export default function Reports() {
               </div>
 
               {historyLoading ? (
-                <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando historialâ€¦</div>
+                <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando historial…</div>
               ) : history.length === 0 ? (
                 <div className="card p-8 text-center text-ink-500 dark:text-obsidian-400">
                   <Calendar size={32} className="mx-auto text-ink-300 dark:text-obsidian-300 mb-2"/>

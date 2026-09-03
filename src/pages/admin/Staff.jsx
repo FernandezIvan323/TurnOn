@@ -84,7 +84,7 @@ function AccessModal({ person, onClose, onSaved }) {
       )}
       <div className="mt-4 flex justify-end gap-2">
         <button onClick={onClose} className="btn-secondary">Cancelar</button>
-        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Creandoâ€¦" : "Crear acceso"}</button>
+        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Creando…" : "Crear acceso"}</button>
       </div>
     </Modal>
   );
@@ -134,7 +134,7 @@ function DeliveryModal({ person, onClose, onSaved }) {
         )}
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardandoâ€¦" : "Guardar"}</button>
+          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
         </div>
       </div>
     </div>
@@ -168,9 +168,9 @@ function TableModal({ table, onClose, onSaved }) {
           <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
         </div>
         <label className="label">Número / identificador</label>
-        <input className="input" value={form.number} onChange={(e) => setForm({...form, number: e.target.value})} placeholder="1, 2, P1, B1â€¦" />
+        <input className="input" value={form.number} onChange={(e) => setForm({...form, number: e.target.value})} placeholder="1, 2, P1, B1…" />
         <label className="label mt-3">Etiqueta (opcional)</label>
-        <input className="input" value={form.label} onChange={(e) => setForm({...form, label: e.target.value})} placeholder="Patio 1, Barra 2â€¦" />
+        <input className="input" value={form.label} onChange={(e) => setForm({...form, label: e.target.value})} placeholder="Patio 1, Barra 2…" />
         <label className="label mt-3">Capacidad</label>
         <input className="input" type="number" value={form.capacity} onChange={(e) => setForm({...form, capacity: e.target.value})} />
         <label className="flex items-center gap-2 text-sm text-ink-600 dark:text-obsidian-200 mt-3">
@@ -184,7 +184,7 @@ function TableModal({ table, onClose, onSaved }) {
         )}
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardandoâ€¦" : "Guardar"}</button>
+          <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
         </div>
       </div>
     </div>
@@ -264,7 +264,7 @@ function AddTableModal({ waiter, availableTables, assignedTableIds, allTables, o
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
           <button onClick={save} disabled={saving || allTables.length === 0} className="btn-primary">
-            {saving ? "Guardandoâ€¦" : `Guardar (${selected.size})`}
+            {saving ? "Guardando…" : `Guardar (${selected.size})`}
           </button>
         </div>
       </div>
@@ -308,7 +308,7 @@ function WaiterModal({ onClose, onSaved }) {
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
           <button onClick={save} disabled={saving || !username || !name || pin.length !== 4} className="btn-primary">
-            {saving ? "Guardandoâ€¦" : "Crear mesero"}
+            {saving ? "Guardando…" : "Crear mesero"}
           </button>
         </div>
       </div>
@@ -415,7 +415,7 @@ function ChangePinModal({ user, onClose, onSaved }) {
                 disabled={saving || pin.length !== 4 || pin2.length !== 4}
                 className="btn-primary w-full sm:w-auto"
               >
-                {saving ? "Guardandoâ€¦" : "Actualizar PIN"}
+                {saving ? "Guardando…" : "Actualizar PIN"}
               </button>
             </div>
           </>
@@ -473,7 +473,7 @@ function AssignmentsTab() {
             </div>
             {w.tables.length === 0 ? (
               <div className="text-sm text-ink-400 dark:text-obsidian-500 italic ml-11">
-                Sin mesas asignadas â€” el mesero no podrá tomar pedidos.
+                Sin mesas asignadas — el mesero no podrá tomar pedidos.
               </div>
             ) : (
               <div className="flex flex-wrap gap-2 ml-11">
@@ -615,7 +615,7 @@ function WaiterHistoryModal({ waiter, onClose }) {
         </div>
         <div className="flex-1 space-y-4 overflow-y-auto p-4">
           {loading ? (
-            <div className="py-8 text-center text-ink-400 dark:text-obsidian-500">Cargandoâ€¦</div>
+            <div className="py-8 text-center text-ink-400 dark:text-obsidian-500">Cargando…</div>
           ) : error ? (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
               {error}
@@ -696,7 +696,7 @@ function WaiterHistoryModal({ waiter, onClose }) {
                                 ? "Tarjeta"
                                 : o.payment_method === "transfer"
                                   ? "Transferencia"
-                                  : o.payment_method || "â€”"}
+                                  : o.payment_method || "—"}
                           </span>
                           <div className="text-right">
                             <span className="font-bold tabular-nums text-ink-800 dark:text-obsidian-50">
@@ -780,7 +780,7 @@ export default function Staff() {
                 {delivery.map((p) => (
                   <tr key={p.id}>
                     <td className="cell-strong">{p.name}</td>
-                    <td className="cell-muted">{p.phone || "â€”"}</td>
+                    <td className="cell-muted">{p.phone || "—"}</td>
                     <td>
                       <span className={`badge ${
                         p.status === "available" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" :
@@ -797,7 +797,7 @@ export default function Staff() {
                             <KeyRound size={10} className="mr-1 inline" /> Con acceso
                           </span>
                           <span className="mt-0.5 text-[10px] text-ink-500 dark:text-obsidian-500">
-                            @{p.username || "â€”"}
+                            @{p.username || "—"}
                           </span>
                         </div>
                       ) : (
@@ -917,7 +917,7 @@ export default function Staff() {
                 {tables.map((t) => (
                   <tr key={t.id}>
                     <td className="cell-strong font-bold">{t.number}</td>
-                    <td className="cell-muted">{t.label || "â€”"}</td>
+                    <td className="cell-muted">{t.label || "—"}</td>
                     <td className="cell-muted">{t.capacity}</td>
                     <td>
                       {t.assigned_user_name ? (

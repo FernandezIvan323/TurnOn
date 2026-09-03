@@ -101,7 +101,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
             Productos
           </div>
           {items.length === 0 ? (
-            <div className="text-xs text-ink-500 dark:text-obsidian-400">Cargando detalleâ€¦</div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Cargando detalle…</div>
           ) : (
             <ul className="max-h-40 space-y-1.5 overflow-y-auto">
               {items.map((it) => (
@@ -196,7 +196,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
         <div className="flex gap-2">
           <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1">
-            {busy ? "Procesandoâ€¦" : (isPrepay ? "Confirmar pre-cobro" : "Confirmar cobro")}
+            {busy ? "Procesando…" : (isPrepay ? "Confirmar pre-cobro" : "Confirmar cobro")}
           </button>
         </div>
     </Modal>

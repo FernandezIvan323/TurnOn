@@ -192,7 +192,7 @@ function PendingBanner({ orders }) {
       {staleCount > 0 && (
         <p className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-200">
           {staleCount} pedido{staleCount === 1 ? "" : "s"} de{" "}
-          <strong>días anteriores</strong> â€” probablemente de pruebas u operación olvidada.
+          <strong>días anteriores</strong> — probablemente de pruebas u operación olvidada.
           Resolvelos para dejar el local listo para un nuevo día.
         </p>
       )}
@@ -217,7 +217,7 @@ function PendingBanner({ orders }) {
                 <span className="truncate font-medium text-ink-800 dark:text-white">
                   {o.type === "table"
                     ? `Mesa ${o.table_number || "?"}`
-                    : o.customer_name || "â€”"}
+                    : o.customer_name || "—"}
                 </span>
                 {age && (
                   <span
@@ -301,7 +301,7 @@ function ClosingDetail({ closing, date, onReset }) {
             <h2 className="text-2xl font-bold text-ink-900 dark:text-white">{date}</h2>
             <div className="mt-0.5 text-xs text-ink-600 dark:text-white">
               Cerrado por{" "}
-              <span className="font-semibold">{closing.closed_by_name || "â€”"}</span>
+              <span className="font-semibold">{closing.closed_by_name || "—"}</span>
               {" · "}
               {closedAtLabel}
             </div>
@@ -343,7 +343,7 @@ function ClosingDetail({ closing, date, onReset }) {
             Fecha de operación: <strong className="text-white">{date}</strong>
           </div>
           <div className="text-sm text-zinc-200">
-            Cajero: <strong className="text-white">{closing.closed_by_name || "â€”"}</strong>
+            Cajero: <strong className="text-white">{closing.closed_by_name || "—"}</strong>
             {" · "}
             Cerrado: {closedAtLabel}
           </div>
@@ -696,7 +696,7 @@ function ClosingForm({ preview, date, onSuccess }) {
         <label className="label text-ink-700 dark:text-white">Observaciones (opcional)</label>
         <textarea
           className="input min-h-[70px] resize-y"
-          placeholder="Ej: Faltante por error en cambioâ€¦"
+          placeholder="Ej: Faltante por error en cambio…"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
@@ -751,7 +751,7 @@ function ClosingForm({ preview, date, onSuccess }) {
         type="button"
       >
         <CheckCircle2 size={18} />
-        {busy ? "Cerrando cajaâ€¦" : "Confirmar corte de caja"}
+        {busy ? "Cerrando caja…" : "Confirmar corte de caja"}
       </button>
     </div>
   );
@@ -848,7 +848,7 @@ export default function CashClosing() {
         )}
 
         {loading ? (
-          <div className="card p-8 text-center text-ink-600 dark:text-white">Cargandoâ€¦</div>
+          <div className="card p-8 text-center text-ink-600 dark:text-white">Cargando…</div>
         ) : err ? (
           <div className="card p-4 text-sm text-rose-700 dark:text-white">{err}</div>
         ) : !preview ? null : alreadyClosed ? (

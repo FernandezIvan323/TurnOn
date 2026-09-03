@@ -33,7 +33,7 @@ function CategoryModal({ cat, onClose, onSaved }) {
       {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{err}</div>}
       <div className="mt-4 flex justify-end gap-2">
         <button onClick={onClose} className="btn-secondary">Cancelar</button>
-        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardandoâ€¦" : "Guardar"}</button>
+        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
       </div>
     </Modal>
   );
@@ -79,7 +79,7 @@ function ProductModal({ product, categories, onClose, onSaved }) {
           <div>
             <label className="label">Categoría</label>
             <select className="input" value={form.category_id || ""} onChange={(e) => setForm({...form, category_id: e.target.value ? Number(e.target.value) : null})}>
-              <option value="">â€” Sin categoría â€”</option>
+              <option value="">— Sin categoría —</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
@@ -92,7 +92,7 @@ function ProductModal({ product, categories, onClose, onSaved }) {
       {err && <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">{err}</div>}
       <div className="mt-4 flex justify-end gap-2">
         <button onClick={onClose} className="btn-secondary">Cancelar</button>
-        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardandoâ€¦" : "Guardar"}</button>
+        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Guardando…" : "Guardar"}</button>
       </div>
     </Modal>
   );
@@ -130,7 +130,7 @@ function ReadOnlyCatalog() {
               className="input pl-8 w-64"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar productoâ€¦"
+              placeholder="Buscar producto…"
             />
           </div>
         }

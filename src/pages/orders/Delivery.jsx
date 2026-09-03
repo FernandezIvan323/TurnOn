@@ -288,7 +288,7 @@ function CompletedDeliveryCard({ order, onReopen, onClick }) {
           </span>
           <div className="min-w-0 space-y-0.5 text-sm">
             <div className="truncate font-semibold text-ink-900 dark:text-white">
-              {order.customer_name || "â€”"}
+              {order.customer_name || "—"}
             </div>
             {order.customer_phone && (
               <div className="flex items-center gap-1 text-xs text-ink-600 dark:text-obsidian-300">
@@ -481,7 +481,7 @@ function NewOrderModal({ onClose, onCreated }) {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onFocus={() => suggestions.length > 0 && setShowSugg(true)}
                     onBlur={() => setTimeout(() => setShowSugg(false), 180)}
-                    placeholder="Ej. Juan Pérez o 555-1234â€¦"
+                    placeholder="Ej. Juan Pérez o 555-1234…"
                     autoComplete="off"
                   />
                 </div>
@@ -559,12 +559,12 @@ function NewOrderModal({ onClose, onCreated }) {
               </div>
               <div>
                 <label className="label">Notas de la entrega</label>
-                <textarea rows={2} className="input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej. Tocar timbre 2 veces, trae cambio de 1000â€¦" />
+                <textarea rows={2} className="input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej. Tocar timbre 2 veces, trae cambio de 1000…" />
               </div>
             </div>
 
             <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mt-5 mb-2">Carrito</h3>
-            {cart.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500">Agrega productos del menú â†’</div>}
+            {cart.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500">Agrega productos del menú →��’</div>}
             <div className="space-y-2">
               {cart.map((c) => (
                 <div key={c.product_id} className="flex items-center gap-2 text-sm">
@@ -614,7 +614,7 @@ function NewOrderModal({ onClose, onCreated }) {
           <div className="flex gap-2">
             <button onClick={onClose} className="btn-secondary">Cancelar</button>
             <button onClick={submit} disabled={saving} className="btn-primary">
-              {saving ? "Guardandoâ€¦" : "Crear pedido"}
+              {saving ? "Guardando…" : "Crear pedido"}
             </button>
           </div>
         </div>
@@ -668,7 +668,7 @@ function AssignModal({ order, onClose, onAssigned }) {
                 <div className="shrink-0 text-right">
                   <div className="text-[10px] uppercase tracking-wide text-ink-400 dark:text-obsidian-500">En la calle</div>
                   <div className="text-sm font-semibold tabular-nums text-indigo-700 dark:text-indigo-300">
-                    {street > 0 ? money(street) : "â€”"}
+                    {street > 0 ? money(street) : "—"}
                   </div>
                   <div className="text-[10px] mt-0.5 text-emerald-700 dark:text-emerald-300">
                     {cashToday > 0 ? `${money(cashToday)} efectivo hoy` : ""}
@@ -738,15 +738,15 @@ function OrderDetailModal({ order, onClose, onChanged }) {
         <div className="mb-4 grid grid-cols-2 gap-3 text-sm">
           <div>
             <span className="text-ink-400 dark:text-obsidian-500">Cliente:</span>{" "}
-            <b>{order.customer_name || "â€”"}</b>
+            <b>{order.customer_name || "—"}</b>
           </div>
           <div>
             <span className="text-ink-400 dark:text-obsidian-500">Teléfono:</span>{" "}
-            {order.customer_phone || "â€”"}
+            {order.customer_phone || "—"}
           </div>
           <div className="col-span-2">
             <span className="text-ink-400 dark:text-obsidian-500">Dirección:</span>{" "}
-            {order.customer_address || "â€”"}
+            {order.customer_address || "—"}
             {order.customer_neighborhood ? ` · ${order.customer_neighborhood}` : ""}
           </div>
           {order.customer_reference && (
@@ -780,7 +780,7 @@ function OrderDetailModal({ order, onClose, onChanged }) {
           </div>
         )}
         {loading ? (
-          <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargandoâ€¦</div>
+          <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
         ) : (
           <div className="space-y-1.5">
             {items.length === 0 && (
@@ -889,7 +889,7 @@ function HistoryModal({ onClose }) {
           {!selected && (
             <div className="py-8 text-center text-sm text-ink-400">Selecciona un repartidor</div>
           )}
-          {loading && <div className="text-sm text-ink-500">Cargandoâ€¦</div>}
+          {loading && <div className="text-sm text-ink-500">Cargando…</div>}
           {err && (
             <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
               {err}
@@ -964,7 +964,7 @@ function ReopenModal({ order, onClose, onReopened }) {
         <div className="mt-4 flex gap-2">
           <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1">
-            {busy ? "Reabriendoâ€¦" : "Reabrir pedido"}
+            {busy ? "Reabriendo…" : "Reabrir pedido"}
           </button>
         </div>
       </div>
@@ -1145,7 +1145,7 @@ export default function Delivery() {
       )}
 
       {loading ? (
-        <div className="text-sm text-ink-600 dark:text-white">Cargandoâ€¦</div>
+        <div className="text-sm text-ink-600 dark:text-white">Cargando…</div>
       ) : filter === "delivered" || filter === "cancelled" ? (
         <div>
           <div className="mb-3 text-sm font-medium text-ink-600 dark:text-obsidian-300">
@@ -1220,7 +1220,7 @@ export default function Delivery() {
           <div className="card w-full max-w-md p-5">
             <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-3">Cancelar pedido #{toCancel.id}</h2>
             <label className="label">Motivo</label>
-            <input className="input" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Cliente no contesta, dirección erróneaâ€¦" />
+            <input className="input" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Cliente no contesta, dirección errónea…" />
             <div className="mt-4 flex justify-end gap-2">
               <button onClick={() => { setToCancel(null); setCancelReason(""); }} className="btn-secondary">Volver</button>
               <button onClick={cancel} className="btn-danger">Cancelar pedido</button>

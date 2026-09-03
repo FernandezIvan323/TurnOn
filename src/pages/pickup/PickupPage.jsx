@@ -421,7 +421,7 @@ function NewPickupModal({ onClose, onCreated }) {
               <div className="flex gap-2">
                 <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
                 <button onClick={submit} disabled={saving || cart.length === 0} className="btn-primary flex-1">
-                  {saving ? "Creandoâ€¦" : "Crear pedido"}
+                  {saving ? "Creando…" : "Crear pedido"}
                 </button>
               </div>
             </div>
@@ -480,7 +480,7 @@ function PayModal({ order, onClose, onPaid }) {
         <div className="flex gap-2">
           <button onClick={onClose} className="btn-secondary flex-1">Cancelar</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1">
-            {busy ? "Procesandoâ€¦" : "Confirmar cobro"}
+            {busy ? "Procesando…" : "Confirmar cobro"}
           </button>
         </div>
       </div>
@@ -665,7 +665,7 @@ export default function PickupPage() {
       )}
 
       {loading ? (
-        <div className="card p-8 text-center text-ink-600 dark:text-white">Cargandoâ€¦</div>
+        <div className="card p-8 text-center text-ink-600 dark:text-white">Cargando…</div>
       ) : filter === "paid" || filter === "cancelled" ? (
         <div>
           <div className="mb-3 text-sm font-medium text-ink-600 dark:text-obsidian-300">
@@ -809,7 +809,7 @@ export default function PickupPage() {
           <div className="card w-full max-w-md p-5">
             <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-3">Cancelar pedido #{toCancel.id}</h2>
             <label className="label">Motivo</label>
-            <input className="input" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Cliente se fue, errorâ€¦" />
+            <input className="input" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Cliente se fue, error…" />
             <div className="mt-4 flex justify-end gap-2">
               <button onClick={() => { setToCancel(null); setCancelReason(""); }} className="btn-secondary">Volver</button>
               <button onClick={cancel} className="btn-danger">Cancelar pedido</button>
