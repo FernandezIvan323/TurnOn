@@ -9,7 +9,7 @@ import StickyNav from "../components/funciones/StickyNav";
 import ProgressBar from "../components/funciones/ProgressBar";
 import BentoGrid from "../components/funciones/BentoGrid";
 import AdvantageRow from "../components/funciones/AdvantageRow";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { STEPS, BUSINESS_TYPES, ADVANTAGES } from "../content/funciones";
 
 const PAD = "px-5 sm:px-8 md:px-12 xl:px-16";
@@ -23,8 +23,6 @@ export default function Funciones() {
 
   const ids = ["hero", ...STEPS.map((s) => s.id), "tipos", "ventajas", "cta"];
   const activeId = useScrollSpy(ids);
-
-  const seated = STEPS.filter((s) => s.step === "04");
 
   return (
     <div className="min-h-svh w-full bg-white text-ink-800 dark:bg-obsidian-950 dark:text-white">
@@ -80,12 +78,12 @@ export default function Funciones() {
           <div className="lg:grid lg:grid-cols-[1fr_240px] lg:gap-16">
             {/* Pasos */}
             <div className="min-w-0">
-              <div className="space-y-16 sm:space-y-20">
+              <div className="space-y-6 sm:space-y-8">
                 {STEPS.map((step, i) => (
                   <section
                     key={step.id}
                     id={step.id}
-                    className="scroll-mt-24 border-b border-paper-200 py-10 last:border-0 dark:border-obsidian-800 sm:py-14"
+                    className="scroll-mt-24 border-b border-paper-200 py-6 last:border-0 dark:border-obsidian-800 sm:py-8"
                   >
                     <StepSection
                       title={`${step.step}. ${step.title}`}
@@ -107,7 +105,7 @@ export default function Funciones() {
                 ))}
 
                 {/* Tipos de negocio */}
-                <section id="tipos" className="scroll-mt-24 border-b border-paper-200 py-10 dark:border-obsidian-800 sm:py-14">
+                <section id="tipos" className="scroll-mt-24 border-b border-paper-200 py-6 dark:border-obsidian-800 sm:py-8">
                   <p className="text-sm font-bold uppercase tracking-widest text-wine-600 dark:text-wine-300">
                     Tipos de local
                   </p>
@@ -123,7 +121,7 @@ export default function Funciones() {
                 </section>
 
                 {/* Ventajas */}
-                <section id="ventajas" className="scroll-mt-24 py-10 dark:border-obsidian-800 sm:py-14">
+                <section id="ventajas" className="scroll-mt-24 py-6 dark:border-obsidian-800 sm:py-8">
                   <p className="text-sm font-bold uppercase tracking-widest text-wine-600 dark:text-wine-300">
                     Ventajas
                   </p>

@@ -1,13 +1,17 @@
 import MockLogin from "../components/landing/MockLogin";
+import MockDashboard from "../components/landing/MockDashboard";
 import MockMenu from "../components/landing/MockMenu";
 import MockInventory from "../components/landing/MockInventory";
 import MockTables from "../components/landing/MockTables";
+import MockWaiterPhone from "../components/landing/MockWaiterPhone";
 import MockKanban from "../components/landing/MockKanban";
 import MockPickup from "../components/landing/MockPickup";
 import MockCashier from "../components/landing/MockCashier";
 import MockCashierClosing from "../components/landing/MockCashierClosing";
 import MockDebts from "../components/landing/MockDebts";
 import MockReports from "../components/landing/MockReports";
+import MockStaff from "../components/landing/MockStaff";
+import MockCustomers from "../components/landing/MockCustomers";
 import MockDriverPhone from "../components/landing/MockDriverPhone";
 
 export const STEPS = [
@@ -26,14 +30,28 @@ export const STEPS = [
     mockVariant: "none",
   },
   {
-    id: "menu",
+    id: "dashboard",
     step: "02",
+    title: "Dashboard del día",
+    subtitle: "Al entrar, el resumen del negocio: ventas, gastos, neto y pedidos.",
+    bullets: [
+      "Ventas, gastos, neto y ticket promedio en tiempo real",
+      "Tarjetas de acción: mesas en cocina, sin asignar, stock bajo",
+      "Cada rol ve su propio panel (cajero, mesero, repartidor)",
+    ],
+    MockDevice: MockDashboard,
+    mockLabel: "Resumen del día",
+    mockVariant: "laptop",
+  },
+  {
+    id: "menu",
+    step: "03",
     title: "Definí tu menú",
-    subtitle: "Categórias y productos cargados una vez, listos para vender.",
+    subtitle: "Categorías y productos cargados una vez, listos para vender.",
     bullets: [
       "Categorías: Pizzas, Bebidas, Postres, etc.",
       "Precio, stock mínimo y disponibilidad por producto",
-      "Los cambios aparecen inmediatamente en la app del mesero y en cocina",
+      "Los cambios aparecen de inmediato en el celular y en cocina",
     ],
     MockDevice: MockMenu,
     mockLabel: "Catálogo",
@@ -41,12 +59,12 @@ export const STEPS = [
   },
   {
     id: "inventario",
-    step: "03",
+    step: "04",
     title: "Control de inventario",
     subtitle: "Stock automático que se descuenta al cerrar cada pedido.",
     bullets: [
       "Alerta visual cuando un producto queda por debajo del mínimo",
-      "Movimientos automáticos al vender o al trackear una merma",
+      "Movimientos automáticos al vender o al registrar una merma",
       "No hace falta contar el stock a mano cada noche",
     ],
     MockDevice: MockInventory,
@@ -55,7 +73,7 @@ export const STEPS = [
   },
   {
     id: "mesas",
-    step: "04",
+    step: "05",
     title: "Mesas abiertas",
     subtitle: "El mesero ve las mesas asignadas, el estado y el turno del siguiente pedido.",
     bullets: [
@@ -68,8 +86,22 @@ export const STEPS = [
     mockVariant: "laptop",
   },
   {
+    id: "mesero",
+    step: "06",
+    title: "El mesero en su celular",
+    subtitle: "Su propia app: mesas asignadas, cuenta abierta y turno en juego.",
+    bullets: [
+      "Ve sólo las mesas que le asignó el cajero",
+      "Abre la cuenta al anotar el primer producto",
+      "Envío a cocina y 'lista para cobrar' con un toque",
+    ],
+    MockDevice: MockWaiterPhone,
+    mockLabel: "App mesero",
+    mockVariant: "phone",
+  },
+  {
     id: "domicilios",
-    step: "05",
+    step: "07",
     title: "Pedidos a domicilio",
     subtitle: "Kanban de 5 columnas con asignación libre a repartidores.",
     bullets: [
@@ -83,7 +115,7 @@ export const STEPS = [
   },
   {
     id: "pickup",
-    step: "06",
+    step: "08",
     title: "Para llevar",
     subtitle: "Cliente llega, paga y se lleva — sin complicaciones.",
     bullets: [
@@ -97,7 +129,7 @@ export const STEPS = [
   },
   {
     id: "caja",
-    step: "07",
+    step: "09",
     title: "Caja y cobro",
     subtitle: "Por cobrar y cobrados separados, métodos de pago claros.",
     bullets: [
@@ -111,11 +143,11 @@ export const STEPS = [
   },
   {
     id: "cierre",
-    step: "08",
+    step: "10",
     title: "Cierre del día",
     subtitle: "Arqueo calculado, diferencia detectada, corte final.",
     bullets: [
-      "El sistema suma todo automáticamente — vos solo contamos el efectivo",
+      "El sistema suma todo automáticamente — vos solo contás el efectivo",
       "Si no cuadra, el sistema marca la diferencia",
       "El corte es inmutable: una vez cerrado, queda cerrado",
     ],
@@ -125,7 +157,7 @@ export const STEPS = [
   },
   {
     id: "deudas",
-    step: "09",
+    step: "11",
     title: "Gestión de deudas",
     subtitle: "Pagos pendientes registrados, sin bloquear el flujo del negocio.",
     bullets: [
@@ -139,7 +171,7 @@ export const STEPS = [
   },
   {
     id: "reportes",
-    step: "10",
+    step: "12",
     title: "Reportes del negocio",
     subtitle: "Ventas del día, top productos, propinas, todo en un panel.",
     bullets: [
@@ -152,8 +184,36 @@ export const STEPS = [
     mockVariant: "laptop",
   },
   {
+    id: "personal",
+    step: "13",
+    title: "Personal y asignaciones",
+    subtitle: "Repartidores, meseros, mesas y quién atiende cada mesa.",
+    bullets: [
+      "Repartidores con estado y acceso al sistema (usuario + PIN)",
+      "Meseros con historial de pedidos, propinas y cambio de PIN",
+      "Asignación de mesas: cada mesa a un mesero",
+    ],
+    MockDevice: MockStaff,
+    mockLabel: "Personal",
+    mockVariant: "laptop",
+  },
+  {
+    id: "clientes",
+    step: "14",
+    title: "Clientes",
+    subtitle: "Búsqueda por teléfono o nombre, con historial de cada uno.",
+    bullets: [
+      "Búsqueda predictiva para cargar un domicilio al toque",
+      "Dirección y referencia guardadas por cliente",
+      "Historial de los últimos 10 pedidos",
+    ],
+    MockDevice: MockCustomers,
+    mockLabel: "Clientes",
+    mockVariant: "laptop",
+  },
+  {
     id: "repartidor",
-    step: "11",
+    step: "15",
     title: "El repartidor",
     subtitle: "Su propia pantalla: pedidos listos, en camino y dinero a rendir.",
     bullets: [

@@ -3,53 +3,35 @@ import { Sparkles, ShoppingBag, Utensils, MonitorSmartphone, Truck } from "lucid
 const ICONS = { Sparkles, ShoppingBag, Utensils, MonitorSmartphone, Truck };
 
 /**
- * Grid bento para "tipos de local": un hero grande + 5 cards compactas.
- * Mobile: grid simple (3 columnas o 2).
+ * Grid "Spotlight" para tipos de local: badge con gradiente wine + icono grande,
+ * título y descripción, hover con lift e iluminación de borde.
  */
 export default function BentoGrid({ items }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-4">
-      {items.map((t, i) => {
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {items.map((t) => {
         const Icon = ICONS[t.icon] || Sparkles;
-        const isHero = i === 0;
         return (
           <div
             key={t.key}
-            className={`group flex flex-col justify-between rounded-2xl border p-4 transition-all hover:border-wine-400 hover:shadow-card dark:hover:border-wine-500/40 sm:p-5 ${
-              isHero
-                ? "col-span-2 flex-row items-start gap-4 bg-paper-50 sm:col-span-3 lg:col-span-2 lg:col-start-1 lg:row-span-2 lg:flex-col lg:gap-6 lg:p-6 dark:border-obsidian-700 dark:bg-obsidian-900"
-                : "border-paper-300 bg-white dark:border-obsidian-700 dark:bg-obsidian-900"
-            }`}
+            className="group relative overflow-hidden rounded-3xl border border-paper-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-wine-400/60 hover:shadow-pop dark:border-obsidian-800 dark:bg-obsidian-900 dark:hover:border-wine-500/50"
           >
-            <div className={`flex items-center gap-3 ${isHero ? "shrink-0" : "flex-col items-start gap-2"}`}>
-              <span
-                className={`rounded-xl bg-wine-50 text-wine-600 dark:bg-wine-900/40 dark:text-wine-300 ${
-                  isHero ? "flex-row items-center justify-center p-3" : "flex h-10 w-10 items-center justify-center p-0"
-                }`}
-              >
-                <Icon size={isHero ? 20 : 20} />
+            {/* Glow de fondo */}
+            <div className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-wine-600/5 blur-2xl transition-opacity duration-300 group-hover:bg-wine-600/15" />
+
+            <div className="relative flex items-start gap-4">
+              <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-wine-600 to-wine-800 text-white shadow-lg shadow-wine-600/20 transition-transform duration-300 group-hover:scale-105">
+                <Icon size={26} />
               </span>
-              <div>
-                <p
-                  className={`font-bold text-ink-900 dark:text-white ${
-                    isHero ? "text-lg sm:text-xl lg:text-2xl" : "text-sm sm:text-base"
-                  }`}
-                >
+              <div className="min-w-0">
+                <h3 className="text-lg font-bold text-ink-900 dark:text-white">
                   {t.label}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-ink-600 dark:text-obsidian-300">
+                  {t.desc}
                 </p>
-                {isHero && (
-                  <p className="mt-1 max-w-xs text-sm leading-relaxed text-ink-600 dark:text-obsidian-300 lg:text-base">
-                    {t.desc}
-                  </p>
-                )}
               </div>
             </div>
-            {/* Descripción oculta en mobile cuando es hero y se ve en mobile */}
-            {!isHero && (
-              <p className="mt-2 text-xs leading-snug text-ink-500 dark:text-obsidian-400 sm:text-sm">
-                {t.desc}
-              </p>
-            )}
           </div>
         );
       })}

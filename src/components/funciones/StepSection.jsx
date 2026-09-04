@@ -13,7 +13,7 @@ export default function StepSection({
 }) {
   return (
     <div
-      className={`flex flex-col gap-8 py-12 sm:py-16 lg:flex-row lg:items-center lg:gap-16 ${
+      className={`flex flex-col gap-6 lg:flex-row lg:items-center lg:gap-12 ${
         reverse ? "lg:flex-row-reverse" : ""
       }`}
     >

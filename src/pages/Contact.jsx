@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, CheckCircle2, Loader2, Mail, MessageSquare, Phone, User } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, Mail, Phone, Sparkles, ShieldCheck, User, Wrench } from "lucide-react";
 import AuthSplitLayout from "../components/auth/AuthSplitLayout";
 import { AuthLabel } from "../components/auth/AuthLabel";
 import { authInputClassName } from "../components/auth/authInputClassName";
@@ -77,9 +77,10 @@ export default function Contact() {
       subtitle="Dejanos tu consulta y te respondemos por correo."
       badge="Hablemos"
       bullets={[
-        { icon: MessageSquare, text: "Respondemos a la brevedad" },
-        { icon: Mail, text: "Te escribimos por email" },
-        { icon: Phone, text: "O directo por teléfono" },
+        { icon: Sparkles, text: "Demo del sistema sin costo ni compromiso" },
+        { icon: ShieldCheck, text: "Sin instalación: funciona desde el navegador" },
+        { icon: Wrench, text: "Te ayudamos a cargar menú y mesas" },
+        { icon: Mail, text: "Respuesta directa a contacto@turnon.app" },
       ]}
     >
       <div ref={formRef} className="space-y-5 pt-1">
@@ -119,43 +120,45 @@ export default function Contact() {
               />
             </div>
 
-            <div>
-              <AuthLabel htmlFor="contact-name">Nombre completo</AuthLabel>
-              <div className="relative">
-                <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 dark:text-obsidian-500" aria-hidden="true" />
-                <input
-                  id="contact-name"
-                  type="text"
-                  className={authInputClassName("pl-8")}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={80}
-                  placeholder="Tu nombre"
-                  autoComplete="name"
-                  disabled={sending}
-                  aria-invalid={!!errors.name}
-                />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <AuthLabel htmlFor="contact-name">Nombre</AuthLabel>
+                <div className="relative">
+                  <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 dark:text-obsidian-500" aria-hidden="true" />
+                  <input
+                    id="contact-name"
+                    type="text"
+                    className={authInputClassName("pl-8")}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    maxLength={80}
+                    placeholder="Tu nombre"
+                    autoComplete="name"
+                    disabled={sending}
+                    aria-invalid={!!errors.name}
+                  />
+                </div>
+                <FieldError>{errors.name}</FieldError>
               </div>
-              <FieldError>{errors.name}</FieldError>
-            </div>
 
-            <div>
-              <AuthLabel htmlFor="contact-email">Email</AuthLabel>
-              <div className="relative">
-                <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 dark:text-obsidian-500" aria-hidden="true" />
-                <input
-                  id="contact-email"
-                  type="email"
-                  className={authInputClassName("pl-8")}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="tu@email.com"
-                  autoComplete="email"
-                  disabled={sending}
-                  aria-invalid={!!errors.email}
-                />
+              <div>
+                <AuthLabel htmlFor="contact-email">Email</AuthLabel>
+                <div className="relative">
+                  <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 dark:text-obsidian-500" aria-hidden="true" />
+                  <input
+                    id="contact-email"
+                    type="email"
+                    className={authInputClassName("pl-8")}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="tu@email.com"
+                    autoComplete="email"
+                    disabled={sending}
+                    aria-invalid={!!errors.email}
+                  />
+                </div>
+                <FieldError>{errors.email}</FieldError>
               </div>
-              <FieldError>{errors.email}</FieldError>
             </div>
 
             <div>
@@ -182,12 +185,12 @@ export default function Contact() {
               <AuthLabel htmlFor="contact-message">Mensaje</AuthLabel>
               <textarea
                 id="contact-message"
-                className={authInputClassName("min-h-[120px] resize-y")}
+                className={authInputClassName("min-h-[96px] resize-y")}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Contanos sobre tu local o tu consulta..."
                 maxLength={1000}
-                rows={6}
+                rows={4}
                 disabled={sending}
                 aria-invalid={!!errors.message}
               />

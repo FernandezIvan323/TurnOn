@@ -117,13 +117,6 @@ export default function Landing() {
                 Menos papel, menos errores y el turno cerrado con números claros.
                 Ideal para restaurantes con mesas y operación a domicilio.
               </p>
-              <Link
-                to={appPath}
-                className="btn mt-8 h-12 bg-white px-6 font-semibold text-ink-950 hover:bg-paper-100"
-              >
-                Entrar al sistema
-                <ArrowRight size={18} />
-              </Link>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {[
@@ -134,11 +127,14 @@ export default function Landing() {
               ].map(({ icon: Icon, t, d }) => (
                 <div
                   key={t}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur"
+                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-wine-400/60 hover:bg-white/10"
                 >
-                  <Icon size={22} className="text-wine-300" />
-                  <p className="mt-3 font-semibold text-white">{t}</p>
-                  <p className="mt-1 text-sm text-white/70">{d}</p>
+                  <div className="pointer-events-none absolute -right-8 -top-8 size-24 rounded-full bg-wine-500/10 blur-2xl transition-opacity duration-300 group-hover:bg-wine-400/20" />
+                  <span className="relative flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-wine-500 to-wine-800 text-white shadow-lg shadow-wine-900/40">
+                    <Icon size={24} />
+                  </span>
+                  <p className="relative mt-4 font-semibold text-white">{t}</p>
+                  <p className="relative mt-1 text-sm text-white/70">{d}</p>
                 </div>
               ))}
             </div>
