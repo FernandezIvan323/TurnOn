@@ -1,25 +1,17 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../store/auth";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import Brand from "../components/Brand";
 import DeviceFrame from "../components/landing/DeviceFrame";
 import MockDashboard from "../components/landing/MockDashboard";
-import MockTables from "../components/landing/MockTables";
-import MockKanban from "../components/landing/MockKanban";
-import MockCashClosing from "../components/landing/MockCashClosing";
 import MockWaiterPhone from "../components/landing/MockWaiterPhone";
 import MockDriverPhone from "../components/landing/MockDriverPhone";
 import {
   ArrowRight,
   Bike,
-  CheckCircle2,
-  Cloud,
   Mail,
   MonitorSmartphone,
-  ShieldCheck,
   ShoppingBag,
-  Sparkles,
   Truck,
   Utensils,
   WalletCards,
@@ -29,91 +21,14 @@ const PAD = "px-5 sm:px-8 md:px-12 xl:px-16";
 const CONTAINER = "mx-auto w-full max-w-screen-2xl";
 
 const navItems = [
-  { href: "#resuelve", label: "Beneficios" },
-  { href: "#funciones", label: "Funciones" },
+  { href: "/funciones", label: "Funciones" },
   { href: "#dispositivos", label: "Dispositivos" },
-  { href: "#ventajas", label: "Ventajas" },
   { href: "/contacto", label: "Contacto" },
 ];
-
-const businessTypes = [
-  {
-    key: "restaurante",
-    label: "Restaurante",
-    desc: "Servicio en sala con mozos y comandas a cocina.",
-    icon: Utensils,
-  },
-  {
-    key: "bar",
-    label: "Bar / café",
-    desc: "Mesas rápidas, ticket promedio alto y rotación constante.",
-    icon: ShoppingBag,
-  },
-  {
-    key: "acera",
-    label: "Acera y mesas",
-    desc: "Servicio al aire libre con vista en tiempo real de cada mesa.",
-    icon: MonitorSmartphone,
-  },
-  {
-    key: "domicilio",
-    label: "Domicilio",
-    desc: "Recepción de llamadas, asignación de repartidores y seguimiento.",
-    icon: Truck,
-  },
-  {
-    key: "pickup",
-    label: "Para llevar",
-    desc: "Pedidos con tiempo estimado y cobro en mostrador.",
-    icon: ShoppingBag,
-  },
-  {
-    key: "foodtruck",
-    label: "Food truck",
-    desc: "Operación mobile con caja y reportes desde cualquier pantalla.",
-    icon: Sparkles,
-  },
-];
-
-const advantages = [
-  {
-    icon: Sparkles,
-    title: "$0 de instalación",
-    text: "Sin hardware especial. Entrás desde el navegador con usuario y PIN.",
-    stat: "$0",
-  },
-  {
-    icon: MonitorSmartphone,
-    title: "3 roles en simultáneo",
-    text: "Cajero, mesero y domiciliario. Cada uno en su pantalla, misma operación.",
-    stat: "3",
-  },
-  {
-    icon: Cloud,
-    title: "1 minuto para empezar",
-    text: "Configurás el menú, las mesas y los repartidores. Listo para el turno.",
-    stat: "1 min",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Stock y caja sin Excel",
-    text: "Inventario auto, deudas y corte Z en un click. Cero cuentas a mano.",
-    stat: "0 Excel",
-  },
-];
-
-function SectionEyebrow({ children }) {
-  return (
-    <p className="mb-2 text-sm font-bold uppercase tracking-widest text-wine-600 dark:text-wine-300">
-      {children}
-    </p>
-  );
-}
 
 export default function Landing() {
   useDocumentTitle(null);
   const { user } = useAuth();
-  const [hoveredType, setHoveredType] = useState(null);
   const appPath = user ? "/dashboard" : "/login";
   const ctaLabel = user ? "Ir al panel" : "Iniciar sesión";
 
@@ -164,22 +79,10 @@ export default function Landing() {
                   {ctaLabel}
                   <ArrowRight size={20} />
                 </Link>
-                <a href="#funciones" className="btn-secondary h-12 px-6 text-base">
+                <Link to="/funciones" className="btn-secondary h-12 px-6 text-base">
                   Ver funciones
-                </a>
+                </Link>
               </div>
-              <ul className="mt-8 space-y-3 text-base font-medium text-ink-700 dark:text-obsidian-200 sm:text-lg">
-                {[
-                  "Turnos FIFO en mesas y pedidos",
-                  "Caja y corte del día sin Excel",
-                  "Mesero en el celular, cajero en la PC",
-                ].map((t) => (
-                  <li key={t} className="flex items-center gap-3">
-                    <CheckCircle2 size={22} className="shrink-0 text-wine-600 dark:text-wine-300" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
             </div>
             <div className="device-stage lg:col-span-7">
               <DeviceFrame variant="laptop" tilt="left" float>
@@ -230,167 +133,6 @@ export default function Landing() {
                   <p className="mt-1 text-sm text-white/70">{d}</p>
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
-
-        {/* —— Funciones alternadas (Fudo style) —— */}
-        <section id="funciones" className="w-full">
-          {/* A: Domicilios */}
-          <div className={`${PAD} border-b border-paper-200 py-16 dark:border-obsidian-800 sm:py-20`}>
-            <div className={`${CONTAINER} grid items-center gap-12 lg:grid-cols-2 lg:gap-16`}>
-              <div>
-                <SectionEyebrow>Pedidos a domicilio</SectionEyebrow>
-                <h2 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
-                  Domicilios con el repartidor en su celular
-                </h2>
-                <p className="mt-4 text-base leading-relaxed text-ink-700 dark:text-obsidian-200">
-                  Tablero Kanban de 5 columnas, asignación de repartidores, pantalla propia para
-                  el domiciliario y cobro al entregar o pre-cobro por transferencia.
-                </p>
-                <ul className="mt-6 space-y-3 text-base text-ink-700 dark:text-obsidian-200">
-                  {[
-                    "5 columnas: pendientes → preparación → listos → en camino → entregados",
-                    "El repartidor opera desde su celular con 'Salí' o 'Salí con todos'",
-                    "'A rendir': el sistema calcula el efectivo que debe entregar al cierre",
-                    "Reasignación libre de pedidos entre repartidores",
-                  ].map((x) => (
-                    <li key={x} className="flex gap-3">
-                      <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-wine-600" />
-                      {x}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <DeviceFrame variant="laptop">
-                <MockKanban />
-              </DeviceFrame>
-            </div>
-          </div>
-
-          {/* B: Mesas */}
-          <div className={`${PAD} border-b border-paper-200 bg-paper-50 py-16 dark:border-obsidian-800 dark:bg-obsidian-900/40 sm:py-20`}>
-            <div className={`${CONTAINER} grid items-center gap-12 lg:grid-cols-2 lg:gap-16`}>
-              <div className="order-2 lg:order-1">
-                <DeviceFrame variant="laptop">
-                  <MockTables />
-                </DeviceFrame>
-              </div>
-              <div className="order-1 lg:order-2">
-                <SectionEyebrow>Servicio en sala</SectionEyebrow>
-                <h2 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
-                  Cargá pedidos y visualizá mesas en segundos
-                </h2>
-                <p className="mt-4 text-base leading-relaxed text-ink-700 dark:text-obsidian-200">
-                  Colores por estado, turno del siguiente pedido y acceso directo a cobrar.
-                  El mesero opera desde el celular; el cajero cierra en caja.
-                </p>
-                <ul className="mt-6 space-y-3 text-base text-ink-700 dark:text-obsidian-200">
-                  {[
-                    "Libre · pendiente · cocina · lista para cobrar",
-                    "Asignación de mesas por mesero",
-                    "Historial de trabajo por jornada",
-                  ].map((x) => (
-                    <li key={x} className="flex gap-3">
-                      <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-wine-600" />
-                      {x}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* C: Caja / resultados */}
-          <div className={`${PAD} border-b border-paper-200 py-16 dark:border-obsidian-800 sm:py-20`}>
-            <div className={`${CONTAINER} grid items-center gap-12 lg:grid-cols-2 lg:gap-16`}>
-              <div>
-                <SectionEyebrow>Mejores resultados</SectionEyebrow>
-                <h2 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
-                  Registrá ventas, gastos y el corte del día
-                </h2>
-                <p className="mt-4 text-base leading-relaxed text-ink-700 dark:text-obsidian-200">
-                  Dashboard en tiempo real, deudas, inventario y reportes imprimibles.
-                  El corte de caja avisa si hay pedidos pendientes.
-                </p>
-                <ul className="mt-6 space-y-3 text-base text-ink-700 dark:text-obsidian-200">
-                  {[
-                    "Efectivo, tarjeta, transferencia y mixto",
-                    "Corte Z con arqueo y hoja imprimible",
-                    "Reportes y top de productos",
-                  ].map((x) => (
-                    <li key={x} className="flex gap-3">
-                      <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-wine-600" />
-                      {x}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <DeviceFrame variant="laptop">
-                <MockCashClosing />
-              </DeviceFrame>
-            </div>
-          </div>
-        </section>
-
-        {/* —— Tipos de negocio —— */}
-        <section className={`${PAD} py-14 sm:py-16`}>
-          <div className={`${CONTAINER} text-center`}>
-            <SectionEyebrow>Para tu tipo de local</SectionEyebrow>
-            <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
-              Una solución para operar mesas y pedidos a domicilio
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base text-ink-700 dark:text-obsidian-200">
-              ¿Restaurante de acera, sala con mesas o solo delivery? Tocá un tipo para ver cómo
-              se ajusta TurnOn.
-            </p>
-            <div
-              className="mx-auto mt-8 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3"
-              onMouseLeave={() => setHoveredType(null)}
-            >
-              {businessTypes.map((b) => {
-                const Icon = b.icon;
-                const isActive = hoveredType === b.key;
-                return (
-                  <button
-                    key={b.key}
-                    type="button"
-                    onMouseEnter={() => setHoveredType(b.key)}
-                    onFocus={() => setHoveredType(b.key)}
-                    onClick={() => setHoveredType(isActive ? null : b.key)}
-                    aria-pressed={isActive}
-                    className={`group flex flex-col items-start gap-2 rounded-2xl border p-4 text-left transition-all ${
-                      isActive
-                        ? "border-wine-500 bg-wine-50 shadow-card dark:border-wine-500/50 dark:bg-wine-900/30"
-                        : "border-paper-300 bg-paper-50 hover:border-wine-300 dark:border-obsidian-700 dark:bg-obsidian-900 dark:hover:border-wine-500/40"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`flex size-9 items-center justify-center rounded-lg transition-colors ${
-                          isActive
-                            ? "bg-wine-600 text-white"
-                            : "bg-wine-50 text-wine-600 dark:bg-wine-900/30 dark:text-wine-300"
-                        }`}
-                      >
-                        <Icon size={18} />
-                      </span>
-                      <span className="text-base font-bold text-ink-900 dark:text-white">
-                        {b.label}
-                      </span>
-                    </div>
-                    <p
-                      className={`text-sm leading-relaxed transition-colors ${
-                        isActive
-                          ? "text-ink-800 dark:text-obsidian-100"
-                          : "text-ink-600 dark:text-obsidian-400"
-                      }`}
-                    >
-                      {b.desc}
-                    </p>
-                  </button>
-                );
-              })}
             </div>
           </div>
         </section>
@@ -482,39 +224,6 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* —— Ventajas —— */}
-        <section id="ventajas" className={`${PAD} py-16 sm:py-20`}>
-          <div className={CONTAINER}>
-            <div className="mx-auto mb-10 max-w-2xl text-center">
-              <SectionEyebrow>Ventajas</SectionEyebrow>
-              <h2 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-4xl">
-                Un sistema pensado para el día a día
-              </h2>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {advantages.map(({ icon: Icon, title, text, stat }) => (
-                <article
-                  key={title}
-                  className="group relative overflow-hidden rounded-2xl border border-paper-300 bg-paper-50 p-6 shadow-card transition hover:border-wine-400 dark:border-obsidian-700 dark:bg-obsidian-900 dark:hover:border-wine-500/40"
-                >
-                  <div className="mb-4 flex items-start justify-between">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-wine-50 text-wine-600 dark:bg-wine-900/40 dark:text-wine-300">
-                      <Icon size={24} />
-                    </div>
-                    <span className="text-3xl font-extrabold tracking-tight text-wine-600/30 transition-colors group-hover:text-wine-600/70 dark:text-wine-300/30 dark:group-hover:text-wine-300/70">
-                      {stat}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-ink-900 dark:text-white">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-ink-700 dark:text-obsidian-200">
-                    {text}
-                  </p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* —— CTA final —— */}
         <section className={`${PAD} bg-ink-950 py-16 text-white sm:py-20`}>
           <div
@@ -592,7 +301,7 @@ export default function Landing() {
               <p className="font-semibold text-ink-900 dark:text-white">Producto</p>
               <ul className="mt-2 space-y-1.5 text-ink-600 dark:text-obsidian-400">
                 <li>
-                  <a href="#funciones" className="hover:text-wine-600" aria-label="Ver funciones del producto">
+                  <a href="/funciones" className="hover:text-wine-600" aria-label="Ver todas las funciones del producto">
                     Funciones
                   </a>
                 </li>

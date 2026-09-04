@@ -1,5 +1,5 @@
 ![Build](https://img.shields.io/badge/build-passing-brightgreen?logo=github)
-![Version](https://img.shields.io/badge/version-1.5.0-blue?logo=react)
+![Version](https://img.shields.io/badge/version-1.6.0-blue?logo=react)
 ![Node](https://img.shields.io/badge/node-18%2B-339933?logo=nodedotjs)
 ![React](https://img.shields.io/badge/react-19-61DAFB?logo=react)
 ![PostgreSQL](https://img.shields.io/badge/postgresql-18%2B-4169E1?logo=postgresql)
@@ -358,6 +358,31 @@ PARA LLEVAR (pickup / walk-in)
 └─────────────────────┘
 ```
 ## 📋 Changelog
+
+### v1.6.0 (2026-09-03) — Nueva página Funciones + Landing minimalista + mocks fieles
+
+#### Nueva página `/funciones`
+- Página pública dedicada a **todas** las funcionalidades del sistema, explicadas **paso a paso** (11 pasos).
+- **Sticky nav con scroll-spy** (IntersectionObserver): sidebar fijo en desktop que resalta la sección activa y permite saltar directo.
+- **Barra de progreso** fina en el tope que muestra cuánto queda de lectura.
+- Contenido centralizado en `src/content/funciones.js` (separación copy/layout).
+- Componentes reutilizables: `StepSection`, `StickyNav`, `ProgressBar`, `BentoGrid`, `AdvantageRow`.
+- **Tipos de local** rediseñados como **bento grid** (hero grande + 5 compactas).
+- **Ventajas** rediseñadas como **filas horizontales** (stat grande a la derecha).
+- Sección del rol domiciliario incluida (pantalla self-service del repartidor).
+
+#### Landing minimalista
+- Header simplificado: "Funciones", "Dispositivos" y "Contacto".
+- Secciones detalladas removidas de la Landing (pedidos a domicilio, servicio en sala, resultados, tipos de local, ventajas) — ahora viven en `/funciones`.
+- Hero sin la lista de 3 puntos; CTA secundario "Ver funciones" apunta a `/funciones`.
+- Franja "TurnOn resuelve" (4 cards) se mantiene como resumen visual.
+
+#### 8 mocks nuevos (fieles a la app real)
+- `MockLogin`, `MockMenu`, `MockInventory`, `MockReports`, `MockPickup`, `MockCashier`, `MockCashierClosing`, `MockDebts`.
+- Convención visual unificada: `bg-paper-50`, cards `rounded-xl border`, badges por tone, `tabular-nums`, iconos lucide.
+
+#### SEO
+- `sitemap.xml` ahora incluye `/funciones` y `/contacto`.
 
 ### v1.5.0 (2026-09-02) — Landing renovada, Contacto, SEO y fixes de encoding
 
