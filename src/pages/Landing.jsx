@@ -3,7 +3,7 @@ import { useAuth } from "../store/auth";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import Brand from "../components/Brand";
 import DeviceFrame from "../components/landing/DeviceFrame";
-import MockDashboard from "../components/landing/MockDashboard";
+import MockSystemOverview from "../components/landing/MockSystemOverview";
 import MockWaiterPhone from "../components/landing/MockWaiterPhone";
 import MockDriverPhone from "../components/landing/MockDriverPhone";
 import {
@@ -94,7 +94,7 @@ export default function Landing() {
             </div>
             <div className="device-stage lg:col-span-7">
               <DeviceFrame variant="laptop" tilt="left" float>
-                <MockDashboard />
+                <MockSystemOverview />
               </DeviceFrame>
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function Landing() {
                     float
                     label="Panel cajero / admin"
                   >
-                    <MockDashboard compact />
+                    <MockSystemOverview compact />
                   </DeviceFrame>
                   <div className="max-w-[16rem] text-center">
                     <h3 className="flex items-center justify-center gap-2 text-base font-bold text-ink-900 dark:text-white">
