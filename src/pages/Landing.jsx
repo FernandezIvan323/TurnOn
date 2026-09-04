@@ -22,7 +22,6 @@ const CONTAINER = "mx-auto w-full max-w-screen-2xl";
 
 const navItems = [
   { href: "/funciones", label: "Funciones" },
-  { href: "#dispositivos", label: "Dispositivos" },
   { href: "/contacto", label: "Contacto" },
 ];
 
@@ -46,18 +45,18 @@ export default function Landing() {
       <header className="sticky top-0 z-40 w-full border-b border-paper-300/80 bg-white/95 backdrop-blur dark:border-obsidian-800 dark:bg-obsidian-950/95">
         <div className={`${PAD} ${CONTAINER} flex h-16 items-center justify-between gap-4 sm:h-[4.5rem]`}>
           <Brand />
-          <nav className="hidden items-center gap-6 lg:flex lg:gap-8">
-            {navItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="text-sm font-medium text-ink-700 transition hover:text-wine-600 dark:text-white dark:hover:text-wine-300"
-              >
-                {item.label}
-              </a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-6 lg:gap-8">
+            <nav className="hidden items-center gap-6 lg:flex lg:gap-8">
+              {navItems.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="text-sm font-medium text-ink-700 transition hover:text-wine-600 dark:text-white dark:hover:text-wine-300"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
             <Link to={appPath} className="btn-primary h-10 px-4">
               {ctaLabel}
             </Link>
@@ -307,11 +306,6 @@ export default function Landing() {
                 <li>
                   <a href="/funciones" className="hover:text-wine-600" aria-label="Ver todas las funciones del producto">
                     Funciones
-                  </a>
-                </li>
-                <li>
-                  <a href="#dispositivos" className="hover:text-wine-600" aria-label="Ver dispositivos compatibles">
-                    Dispositivos
                   </a>
                 </li>
                 <li>

@@ -34,17 +34,19 @@ export default function Funciones() {
           <Link to="/" className="shrink-0">
             <Brand />
           </Link>
-          <nav className="hidden items-center gap-6 lg:flex lg:gap-8">
-            <Link to="/" className="text-sm font-medium text-ink-700 dark:text-obsidian-200 dark:hover:text-white">
-              Inicio
+          <div className="flex items-center gap-6 lg:gap-8">
+            <nav className="hidden items-center gap-6 lg:flex lg:gap-8">
+              <Link to="/" className="text-sm font-medium text-ink-700 dark:text-obsidian-200 dark:hover:text-white">
+                Inicio
+              </Link>
+              <Link to="/contacto" className="text-sm font-medium text-ink-700 dark:text-obsidian-200 dark:hover:text-white">
+                Contacto
+              </Link>
+            </nav>
+            <Link to={appPath} className="btn-primary h-10 px-4">
+              {cta}
             </Link>
-            <Link to="/contacto" className="text-sm font-medium text-ink-700 dark:text-obsidian-200 dark:hover:text-white">
-              Contacto
-            </Link>
-          </nav>
-          <Link to={appPath} className="btn-primary h-10 px-4">
-            {cta}
-          </Link>
+          </div>
         </div>
       </header>
 

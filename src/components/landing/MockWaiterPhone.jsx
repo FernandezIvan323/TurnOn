@@ -1,4 +1,4 @@
-import { Utensils, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 
 const myTables = [
   { n: "2", state: "pending", total: "$28.000", ago: "12 min" },
@@ -16,6 +16,12 @@ const stateLabel = {
   pending: "Pendiente",
   preparing: "Cocina",
   ready: "Por cobrar",
+};
+
+const stateDot = {
+  pending: "bg-rose-500",
+  preparing: "bg-blue-500",
+  ready: "bg-amber-500",
 };
 
 export default function MockWaiterPhone() {
@@ -50,24 +56,27 @@ export default function MockWaiterPhone() {
         {myTables.map((t) => (
           <div
             key={t.n}
-            className="flex items-center gap-2 rounded-xl border border-paper-200 bg-white p-2.5 dark:border-obsidian-700 dark:bg-obsidian-900"
+            className="rounded-xl border border-paper-200 bg-white p-3 dark:border-obsidian-700 dark:bg-obsidian-900"
           >
-            <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-lg bg-wine-50 dark:bg-wine-900/30">
-              <Utensils size={12} className="text-wine-600 dark:text-wine-300" />
-              <span className="text-sm font-bold text-ink-900 dark:text-white">{t.n}</span>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-bold text-ink-900 dark:text-white">
+                Mesa {t.n}
+              </span>
+              <span className={`h-2.5 w-2.5 rounded-full ${stateDot[t.state]}`} title={stateLabel[t.state]} />
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-ink-900 dark:text-white">Mesa {t.n}</span>
-                <span className={`rounded-full px-1.5 py-0.5 text-[8px] font-bold ${stateStyle[t.state]}`}>
-                  {stateLabel[t.state]}
-                </span>
+            <div className="mt-2 flex items-end justify-between gap-2">
+              <div>
+                <p className="text-base font-bold tabular-nums leading-none text-ink-900 dark:text-white">
+                  {t.total}
+                </p>
+                <p className="mt-1 flex items-center gap-1 text-[9px] text-ink-500 dark:text-obsidian-400">
+                  <Clock size={9} /> {t.ago}
+                </p>
               </div>
-              <p className="flex items-center gap-1 text-[9px] text-ink-500 dark:text-obsidian-400">
-                <Clock size={9} /> {t.ago}
-              </p>
+              <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${stateStyle[t.state]}`}>
+                {stateLabel[t.state]}
+              </span>
             </div>
-            <p className="text-xs font-bold tabular-nums text-ink-900 dark:text-white">{t.total}</p>
           </div>
         ))}
       </div>
