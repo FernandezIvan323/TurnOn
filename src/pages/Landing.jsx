@@ -26,6 +26,14 @@ const navItems = [
   { href: "/contacto", label: "Contacto" },
 ];
 
+function SectionEyebrow({ children }) {
+  return (
+    <p className="mb-2 text-sm font-bold uppercase tracking-widest text-wine-600 dark:text-wine-300">
+      {children}
+    </p>
+  );
+}
+
 export default function Landing() {
   useDocumentTitle(null);
   const { user } = useAuth();
