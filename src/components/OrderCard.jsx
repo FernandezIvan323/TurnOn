@@ -1,15 +1,15 @@
 import { money, formatTime, statusLabels, typeLabels } from "../lib/format";
-import { orderAccent, TYPE_ICON } from "../lib/cardAccent";
+import { orderAccent, rotateAccent, TYPE_ICON } from "../lib/cardAccent";
 import { Clock } from "lucide-react";
 
 /**
- * Card unificada de pedido (color semántico por estado).
- * Estructura: hora/#id arriba, nombre grande, dirección, esquinas turno/dinero.
- * Click -> abre el detalle.
+ * Card unificada de pedido.
+ * Por defecto usa color semántico por estado; con `rotateIndex` usa la paleta
+ * rotativa (una card de cada color). Click -> abre el detalle.
  */
-export default function OrderCard({ order, onClick, footer = null }) {
-  const accent = orderAccent(order);
-  const TypeIcon = TYPE_ICON[order.type] || Utensils;
+export default function OrderCard({ order, onClick, footer = null, rotateIndex = null }) {
+  const accent = rotateIndex != null ? rotateAccent(rotateIndex) : orderAccent(order);
+  const TypeIcon = TYPE_ICON[order.type] || TYPE_ICON.table;
   const title =
     order.type === "table"
       ? `Mesa ${order.table_number || ""}${order.table_label ? ` · ${order.table_label}` : ""}`

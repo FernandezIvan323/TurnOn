@@ -11,9 +11,11 @@ import {
   statusLabels,
   statusColors,
 } from "../../lib/format";
-import { orderAccent } from "../../lib/cardAccent";
 import { kanbanColumnClass, KANBAN_COUNT_PILL } from "../../lib/kanbanTones";
 import Modal from "../../components/Modal";
+import SharedOrderCard from "../../components/OrderCard";
+import RiderHistoryModal from "../../components/RiderHistoryModal";
+import DetailModal from "../../components/DetailModal";
 import { diffNewOrders, playBeep, isNotifyMuted, setNotifyMuted } from "../../lib/notify";
 import {
   Phone, MapPin, Plus, ChevronRight, X, User as UserIcon,
@@ -244,11 +246,12 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
 }
 
 /** Tarjeta de un pedido entregado/cancelado (reusa la OrderCard compartida). */
-function CompletedDeliveryCard({ order, onReopen, onClick }) {
+function CompletedDeliveryCard({ order, onReopen, onClick, rotateIndex = null }) {
   return (
-    <OrderCard
+    <SharedOrderCard
       order={order}
       onClick={onClick}
+      rotateIndex={rotateIndex}
       footer={
         <>
           <div className="flex items-center justify-between gap-2">
@@ -649,118 +652,105 @@ function OrderDetailModal({ order, onClose, onChanged }) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
-      onClick={onClose}
+    <DetailModal
+      title={`#${order.id}`}
+      badge="Domicilio"
+      type="delivery"
+      amount={money(order.total)}
+      onClose={onClose}
     >
-      <div
-        className="card max-h-[90vh] w-full max-w-2xl overflow-y-auto p-5"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">
-            Pedido #{order.id}
-          </h2>
-          <button type="button" onClick={onClose} className="btn-ghost">
-            <X size={18} />
-          </button>
+      <div className="mb-4 grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <span className="text-ink-400 dark:text-obsidian-500">Cliente:</span>{" "}
+          <b className="text-ink-900 dark:text-white">{order.customer_name || "—"}</b>
         </div>
-        <div className="mb-4 grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <span className="text-ink-400 dark:text-obsidian-500">Cliente:</span>{" "}
-            <b>{order.customer_name || "—"}</b>
-          </div>
-          <div>
-            <span className="text-ink-400 dark:text-obsidian-500">Teléfono:</span>{" "}
-            {order.customer_phone || "—"}
-          </div>
+        <div>
+          <span className="text-ink-400 dark:text-obsidian-500">Teléfono:</span>{" "}
+          {order.customer_phone || "—"}
+        </div>
+        <div className="col-span-2">
+          <span className="text-ink-400 dark:text-obsidian-500">Dirección:</span>{" "}
+          {[order.customer_neighborhood, order.customer_address].filter(Boolean).join(" · ") || "—"}
+        </div>
+        {order.customer_reference && (
           <div className="col-span-2">
-            <span className="text-ink-400 dark:text-obsidian-500">Dirección:</span>{" "}
-            {order.customer_address || "—"}
-            {order.customer_neighborhood ? ` · ${order.customer_neighborhood}` : ""}
+            <span className="text-ink-400 dark:text-obsidian-500">Referencia:</span>{" "}
+            {order.customer_reference}
           </div>
-          {order.customer_reference && (
-            <div className="col-span-2">
-              <span className="text-ink-400 dark:text-obsidian-500">Referencia:</span>{" "}
-              {order.customer_reference}
-            </div>
-          )}
-          {order.delivery_name && (
-            <div>
-              <span className="text-ink-400 dark:text-obsidian-500">Repartidor:</span>{" "}
-              <b>{order.delivery_name}</b>
-            </div>
-          )}
+        )}
+        {order.delivery_name && (
           <div>
-            <span className="text-ink-400 dark:text-obsidian-500">Estado:</span>{" "}
-            <span className={`badge ${statusColors[order.status] || ""}`}>
-              {statusLabels[order.status] || order.status}
-            </span>
-          </div>
-          {order.payment_status === "paid" && (
-            <div>
-              <span className="text-ink-400 dark:text-obsidian-500">Pago:</span>{" "}
-              {payMethodLabel(order.payment_method)}
-            </div>
-          )}
-        </div>
-        {order.notes && (
-          <div className="card mb-3 border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
-            <StickyNote size={14} className="mr-1 inline" /> {order.notes}
+            <span className="text-ink-400 dark:text-obsidian-500">Repartidor:</span>{" "}
+            <b className="text-indigo-700 dark:text-indigo-300">{order.delivery_name}</b>
           </div>
         )}
-        {loading ? (
-          <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
-        ) : (
-          <div className="space-y-1.5">
-            {items.length === 0 && (
-              <div className="text-sm text-ink-400">Sin productos en el pedido.</div>
-            )}
-            {items.map((it, i) => (
-              <div
-                key={it.id ?? i}
-                className="flex items-center justify-between border-b border-paper-200 py-1.5 text-sm dark:border-obsidian-800"
-              >
-                <div>
-                  <div className="font-medium text-ink-800 dark:text-obsidian-50">
-                    {it.name_snapshot}{" "}
-                    {it.notes && (
-                      <span className="text-xs text-amber-700 dark:text-amber-400">· {it.notes}</span>
-                    )}
-                  </div>
-                  <div className="text-xs text-ink-500 dark:text-obsidian-400">
-                    {money(it.unit_price)} c/u
-                  </div>
-                </div>
-                <div className="font-semibold text-ink-700 dark:text-obsidian-100">
-                  x{it.quantity}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="mt-4 flex items-center justify-between border-t border-paper-200 pt-3 dark:border-obsidian-800">
-          <span className="text-ink-500 dark:text-obsidian-400">Total</span>
-          <span className="text-2xl font-bold tabular-nums text-ink-800 dark:text-obsidian-50">
-            {money(order.total)}
+        <div>
+          <span className="text-ink-400 dark:text-obsidian-500">Estado:</span>{" "}
+          <span className={`badge ${statusColors[order.status] || ""}`}>
+            {statusLabels[order.status] || order.status}
           </span>
         </div>
-        {order.status === "on_the_way" && (
-          <div className="mt-4 flex gap-2">
-            <button type="button" onClick={closePaid} className="btn-primary flex-1">
-              <CheckCircle2 size={16} /> Entregado y cobrado
-            </button>
-            <button
-              type="button"
-              onClick={markDebt}
-              className="btn-secondary flex-1 border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/20"
-            >
-              <AlertTriangle size={16} /> Entregado (deuda)
-            </button>
+        {order.payment_status === "paid" && (
+          <div>
+            <span className="text-ink-400 dark:text-obsidian-500">Pago:</span>{" "}
+            <b>{payMethodLabel(order.payment_method)}</b>
           </div>
         )}
       </div>
-    </div>
+
+      {order.notes && (
+        <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+          <StickyNote size={14} className="mr-1 inline" /> {order.notes}
+        </div>
+      )}
+
+      <p className="mb-2 text-xs font-bold uppercase tracking-widest text-ink-500 dark:text-obsidian-400">
+        Productos
+      </p>
+      {loading ? (
+        <div className="text-sm text-ink-500 dark:text-obsidian-400">Cargando…</div>
+      ) : (
+        <div className="space-y-1.5">
+          {items.length === 0 && (
+            <div className="text-sm text-ink-400">Sin productos en el pedido.</div>
+          )}
+          {items.map((it, i) => (
+            <div
+              key={it.id ?? i}
+              className="flex items-center justify-between border-b border-paper-200 py-1.5 text-sm last:border-0 dark:border-obsidian-800"
+            >
+              <div>
+                <div className="font-medium text-ink-800 dark:text-obsidian-50">
+                  {it.name_snapshot}{" "}
+                  {it.notes && (
+                    <span className="text-xs text-amber-700 dark:text-amber-400">· {it.notes}</span>
+                  )}
+                </div>
+                <div className="text-xs text-ink-500 dark:text-obsidian-400">
+                  {money(it.unit_price)} c/u
+                </div>
+              </div>
+              <div className="font-semibold text-ink-700 dark:text-obsidian-100">x{it.quantity}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {order.status === "on_the_way" && (
+        <div className="mt-5 flex gap-2 border-t border-paper-200 pt-4 dark:border-obsidian-800">
+          <button type="button" onClick={closePaid} className="btn-primary flex-1">
+            <CheckCircle2 size={16} /> Entregado y cobrado
+          </button>
+          <button
+            type="button"
+            onClick={markDebt}
+            className="btn-secondary flex-1 border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/20"
+          >
+            <AlertTriangle size={16} /> Entregado (deuda)
+          </button>
+        </div>
+      )}
+    </DetailModal>
   );
 }
 
@@ -781,10 +771,7 @@ const RIDER_ACCENTS = [
 
 function DeliveryHistoryInline() {
   const [riders, setRiders] = useState([]);
-  const [expanded, setExpanded] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState(null);
+  const [viewRider, setViewRider] = useState(null);
 
   useEffect(() => {
     const from = ymdDaysAgo(364);
@@ -794,51 +781,6 @@ function DeliveryHistoryInline() {
       .then((r) => setRiders(r.data || []))
       .catch(() => setRiders([]));
   }, []);
-
-  const open = async (id) => {
-    setExpanded(id);
-    setLoading(true);
-    setErr(null);
-    try {
-      const { data } = await api.get("/delivery/history", { params: { delivery_person_id: id, limit: 100 } });
-      setHistory(data);
-    } catch (e) {
-      setErr(e.response?.data?.error || e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (expanded) {
-    const rider = riders.find((r) => r.id === expanded);
-    const total = history.reduce((s, o) => s + Number(o.total || 0), 0);
-    return (
-      <div className="mt-6 rounded-2xl border border-paper-200 bg-white p-5 dark:border-obsidian-800 dark:bg-obsidian-900">
-        <button type="button" onClick={() => setExpanded(null)} className="btn-secondary mb-4 text-sm">
-          <ArrowLeft size={14} /> Atrás
-        </button>
-        <div className="mb-4 flex items-center justify-between rounded-xl border border-wine-200 bg-wine-50/60 p-3 dark:border-wine-800 dark:bg-wine-900/20">
-          <span className="text-base font-semibold text-ink-900 dark:text-white">
-            {rider?.name}
-          </span>
-          <span className="text-lg font-bold text-wine-600 dark:text-wine-300">{money(total)}</span>
-        </div>
-        {loading ? (
-          <div className="text-sm text-ink-500">Cargando…</div>
-        ) : err ? (
-          <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">{err}</div>
-        ) : history.length === 0 ? (
-          <div className="py-8 text-center text-sm text-ink-400">Sin entregas.</div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {history.map((o) => (
-              <CompletedDeliveryCard key={o.id} order={o} />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div className="mt-6">
@@ -850,29 +792,31 @@ function DeliveryHistoryInline() {
           Sin repartidores.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {riders.map((r, i) => (
             <button
               key={r.id}
               type="button"
-              onClick={() => open(r.id)}
-              className={`rounded-2xl border p-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:shadow-pop ${RIDER_ACCENTS[i % RIDER_ACCENTS.length]}`}
+              onClick={() => setViewRider(r)}
+              className={`flex flex-col rounded-2xl border p-3 text-left shadow-soft transition hover:-translate-y-0.5 hover:shadow-pop ${RIDER_ACCENTS[i % RIDER_ACCENTS.length]}`}
             >
-              <div className="text-lg font-bold text-ink-900 dark:text-white">{r.name}</div>
-              <div className="mt-4 flex items-end justify-between gap-2">
+              <div className="truncate text-base font-bold text-ink-900 dark:text-white">{r.name}</div>
+              <div className="mt-3 flex items-end justify-between gap-2">
                 <div>
-                  <div className="text-xs font-medium text-ink-500 dark:text-obsidian-400">Domicilios</div>
-                  <div className="text-2xl font-bold tabular-nums text-ink-900 dark:text-white">{r.deliveries || 0}</div>
+                  <div className="text-[10px] font-medium uppercase tracking-wide text-ink-500 dark:text-obsidian-400">Domicilios</div>
+                  <div className="text-xl font-bold tabular-nums text-ink-900 dark:text-white">{r.deliveries || 0}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs font-medium text-ink-500 dark:text-obsidian-400">Dinero</div>
-                  <div className="text-2xl font-bold tabular-nums text-ink-900 dark:text-white">{money(r.revenue || 0)}</div>
+                  <div className="text-[10px] font-medium uppercase tracking-wide text-ink-500 dark:text-obsidian-400">Dinero</div>
+                  <div className="text-xl font-bold tabular-nums text-ink-900 dark:text-white">{money(r.revenue || 0)}</div>
                 </div>
               </div>
             </button>
           ))}
         </div>
       )}
+
+      {viewRider && <RiderHistoryModal rider={viewRider} onClose={() => setViewRider(null)} />}
     </div>
   );
 }
@@ -1127,10 +1071,11 @@ export default function Delivery() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {(enriched.length ? enriched : filtered).map((o) => (
+              {(enriched.length ? enriched : filtered).map((o, i) => (
                 <CompletedDeliveryCard
                   key={o.id}
                   order={o}
+                  rotateIndex={i}
                   onReopen={filter === "delivered" ? (x) => setToReopen(x) : undefined}
                   onClick={() => setToView(o)}
                 />
