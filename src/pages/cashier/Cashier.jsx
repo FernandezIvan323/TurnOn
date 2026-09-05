@@ -206,16 +206,22 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
 
 function OrderRow({ order, turn, onClose, onPrepay, onTicket, onView, highlight = false }) {
   const TypeIcon = order.type === "delivery" ? Truck : order.type === "pickup" ? ShoppingBag : Utensils;
+  const channelAccent =
+    order.type === "delivery"
+      ? "border-l-indigo-500"
+      : order.type === "pickup"
+      ? "border-l-amber-500"
+      : "border-l-sky-500";
   return (
     <div
-      className={`card p-4 flex items-center justify-between gap-4 ${
+      className={`card flex items-center gap-4 border-l-4 p-4 ${channelAccent} ${
         highlight
           ? "border-sky-400 bg-sky-50/70 ring-1 ring-sky-200 dark:border-sky-600 dark:bg-sky-900/20 dark:ring-sky-800"
           : ""
       }`}
     >
-      <div className="flex-1">
-        <div className="flex items-center gap-2 text-xs text-ink-500 dark:text-obsidian-400">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-ink-500 dark:text-obsidian-400">
           {turn && (
             <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-wine-600 text-white dark:bg-wine-500">
               #{turn}
@@ -230,59 +236,49 @@ function OrderRow({ order, turn, onClose, onPrepay, onTicket, onView, highlight 
           </span>
           <span className={`badge ${statusColors[order.status]}`}>{statusLabels[order.status]}</span>
         </div>
-        <div className="font-semibold text-ink-800 dark:text-obsidian-50 mt-0.5">
+        <div className="mt-0.5 font-semibold text-ink-800 dark:text-obsidian-50">
           {order.type === "table"
             ? `Mesa ${order.table_number}` + (order.table_label ? ` · ${order.table_label}` : "")
             : `${order.customer_name}${order.customer_neighborhood ? " · " + order.customer_neighborhood : ""}`}
         </div>
         {order.notes && <div className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">Nota: {order.notes}</div>}
         {order.payment_status === "paid" && (
-          <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">
-            âœ“ Pagado ({order.payment_method}){Number(order.tip) > 0 ? ` + ${money(order.tip)} propina` : ""}
+          <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5 font-medium">
+            ✓ Pagado ({payMethodLabel(order.payment_method)}){Number(order.tip) > 0 ? ` + ${money(order.tip)} propina` : ""}
           </div>
         )}
       </div>
-      <div className="text-right">
-        <div className="text-xl font-bold text-ink-800 dark:text-obsidian-50">{money(order.total)}</div>
-        {order.type === "delivery" && order.status === "on_the_way" && order.payment_status !== "paid" && (
-          <div className="flex flex-col gap-1 mt-1">
-            <button onClick={() => onPrepay(order)} className="btn-secondary text-xs">
-              <CreditCard size={12}/> Pre-cobrar (transfer)
-            </button>
-            <button onClick={() => onClose(order)} className="btn-primary text-xs">
-              <CheckCircle2 size={12}/> Cobrar al entregar
-            </button>
-            <button onClick={() => onView(order)} className="btn-secondary text-xs">
-              <Eye size={12}/> Ver
-            </button>
-          </div>
-        )}
-        {(order.type !== "delivery" || (order.type === "delivery" && order.status !== "on_the_way") || order.payment_status === "paid") && (
-          order.payment_status !== "paid" ? (
-            <div className="flex items-center justify-end gap-1 mt-1">
-              <button onClick={() => onView(order)} className="btn-secondary text-xs">
-                <Eye size={12}/> Ver
+      <div className="shrink-0 text-right">
+        <div className="text-xl font-bold tabular-nums text-ink-800 dark:text-obsidian-50">{money(order.total)}</div>
+        <div className="mt-2 flex flex-wrap items-center justify-end gap-1.5">
+          {order.type === "delivery" && order.status === "on_the_way" && order.payment_status !== "paid" && (
+            <>
+              <button onClick={() => onPrepay(order)} className="btn-secondary h-9 text-xs">
+                <CreditCard size={12} /> Pre-cobrar
               </button>
-              <button onClick={() => onClose(order)} className="btn-primary text-sm">
-                <CheckCircle2 size={14}/> Cobrar
+              <button onClick={() => onClose(order)} className="btn-primary h-9 text-xs">
+                <CheckCircle2 size={12} /> Al entregar
               </button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-end gap-2 mt-1">
+            </>
+          )}
+          {(order.type !== "delivery" || (order.type === "delivery" && order.status !== "on_the_way") || order.payment_status === "paid") && (
+            order.payment_status !== "paid" ? (
+              <button onClick={() => onClose(order)} className="btn-primary h-9 text-sm">
+                <CheckCircle2 size={14} /> Cobrar
+              </button>
+            ) : (
               <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Pagado</span>
-              <div className="flex items-center gap-1">
-                <button onClick={() => onView(order)} className="btn-secondary text-xs">
-                  <Eye size={12}/> Ver
-                </button>
-                {onTicket && (
-                  <button onClick={() => onTicket(order)} className="btn-secondary text-xs">
-                    <Printer size={12}/> Ticket
-                  </button>
-                )}
-              </div>
-            </div>
-          )
-        )}
+            )
+          )}
+          <button onClick={() => onView(order)} className="btn-secondary h-9 text-xs">
+            <Eye size={12} /> Ver
+          </button>
+          {order.payment_status === "paid" && onTicket && (
+            <button onClick={() => onTicket(order)} className="btn-secondary h-9 text-xs">
+              <Printer size={12} /> Ticket
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

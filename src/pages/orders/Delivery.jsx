@@ -11,6 +11,7 @@ import {
   statusLabels,
   statusColors,
 } from "../../lib/format";
+import { orderAccent } from "../../lib/cardAccent";
 import { kanbanColumnClass, KANBAN_COUNT_PILL } from "../../lib/kanbanTones";
 import Modal from "../../components/Modal";
 import { diffNewOrders, playBeep, isNotifyMuted, setNotifyMuted } from "../../lib/notify";
@@ -242,112 +243,41 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
   );
 }
 
-/** Tarjeta para pedidos entregados / historial (productos + cliente). */
+/** Tarjeta de un pedido entregado/cancelado (reusa la OrderCard compartida). */
 function CompletedDeliveryCard({ order, onReopen, onClick }) {
-  const items = order.items || [];
-  const isDebt = order.payment_status === "debt";
   return (
-    <div
-      className={`flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-l-4 border-paper-300 p-0 shadow-soft transition hover:-translate-y-0.5 hover:border-wine-400 hover:shadow-pop dark:border-obsidian-700 dark:hover:border-wine-500/50 ${
-        isDebt
-          ? "border-l-rose-500 bg-gradient-to-br from-rose-50/70 to-white dark:from-rose-950/30 dark:to-obsidian-900"
-          : "border-l-emerald-500 bg-gradient-to-br from-emerald-50/60 to-white dark:from-emerald-950/25 dark:to-obsidian-900"
-      }`}
+    <OrderCard
+      order={order}
       onClick={onClick}
-    >
-      <div className="flex flex-1 flex-col p-4">
-        <div className="mb-3 flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-base font-bold text-ink-900 dark:text-white">#{order.id}</span>
-              <span className="inline-flex items-center gap-0.5 text-xs text-ink-500 dark:text-obsidian-400">
-                <Clock size={11} /> {formatTime(order.closed_at || order.created_at)}
-              </span>
+      footer={
+        <>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs font-medium text-ink-600 dark:text-obsidian-300">
+              {order.payment_status === "paid"
+                ? `Pagado${order.payment_method ? ` · ${payMethodLabel(order.payment_method)}` : ""}`
+                : order.payment_status === "debt"
+                ? "Deuda"
+                : statusLabels[order.status] || order.status}
             </div>
-            {order.payment_status === "paid" && (
-              <span className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                âœ“ {payMethodLabel(order.payment_method)}
-              </span>
-            )}
-            {isDebt && (
-              <span className="mt-1 inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">
-                Deuda
-              </span>
-            )}
-          </div>
-          <div className="shrink-0 rounded-xl bg-white/90 px-2.5 py-1.5 text-right shadow-sm ring-1 ring-paper-200 dark:bg-obsidian-950/80 dark:ring-obsidian-700">
-            <div className="text-lg font-bold tabular-nums text-ink-900 dark:text-white">
-              {money(order.total)}
-            </div>
-          </div>
-        </div>
-
-        <div className="mb-3 flex items-start gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
-            <UserIcon size={14} />
-          </span>
-          <div className="min-w-0 space-y-0.5 text-sm">
-            <div className="truncate font-semibold text-ink-900 dark:text-white">
-              {order.customer_name || "—"}
-            </div>
-            {order.customer_phone && (
-              <div className="flex items-center gap-1 text-xs text-ink-600 dark:text-obsidian-300">
-                <Phone size={11} /> {order.customer_phone}
-              </div>
-            )}
-            {(order.customer_address || order.customer_neighborhood) && (
-              <div className="flex items-start gap-1 text-xs text-ink-500 dark:text-obsidian-400">
-                <MapPin size={11} className="mt-0.5 shrink-0" />
-                <span className="line-clamp-2">
-                  {[order.customer_neighborhood, order.customer_address].filter(Boolean).join(" · ")}
-                </span>
-              </div>
-            )}
             {order.delivery_name && (
-              <div className="flex items-center gap-1 text-xs font-medium text-indigo-700 dark:text-indigo-300">
-                <Truck size={11} /> {order.delivery_name}
-              </div>
+              <div className="text-xs text-ink-500 dark:text-obsidian-400">↗ {order.delivery_name}</div>
             )}
           </div>
-        </div>
-
-        <div className="mb-3 min-h-0 flex-1 rounded-xl bg-white/60 p-2.5 ring-1 ring-paper-200/80 dark:bg-obsidian-950/50 dark:ring-obsidian-700">
-          <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-400 dark:text-obsidian-400">
-            Productos
-          </div>
-          {items.length === 0 ? (
-            <div className="text-xs text-ink-400">Sin detalle de ítems</div>
-          ) : (
-            <ul className="max-h-28 space-y-1 overflow-y-auto text-xs text-ink-700 dark:text-obsidian-200">
-              {items.map((it, i) => (
-                <li key={i} className="flex justify-between gap-2">
-                  <span className="min-w-0">
-                    <b className="tabular-nums text-ink-900 dark:text-white">{it.quantity}</b>{" "}
-                    {it.name_snapshot}
-                  </span>
-                  <span className="shrink-0 tabular-nums text-ink-500 dark:text-obsidian-400">
-                    {money(Number(it.unit_price) * Number(it.quantity))}
-                  </span>
-                </li>
-              ))}
-            </ul>
+          {onReopen && order.status === "delivered" && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onReopen(order);
+              }}
+              className="mt-3 inline-flex h-9 w-full items-center justify-center gap-1 rounded-xl border border-paper-300 bg-white text-xs font-semibold text-ink-700 transition hover:bg-paper-50 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-100"
+            >
+              <RotateCcw size={14} /> Reabrir
+            </button>
           )}
-        </div>
-
-        {onReopen && order.status === "delivered" && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onReopen(order);
-            }}
-            className="mt-auto inline-flex h-9 w-full items-center justify-center gap-1 rounded-xl border border-paper-300 bg-white text-xs font-semibold text-ink-700 transition hover:bg-paper-50 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-100"
-          >
-            <RotateCcw size={14} /> Reabrir
-          </button>
-        )}
-      </div>
-    </div>
+        </>
+      }
+    />
   );
 }
 

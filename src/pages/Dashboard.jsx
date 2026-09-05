@@ -27,7 +27,6 @@ import {
   BookOpen,
   ArrowRight,
   Package,
-  Star,
 } from "lucide-react";
 
 /* ── Shared UI ─────────────────────────────────────────────── */
@@ -179,53 +178,6 @@ function KpiSkeleton() {
   );
 }
 
-function ChannelBars({ delivery = 0, table = 0, pickup = 0 }) {
-  const total = delivery + table + pickup;
-  const pct = (n) => (total > 0 ? Math.round((n / total) * 100) : 0);
-  const rows = [
-    { label: "Domicilios", n: delivery, bar: "bg-blue-500", text: "text-blue-700 dark:text-blue-300" },
-    { label: "Mesas", n: table, bar: "bg-rose-500", text: "text-rose-700 dark:text-rose-300" },
-    { label: "Para llevar", n: pickup, bar: "bg-amber-500", text: "text-amber-700 dark:text-amber-300" },
-  ];
-
-  return (
-    <div className="card p-5">
-      <div className="mb-4 flex items-baseline justify-between gap-2">
-        <h3 className="text-sm font-semibold text-ink-900 dark:text-white">
-          Canales del día
-        </h3>
-        <span className="text-xs font-medium text-ink-600 dark:text-white">
-          {total} pedido{total === 1 ? "" : "s"}
-        </span>
-      </div>
-      {total === 0 ? (
-        <p className="py-6 text-center text-sm text-ink-600 dark:text-white">
-          Aún no hay pedidos cobrados hoy
-        </p>
-      ) : (
-        <div className="space-y-4">
-          {rows.map((r) => (
-            <div key={r.label}>
-              <div className="mb-1 flex items-center justify-between text-sm">
-                <span className="font-medium text-ink-800 dark:text-white">{r.label}</span>
-                <span className={`font-semibold tabular-nums ${r.text}`}>
-                  {r.n} · {pct(r.n)}%
-                </span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-paper-200 dark:bg-obsidian-800">
-                <div
-                  className={`h-full rounded-full ${r.bar} transition-all`}
-                  style={{ width: `${pct(r.n)}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ── Admin ─────────────────────────────────────────────────── */
 
 function AdminDashboard() {
@@ -233,7 +185,6 @@ function AdminDashboard() {
   const [data, setData] = useState(null);
   const [expensesData, setExpensesData] = useState(null);
   const [lowStockCount, setLowStockCount] = useState(0);
-  const [topProducts, setTopProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const hasLoaded = useRef(false);
@@ -255,23 +206,10 @@ function AdminDashboard() {
         console.error("[dashboard] Error al cargar gastos:", e);
       }
       try {
-        const inv = await api.get("/inventory");
-        setLowStockCount(inv.data.filter((p) => p.low_stock).length);
+        const { data } = await api.get("/inventory");
+        setLowStockCount(data.filter((p) => p.low_stock).length);
       } catch (e) {
         console.error("[dashboard] Error al cargar inventario:", e);
-      }
-      try {
-        const top = await api.get("/reports/top-products", {
-          params: {
-            from: todayLocalISO(),
-            to: todayLocalISO(),
-            limit: 5,
-            by: "qty",
-          },
-        });
-        setTopProducts(top.data);
-      } catch (e) {
-        console.error("[dashboard] Error al cargar top productos:", e);
       }
     } finally {
       hasLoaded.current = true;
