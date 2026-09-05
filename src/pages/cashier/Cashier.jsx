@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
-import { money, formatTime, typeLabels, statusLabels, statusColors, typeColors, assignTurns } from "../../lib/format";
+import { money, formatTime, payMethodLabel, typeLabels, statusLabels, statusColors, typeColors, assignTurns } from "../../lib/format";
 import { useLiveRefresh } from "../../lib/useLiveRefresh";
 import ReceiptTicket from "../../components/ReceiptTicket";
 import OrderDetailModal from "../../components/OrderDetailModal";
