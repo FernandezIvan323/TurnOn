@@ -119,7 +119,7 @@ export default function Reports() {
     if (rangeKey === "custom") {
       const from = customFrom <= customTo ? customFrom : customTo;
       const to = customFrom <= customTo ? customTo : customFrom;
-      return { from, to, label: from === to ? from : `${from} →��’ ${to}` };
+      return { from, to, label: from === to ? from : `${from} →��’ ${to}` };
     }
     const preset = RANGE_PRESETS.find((p) => p.key === rangeKey) || RANGE_PRESETS[0];
     return preset.build();
@@ -208,14 +208,14 @@ export default function Reports() {
         title="Reportes"
         subtitle={tab === "history" ? "Historial de actividad" : range.label}
         right={
-          <div className="flex gap-2 no-print">
+          <div className="flex flex-wrap gap-2 no-print">
             {tab === "summary" && hasSales && (
-              <button type="button" onClick={() => window.print()} className="btn-secondary text-sm">
-                <Printer size={14}/> Imprimir resumen
+              <button type="button" onClick={() => window.print()} className="btn-secondary h-10 px-4 text-base">
+                <Printer size={18}/> Imprimir resumen
               </button>
             )}
-            <button onClick={() => nav(`/reports/daily?date=${range.to}`)} className="btn-primary text-sm">
-              <Printer size={14}/> Diario
+            <button onClick={() => nav(`/reports/daily?date=${range.to}`)} className="btn-primary h-10 px-4 text-base">
+              <Printer size={18}/> Diario
             </button>
           </div>
         }
@@ -244,7 +244,7 @@ export default function Reports() {
           {rangeKey === "custom" && (
             <div className="flex items-center gap-2 text-sm">
               <input type="date" className="input h-9 text-sm" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
-              <span className="text-ink-400">→��’</span>
+              <span className="text-ink-400">→��’</span>
               <input type="date" className="input h-9 text-sm" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
             </div>
           )}
