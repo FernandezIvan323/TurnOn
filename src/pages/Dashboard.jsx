@@ -8,6 +8,7 @@ import { money, statusLabels, statusColors } from "../lib/format";
 import { todayLocalISO } from "../lib/date";
 import { useLiveRefresh } from "../lib/useLiveRefresh";
 import DriverHome from "./driver/DriverHome";
+import ModuleGrid from "../components/ModuleGrid";
 import {
   DollarSign,
   ShoppingBag,
@@ -377,66 +378,21 @@ function AdminDashboard() {
         />
       </div>
 
-      {/* 2. Atención ahora */}
+      {/* 2. Operación (KPIs) + grilla de secciones (hub) */}
       <SectionTitle
-        title="Atención ahora"
-        hint="Lo que está en curso y necesita acción"
+        title="Operación"
+        hint="Lo que necesita acción ahora"
       />
-
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-600 dark:text-white">
-        En preparación
-        {(o.preparing || 0) > 0 && (
-          <span className="ml-2 font-normal normal-case tracking-normal text-ink-500 dark:text-obsidian-400">
-            · total cocina {o.preparing}
-          </span>
-        )}
-      </p>
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <OpCard
-          to="/tables"
-          icon={Utensils}
-          label="Mesas"
-          value={o.preparing_tables || 0}
-          hint="En cocina · ir a mesas"
-          color="bg-blue-50 text-blue-700"
-          darkColor="dark:bg-blue-900/30 dark:text-blue-300"
-          alert={(o.preparing_tables || 0) > 0}
-        />
-        <OpCard
-          to="/delivery"
-          icon={Bike}
-          label="Domicilios"
-          value={o.preparing_delivery || 0}
-          hint="En cocina · ir a domicilios"
-          color="bg-blue-50 text-blue-700"
-          darkColor="dark:bg-blue-900/30 dark:text-blue-300"
-          alert={(o.preparing_delivery || 0) > 0}
-        />
-        <OpCard
-          to="/pickup"
-          icon={ShoppingBag}
-          label="Para llevar"
-          value={o.preparing_pickup || 0}
-          hint="En cocina · ir a para llevar"
-          color="bg-blue-50 text-blue-700"
-          darkColor="dark:bg-blue-900/30 dark:text-blue-300"
-          alert={(o.preparing_pickup || 0) > 0}
-        />
-      </div>
-
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-600 dark:text-white">
-        Domicilios · reparto
-      </p>
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <OpCard
-          to="/delivery"
-          icon={AlertCircle}
-          label="Sin asignar"
-          value={o.pending_to_assign || 0}
-          hint="En cocina sin repartidor"
-          color="bg-amber-50 text-amber-700"
-          darkColor="dark:bg-amber-900/30 dark:text-amber-300"
-          alert={(o.pending_to_assign || 0) > 0}
+          to="/cashier"
+          icon={PackageCheck}
+          label="Por cobrar"
+          value={o.ready_to_pay || 0}
+          hint="Listas para cobrar"
+          color="bg-sky-50 text-sky-700"
+          darkColor="dark:bg-sky-900/30 dark:text-sky-300"
+          alert={(o.ready_to_pay || 0) > 0}
         />
         <OpCard
           to="/delivery"
@@ -448,36 +404,15 @@ function AdminDashboard() {
           darkColor="dark:bg-indigo-900/30 dark:text-indigo-300"
           alert={(o.on_the_way || 0) > 0}
         />
-      </div>
-
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-600 dark:text-white">
-        Local e inventario
-      </p>
-      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <OpCard
-          to="/tables"
-          icon={Utensils}
-          label="Mesas activas"
-          value={o.active_tables || 0}
-          hint="Con cuenta abierta"
-          color="bg-rose-50 text-rose-700"
-          darkColor="dark:bg-rose-900/30 dark:text-rose-300"
-        />
-        <OpCard
-          to="/cashier"
-          icon={PackageCheck}
-          label="Por cobrar"
-          value={o.ready_to_pay || 0}
-          hint={
-            (o.ready_to_pay || 0) > 0
-              ? "Marcadas listas por el mesero"
-              : (o.active_tables || 0) > 0
-                ? `${o.active_tables} mesa${o.active_tables === 1 ? "" : "s"} aún en curso`
-                : "Nada listo en caja"
-          }
-          color="bg-sky-50 text-sky-700"
-          darkColor="dark:bg-sky-900/30 dark:text-sky-300"
-          alert={(o.ready_to_pay || 0) > 0}
+          to="/delivery"
+          icon={AlertCircle}
+          label="Sin asignar"
+          value={o.pending_to_assign || 0}
+          hint="En cocina sin repartidor"
+          color="bg-amber-50 text-amber-700"
+          darkColor="dark:bg-amber-900/30 dark:text-amber-300"
+          alert={(o.pending_to_assign || 0) > 0}
         />
         <OpCard
           to="/admin/inventory"
@@ -491,73 +426,17 @@ function AdminDashboard() {
         />
       </div>
 
-      {/* 3. Del día */}
       <SectionTitle
-        title="Del día"
-        hint="Qué se vendió más y por qué canal"
+        title="Secciones"
+        hint="Todas las áreas del sistema"
       />
-      <div className="mb-2 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <div className="card p-5">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-ink-900 dark:text-white">
-                Top productos
-              </h3>
-              <Link
-                to="/reports"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-wine-700 hover:underline dark:text-wine-300"
-              >
-                Reportes <ArrowRight size={12} />
-              </Link>
-            </div>
-            {topProducts.length > 0 ? (
-              <div className="space-y-3">
-                {topProducts.map((p, i) => (
-                  <div key={`${p.name}-${i}`} className="flex items-center gap-3">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-wine-50 text-xs font-bold text-wine-700 dark:bg-wine-900/40 dark:text-wine-300">
-                      {i + 1}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold text-ink-900 dark:text-white">
-                        {p.name}
-                      </div>
-                      <div className="text-[11px] text-ink-600 dark:text-white">
-                        {p.category}
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <div className="text-sm font-bold tabular-nums text-ink-900 dark:text-white">
-                        {p.qty} uds
-                      </div>
-                      <div className="text-[11px] text-ink-600 dark:text-white">
-                        {money(p.revenue)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-8 text-center">
-                <Star
-                  size={32}
-                  className="mx-auto mb-2 text-ink-300 dark:text-white/40"
-                />
-                <div className="text-sm font-medium text-ink-700 dark:text-white">
-                  Sin ventas registradas hoy
-                </div>
-                <div className="mt-1 text-xs text-ink-600 dark:text-white">
-                  Los más vendidos aparecerán aquí
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        <ChannelBars
-          delivery={t.delivery_count || 0}
-          table={t.table_count || 0}
-          pickup={t.pickup_count || 0}
-        />
-      </div>
+      <ModuleGrid
+        badges={{
+          "/cashier": { count: o.ready_to_pay || 0, alert: (o.ready_to_pay || 0) > 0 },
+          "/delivery": { count: (o.on_the_way || 0) + (o.pending_to_assign || 0), alert: (o.on_the_way || 0) + (o.pending_to_assign || 0) > 0 },
+          "/admin/inventory": { count: lowStockCount, alert: lowStockCount > 0 },
+        }}
+      />
     </div>
   );
 }

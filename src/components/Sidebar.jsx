@@ -2,47 +2,12 @@ import { useEffect, useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../store/auth";
 import LogoutConfirm from "./LogoutConfirm";
+import { NAV_ITEMS, navLabel } from "../config/nav";
 import {
-  LayoutDashboard,
-  Truck,
-  Utensils,
-  Calculator,
-  Users,
-  BarChart3,
   LogOut,
-  Home,
-  BookOpen,
-  ScrollText,
-  TrendingDown,
-  Package,
-  AlertTriangle,
-  ShoppingBag,
-  CalendarDays,
+  Utensils,
   X,
 } from "lucide-react";
-
-const items = [
-  { to: "/dashboard", label: "Inicio", icon: Home, roles: ["admin", "waiter", "delivery"] },
-  { to: "/tables", label: "Mesas", icon: Utensils, roles: ["admin", "waiter"] },
-  { to: "/menu", labelKey: "catalog", icon: BookOpen, roles: ["admin", "waiter"] },
-  { to: "/my-history", label: "Mi historial", icon: CalendarDays, roles: ["waiter", "delivery"] },
-  { to: "/delivery", label: "Domicilios", icon: Truck, roles: ["admin"] },
-  { to: "/pickup", label: "Para llevar", icon: ShoppingBag, roles: ["admin"] },
-  { to: "/debts", label: "Deudas", icon: AlertTriangle, roles: ["admin"] },
-  { to: "/cashier", label: "Caja", icon: Calculator, roles: ["admin"] },
-  { to: "/cashier/closing", label: "Corte de caja", icon: ScrollText, roles: ["admin"] },
-  { to: "/admin/expenses", label: "Gastos", icon: TrendingDown, roles: ["admin"] },
-  { to: "/customers", label: "Clientes", icon: Users, roles: ["admin"] },
-  { to: "/staff", label: "Personal", icon: LayoutDashboard, roles: ["admin"] },
-  { to: "/admin/inventory", label: "Inventario", icon: Package, roles: ["admin"] },
-  { to: "/reports", label: "Reportes", icon: BarChart3, roles: ["admin"] },
-];
-
-const labelFor = (it, role) => {
-  if (it.label) return it.label;
-  if (it.labelKey === "catalog") return role === "admin" ? "Menú" : "Catálogo";
-  return "";
-};
 
 export default function Sidebar({ open = false, onClose }) {
   const { user, logout } = useAuth();
@@ -67,7 +32,7 @@ export default function Sidebar({ open = false, onClose }) {
 
   if (!user) return null;
 
-  const navItems = items.filter((i) => i.roles.includes(user.role));
+  const navItems = NAV_ITEMS.filter((i) => i.roles.includes(user.role));
 
   const panel = (
     <>
@@ -119,7 +84,7 @@ export default function Sidebar({ open = false, onClose }) {
               }
             >
               <Icon size={22} className="shrink-0" />
-              {labelFor(it, user.role)}
+              {navLabel(it, user.role)}
             </NavLink>
           );
         })}
