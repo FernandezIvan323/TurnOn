@@ -6,11 +6,12 @@ import Header from "../../components/Header";
 import { money, formatTime, typeLabels, statusLabels, statusColors, typeColors, assignTurns } from "../../lib/format";
 import { useLiveRefresh } from "../../lib/useLiveRefresh";
 import ReceiptTicket from "../../components/ReceiptTicket";
+import OrderDetailModal from "../../components/OrderDetailModal";
 import Modal from "../../components/Modal";
 import SegmentedControl from "../../components/SegmentedControl";
 import EmptyState from "../../components/EmptyState";
 import { toast } from "../../store/toast";
-import { CheckCircle2, Receipt, X, Calculator, CreditCard, Wallet, Banknote, Building2, Truck, Utensils, ShoppingBag, ScrollText, Users, AlertTriangle, Printer } from "lucide-react";
+import { CheckCircle2, Receipt, X, Calculator, CreditCard, Wallet, Banknote, Building2, Truck, Utensils, ShoppingBag, ScrollText, Users, AlertTriangle, Printer, Eye } from "lucide-react";
 
 const TIP_PRESETS = [0, 10, 15, 20];
 
@@ -203,7 +204,7 @@ function CloseModal({ order, mode = "close", onClose, onClosed }) {
   );
 }
 
-function OrderRow({ order, turn, onClose, onPrepay, onTicket, highlight = false }) {
+function OrderRow({ order, turn, onClose, onPrepay, onTicket, onView, highlight = false }) {
   const TypeIcon = order.type === "delivery" ? Truck : order.type === "pickup" ? ShoppingBag : Utensils;
   return (
     <div
@@ -251,21 +252,34 @@ function OrderRow({ order, turn, onClose, onPrepay, onTicket, highlight = false 
             <button onClick={() => onClose(order)} className="btn-primary text-xs">
               <CheckCircle2 size={12}/> Cobrar al entregar
             </button>
+            <button onClick={() => onView(order)} className="btn-secondary text-xs">
+              <Eye size={12}/> Ver
+            </button>
           </div>
         )}
         {(order.type !== "delivery" || (order.type === "delivery" && order.status !== "on_the_way") || order.payment_status === "paid") && (
           order.payment_status !== "paid" ? (
-            <button onClick={() => onClose(order)} className="btn-primary text-sm mt-1">
-              <CheckCircle2 size={14}/> Cobrar
-            </button>
+            <div className="flex items-center justify-end gap-1 mt-1">
+              <button onClick={() => onView(order)} className="btn-secondary text-xs">
+                <Eye size={12}/> Ver
+              </button>
+              <button onClick={() => onClose(order)} className="btn-primary text-sm">
+                <CheckCircle2 size={14}/> Cobrar
+              </button>
+            </div>
           ) : (
-            <div className="flex flex-col items-end gap-1 mt-1">
+            <div className="flex flex-col items-end gap-2 mt-1">
               <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Pagado</span>
-              {onTicket && (
-                <button onClick={() => onTicket(order)} className="btn-secondary text-xs">
-                  <Printer size={12}/> Ticket
+              <div className="flex items-center gap-1">
+                <button onClick={() => onView(order)} className="btn-secondary text-xs">
+                  <Eye size={12}/> Ver
                 </button>
-              )}
+                {onTicket && (
+                  <button onClick={() => onTicket(order)} className="btn-secondary text-xs">
+                    <Printer size={12}/> Ticket
+                  </button>
+                )}
+              </div>
             </div>
           )
         )}
@@ -283,6 +297,7 @@ export default function Cashier() {
   const [toClose, setToClose] = useState(null);
   const [toPrepay, setToPrepay] = useState(null);
   const [ticketOrder, setTicketOrder] = useState(null);
+  const [viewOrder, setViewOrder] = useState(null);
 
   const load = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
@@ -430,6 +445,7 @@ export default function Cashier() {
               onClose={setToClose}
               onPrepay={setToPrepay}
               onTicket={tab === "paid" ? setTicketOrder : undefined}
+              onView={setViewOrder}
               highlight={tab === "pending"}
             />
           ))}
@@ -465,6 +481,12 @@ export default function Cashier() {
         <ReceiptTicket
           order={ticketOrder}
           onClose={() => setTicketOrder(null)}
+        />
+      )}
+      {viewOrder && (
+        <OrderDetailModal
+          order={viewOrder}
+          onClose={() => setViewOrder(null)}
         />
       )}
     </div>

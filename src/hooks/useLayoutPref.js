@@ -1,35 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
-
-const KEY = "turnon.layout";
-const VALID = ["list", "grid"];
+import { useLayout } from "../store/layout";
 
 /**
- * Preferencia de navegación: "list" (sidebar clásico) o "grid" (hub + pantalla completa).
- * Persiste en localStorage.
+ * Preferencia de navegación: "list" (sidebar clásico) o "grid" (pantalla completa).
+ * Puente sobre el store zustand: cualquier toggle/set re-renderiza TODOS los
+ * consumidores al instante (sin necesidad de recargar la página).
  */
 export function useLayoutPref() {
-  const [layout, setLayout] = useState(() => {
-    const v = localStorage.getItem(KEY);
-    return VALID.includes(v) ? v : "list";
-  });
-
-  const toggle = useCallback(() => {
-    setLayout((prev) => {
-      const next = prev === "list" ? "grid" : "list";
-      localStorage.setItem(KEY, next);
-      return next;
-    });
-  }, []);
-
-  const set = useCallback((v) => {
-    const next = VALID.includes(v) ? v : "list";
-    localStorage.setItem(KEY, next);
-    setLayout(next);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(KEY, layout);
-  }, [layout]);
-
+  const layout = useLayout((s) => s.layout);
+  const toggle = useLayout((s) => s.toggle);
+  const set = useLayout((s) => s.set);
   return { layout, toggle, set };
 }

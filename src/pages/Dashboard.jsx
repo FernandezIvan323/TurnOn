@@ -430,7 +430,7 @@ function AdminDashboard() {
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-600 dark:text-white">
         Domicilios · reparto
       </p>
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <OpCard
           to="/delivery"
           icon={AlertCircle}
@@ -450,6 +450,15 @@ function AdminDashboard() {
           color="bg-indigo-50 text-indigo-700"
           darkColor="dark:bg-indigo-900/30 dark:text-indigo-300"
           alert={(o.on_the_way || 0) > 0}
+        />
+        <OpCard
+          to="/reports"
+          icon={CheckCircle2}
+          label="Pedidos hechos hoy"
+          value={t.orders_count || 0}
+          hint="Cobrados"
+          color="bg-emerald-50 text-emerald-700"
+          darkColor="dark:bg-emerald-900/30 dark:text-emerald-300"
         />
       </div>
 
@@ -491,74 +500,6 @@ function AdminDashboard() {
           color="bg-rose-50 text-rose-700"
           darkColor="dark:bg-rose-900/30 dark:text-rose-300"
           alert={lowStockCount > 0}
-        />
-      </div>
-
-      {/* 3. Del día */}
-      <SectionTitle
-        title="Del día"
-        hint="Qué se vendió más y por qué canal"
-      />
-      <div className="mb-2 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <div className="card p-5">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-ink-900 dark:text-white">
-                Top productos
-              </h3>
-              <Link
-                to="/reports"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-wine-700 hover:underline dark:text-wine-300"
-              >
-                Reportes <ArrowRight size={12} />
-              </Link>
-            </div>
-            {topProducts.length > 0 ? (
-              <div className="space-y-3">
-                {topProducts.map((p, i) => (
-                  <div key={`${p.name}-${i}`} className="flex items-center gap-3">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-wine-50 text-xs font-bold text-wine-700 dark:bg-wine-900/40 dark:text-wine-300">
-                      {i + 1}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold text-ink-900 dark:text-white">
-                        {p.name}
-                      </div>
-                      <div className="text-[11px] text-ink-600 dark:text-white">
-                        {p.category}
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <div className="text-sm font-bold tabular-nums text-ink-900 dark:text-white">
-                        {p.qty} uds
-                      </div>
-                      <div className="text-[11px] text-ink-600 dark:text-white">
-                        {money(p.revenue)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-8 text-center">
-                <Star
-                  size={32}
-                  className="mx-auto mb-2 text-ink-300 dark:text-white/40"
-                />
-                <div className="text-sm font-medium text-ink-700 dark:text-white">
-                  Sin ventas registradas hoy
-                </div>
-                <div className="mt-1 text-xs text-ink-600 dark:text-white">
-                  Los más vendidos aparecerán aquí
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        <ChannelBars
-          delivery={t.delivery_count || 0}
-          table={t.table_count || 0}
-          pickup={t.pickup_count || 0}
         />
       </div>
 

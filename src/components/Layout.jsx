@@ -40,7 +40,7 @@ export default function Layout() {
                 <Menu size={24} />
               </button>
             )}
-            <Link to="/dashboard" className="flex min-w-0 items-center gap-2">
+            <Link to="/dashboard" className={`flex min-w-0 items-center gap-2 ${!isGrid ? "lg:hidden" : ""}`}>
               <img
                 src="/favicon.svg"
                 alt=""

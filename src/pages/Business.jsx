@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import api from "../lib/api";
 import Header from "../components/Header";
 import SegmentedControl from "../components/SegmentedControl";
-import ModuleGrid from "../components/ModuleGrid";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { useAuth } from "../store/auth";
 import { toast } from "../store/toast";
@@ -176,13 +175,6 @@ export default function Business() {
   return (
     <div>
       <Header title="Negocio" subtitle="Datos del local y crecimiento" />
-
-      <div className="mb-6">
-        <h2 className="mb-3 text-sm font-bold uppercase tracking-widest text-ink-700 dark:text-white">
-          Operaciones
-        </h2>
-        <ModuleGrid />
-      </div>
 
       <div className="mb-4">
         <SegmentedControl

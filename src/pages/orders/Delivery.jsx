@@ -160,7 +160,7 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
                   e.stopPropagation();
                   onCancel(order);
                 }}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-paper-300 bg-white text-ink-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-200 dark:hover:border-rose-800 dark:hover:bg-rose-950/40"
+                className="inline-flex h-9 flex-1 items-center justify-center rounded-xl border border-paper-300 bg-white text-ink-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-200 dark:hover:border-rose-800 dark:hover:bg-rose-950/40"
                 title={`Cancelar pedido #${order.id}`}
                 aria-label={`Cancelar pedido #${order.id}`}
               >
@@ -187,7 +187,7 @@ function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPrepari
                   e.stopPropagation();
                   onBackPending(order);
                 }}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-paper-300 bg-white text-ink-600 transition hover:bg-paper-100 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-200"
+                className="inline-flex h-9 flex-1 items-center justify-center rounded-xl border border-paper-300 bg-white text-ink-600 transition hover:bg-paper-100 dark:border-obsidian-600 dark:bg-obsidian-950 dark:text-obsidian-200"
                 title="Volver a pendiente"
               >
                 <ArrowLeft size={15} />
@@ -834,17 +834,39 @@ function OrderDetailModal({ order, onClose, onChanged }) {
   );
 }
 
+function ymdDaysAgo(days) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const RIDER_ACCENTS = [
+  "border-violet-300 bg-violet-50/40 dark:border-violet-700 dark:bg-violet-900/20",
+  "border-indigo-300 bg-indigo-50/40 dark:border-indigo-700 dark:bg-indigo-900/20",
+  "border-sky-300 bg-sky-50/40 dark:border-sky-700 dark:bg-sky-900/20",
+  "border-emerald-300 bg-emerald-50/40 dark:border-emerald-700 dark:bg-emerald-900/20",
+  "border-amber-300 bg-amber-50/40 dark:border-amber-700 dark:bg-amber-900/20",
+  "border-rose-300 bg-rose-50/40 dark:border-rose-700 dark:bg-rose-900/20",
+];
+
 function DeliveryHistoryInline() {
-  const [persons, setPersons] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const [riders, setRiders] = useState([]);
+  const [expanded, setExpanded] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
 
-  useEffect(() => { api.get("/delivery").then((r) => setPersons(r.data)); }, []);
+  useEffect(() => {
+    const from = ymdDaysAgo(364);
+    const to = ymdDaysAgo(0);
+    api
+      .get("/reports/delivery-by-person", { params: { from, to } })
+      .then((r) => setRiders(r.data || []))
+      .catch(() => setRiders([]));
+  }, []);
 
-  const loadHistory = async (id) => {
-    setSelected(id);
+  const open = async (id) => {
+    setExpanded(id);
     setLoading(true);
     setErr(null);
     try {
@@ -857,59 +879,70 @@ function DeliveryHistoryInline() {
     }
   };
 
-  const pname = persons.find((p) => p.id === selected)?.name || "";
-  const totalEarned = history.reduce((s, o) => s + Number(o.total), 0);
+  if (expanded) {
+    const rider = riders.find((r) => r.id === expanded);
+    const total = history.reduce((s, o) => s + Number(o.total || 0), 0);
+    return (
+      <div className="mt-6 rounded-2xl border border-paper-200 bg-white p-5 dark:border-obsidian-800 dark:bg-obsidian-900">
+        <button type="button" onClick={() => setExpanded(null)} className="btn-secondary mb-4 text-sm">
+          <ArrowLeft size={14} /> Atrás
+        </button>
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-wine-200 bg-wine-50/60 p-3 dark:border-wine-800 dark:bg-wine-900/20">
+          <span className="text-base font-semibold text-ink-900 dark:text-white">
+            {rider?.name}
+          </span>
+          <span className="text-lg font-bold text-wine-600 dark:text-wine-300">{money(total)}</span>
+        </div>
+        {loading ? (
+          <div className="text-sm text-ink-500">Cargando…</div>
+        ) : err ? (
+          <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">{err}</div>
+        ) : history.length === 0 ? (
+          <div className="py-8 text-center text-sm text-ink-400">Sin entregas.</div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {history.map((o) => (
+              <CompletedDeliveryCard key={o.id} order={o} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-6 rounded-2xl border border-paper-200 bg-white dark:border-obsidian-800 dark:bg-obsidian-900">
-      <div className="flex items-center justify-between border-b border-paper-300 px-5 py-4 dark:border-obsidian-800">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-ink-800 dark:text-obsidian-50">
-          <Clock size={18}/> Historial de repartidores
-        </h2>
-      </div>
-      <div className="p-5">
-        <div className="mb-4 flex flex-wrap gap-2">
-          {persons.map((p) => (
+    <div className="mt-6">
+      <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-ink-900 dark:text-white">
+        <Clock size={18} /> Historial de repartidores
+      </h2>
+      {riders.length === 0 ? (
+        <div className="rounded-2xl border border-paper-200 py-8 text-center text-sm text-ink-400 dark:border-obsidian-800">
+          Sin repartidores.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {riders.map((r, i) => (
             <button
-              key={p.id}
+              key={r.id}
               type="button"
-              onClick={() => loadHistory(p.id)}
-              className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
-                selected === p.id
-                  ? "border-wine-500 bg-wine-600 text-white"
-                  : "border-paper-300 bg-paper-50 text-ink-600 hover:bg-paper-200 dark:border-obsidian-700 dark:bg-obsidian-900 dark:text-obsidian-200"
-              }`}
+              onClick={() => open(r.id)}
+              className={`rounded-2xl border p-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:shadow-pop ${RIDER_ACCENTS[i % RIDER_ACCENTS.length]}`}
             >
-              {p.name}
+              <div className="text-lg font-bold text-ink-900 dark:text-white">{r.name}</div>
+              <div className="mt-4 flex items-end justify-between gap-2">
+                <div>
+                  <div className="text-xs font-medium text-ink-500 dark:text-obsidian-400">Domicilios</div>
+                  <div className="text-2xl font-bold tabular-nums text-ink-900 dark:text-white">{r.deliveries || 0}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs font-medium text-ink-500 dark:text-obsidian-400">Dinero</div>
+                  <div className="text-2xl font-bold tabular-nums text-ink-900 dark:text-white">{money(r.revenue || 0)}</div>
+                </div>
+              </div>
             </button>
           ))}
         </div>
-        {!selected && (
-          <div className="py-8 text-center text-sm text-ink-400">Selecciona un repartidor</div>
-        )}
-        {loading && <div className="text-sm text-ink-500">Cargando…</div>}
-        {err && (
-          <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
-            {err}
-          </div>
-        )}
-        {selected && !loading && !err && history.length === 0 && (
-          <div className="py-8 text-center text-sm text-ink-400">{pname} no tiene entregas.</div>
-        )}
-        {selected && !loading && history.length > 0 && (
-          <div>
-            <div className="mb-4 flex items-center justify-between rounded-xl border border-wine-200 bg-wine-50/60 p-3 dark:border-wine-800 dark:bg-wine-900/20">
-              <span className="text-sm font-medium">Total entregado · {pname}</span>
-              <span className="text-lg font-bold text-wine-600 dark:text-wine-300">{money(totalEarned)}</span>
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {history.map((o) => (
-                <CompletedDeliveryCard key={o.id} order={o} />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
@@ -1177,8 +1210,8 @@ export default function Delivery() {
         </div>
       ) : (
         <div
-          className={`grid grid-cols-1 gap-4 items-start ${
-            filter === "active" ? "md:grid-cols-3" : "md:grid-cols-2 xl:grid-cols-4"
+          className={`mx-auto grid w-full max-w-[1600px] grid-cols-1 gap-4 items-start ${
+            filter === "active" ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-2 xl:grid-cols-4"
           }`}
         >
           {(filter === "active"
