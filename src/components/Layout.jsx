@@ -1,18 +1,21 @@
 import { useState } from "react";
-import { Outlet, Navigate, Link } from "react-router-dom";
+import { Outlet, Navigate, Link, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import ServerStatus from "./ServerStatus";
 import ThemeToggle from "./ThemeToggle";
 import Toaster from "./Toaster";
+import TopNavLinks from "./TopNavLinks";
 import { useAuth } from "../store/auth";
 import { useLayoutPref } from "../hooks/useLayoutPref";
-import { Menu, Home, List, LayoutGrid } from "lucide-react";
+import { Menu, List, LayoutGrid } from "lucide-react";
 
 export default function Layout() {
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const { layout, toggle } = useLayoutPref();
+  const location = useLocation();
   const isGrid = layout === "grid";
+  const onDashboard = location.pathname === "/dashboard";
 
   if (!user) return <Navigate to="/login" replace />;
 
@@ -23,10 +26,11 @@ export default function Layout() {
       {!isGrid && <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Barra superior (visible siempre) */}
+        {/* Barra superior */}
         <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-paper-300 bg-white/95 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur dark:border-obsidian-800 dark:bg-obsidian-950/95">
-          <div className="flex min-w-0 items-center gap-2">
-            {!isGrid ? (
+          {/* Izquierda: logo (+ menú móvil solo en modo lista) */}
+          <div className="flex flex-1 items-center gap-2">
+            {!isGrid && (
               <button
                 type="button"
                 onClick={() => setMenuOpen(true)}
@@ -35,15 +39,6 @@ export default function Layout() {
               >
                 <Menu size={24} />
               </button>
-            ) : (
-              <Link
-                to="/dashboard"
-                className="btn-ghost h-11 w-11 shrink-0 p-0"
-                aria-label="Ir al inicio"
-                title="Ir al inicio"
-              >
-                <Home size={22} />
-              </Link>
             )}
             <Link to="/dashboard" className="flex min-w-0 items-center gap-2">
               <img
@@ -56,7 +51,16 @@ export default function Layout() {
               </span>
             </Link>
           </div>
-          <div className="flex items-center gap-1">
+
+          {/* Centro: navegación de íconos (solo modo grilla, fuera del inicio) */}
+          {isGrid && !onDashboard && (
+            <div className="hidden shrink-0 sm:block">
+              <TopNavLinks role={user.role} />
+            </div>
+          )}
+
+          {/* Derecha: toggle + tema */}
+          <div className="flex flex-1 items-center justify-end gap-1">
             <button
               type="button"
               onClick={toggle}

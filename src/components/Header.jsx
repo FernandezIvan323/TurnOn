@@ -1,5 +1,3 @@
-import ThemeToggle from "./ThemeToggle";
-
 export default function Header({ title, subtitle, right }) {
   return (
     <header className="mb-4 flex flex-wrap items-start justify-between gap-2 sm:mb-6">
@@ -13,10 +11,6 @@ export default function Header({ title, subtitle, right }) {
       </div>
       <div className="flex shrink-0 flex-nowrap items-center gap-2">
         {right}
-        {/* En móvil el toggle va en la topbar del Layout */}
-        <div className="hidden shrink-0 lg:block">
-          <ThemeToggle />
-        </div>
       </div>
     </header>
   );
