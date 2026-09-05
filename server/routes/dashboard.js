@@ -138,4 +138,31 @@ router.get("/summary", authRequired, async (req, res) => {
   });
 });
 
+// Datos del negocio (horas trabajadas + días activos) — solo admin.
+router.get("/business", authRequired, async (req, res) => {
+  if (req.user.role !== "admin")
+    return res.status(403).json({ error: "No autorizado" });
+
+  const today = await query(
+    `SELECT MIN(created_at) AS first_order,
+            MAX(COALESCE(closed_at, created_at)) AS last_order
+       FROM orders
+      WHERE DATE(created_at AT TIME ZONE '${tz()}') = CURRENT_DATE`
+  );
+  const month = await query(
+    `SELECT COUNT(DISTINCT DATE(created_at AT TIME ZONE '${tz()}'))::int AS work_days,
+            COUNT(*) FILTER (WHERE payment_status = 'paid')::int AS paid_orders
+       FROM orders
+      WHERE DATE_TRUNC('month', created_at AT TIME ZONE '${tz()}')
+            = DATE_TRUNC('month', CURRENT_DATE AT TIME ZONE '${tz()}')`
+  );
+
+  res.json({
+    first_order: today.rows[0]?.first_order || null,
+    last_order: today.rows[0]?.last_order || null,
+    work_days_month: month.rows[0]?.work_days || 0,
+    paid_orders_month: month.rows[0]?.paid_orders || 0,
+  });
+});
+
 export default router;

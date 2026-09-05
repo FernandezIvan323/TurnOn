@@ -21,6 +21,7 @@ import Inventory from "./pages/admin/Inventory";
 import DailyReport from "./pages/admin/DailyReport";
 import PickupPage from "./pages/pickup/PickupPage";
 import MyWorkHistory from "./pages/waiter/MyWorkHistory";
+import Business from "./pages/Business";
 import Contact from "./pages/Contact";
 import Funciones from "./pages/Funciones";
 
@@ -65,6 +66,7 @@ export default function App() {
         <Route path="/admin/inventory" element={<AdminOnly><Inventory /></AdminOnly>} />
         <Route path="/reports" element={<AdminOnly><Reports /></AdminOnly>} />
         <Route path="/reports/daily" element={<AdminOnly><DailyReport /></AdminOnly>} />
+        <Route path="/negocio" element={<AdminOnly><Business /></AdminOnly>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
