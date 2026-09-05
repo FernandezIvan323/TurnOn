@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { loadSettings } from "./lib/settings";
 import Layout from "./components/Layout";
 import RequireRole from "./components/RequireRole";
 import Landing from "./pages/Landing";
@@ -31,6 +33,10 @@ function WaiterOnly({ children }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
   return (
     <Routes>
       <Route path="/" element={<Landing />} />

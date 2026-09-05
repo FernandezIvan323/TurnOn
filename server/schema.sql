@@ -139,6 +139,20 @@ CREATE TABLE IF NOT EXISTS cash_closings (
 CREATE INDEX IF NOT EXISTS idx_cash_closings_date  ON cash_closings(closing_date DESC);
 CREATE INDEX IF NOT EXISTS idx_cash_closings_user  ON cash_closings(closed_by);
 
+-- Configuración del negocio (una sola fila, id = 1)
+CREATE TABLE IF NOT EXISTS settings (
+  id            INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  business_name VARCHAR(120) NOT NULL DEFAULT 'TurnOn',
+  address       VARCHAR(200),
+  phone         VARCHAR(40),
+  currency      VARCHAR(10)  NOT NULL DEFAULT 'COP',
+  locale        VARCHAR(10)  NOT NULL DEFAULT 'es-CO',
+  timezone      VARCHAR(64)  NOT NULL DEFAULT 'America/Mexico_City',
+  open_hour     TIME,
+  close_hour    TIME,
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Gastos del día
 CREATE TABLE IF NOT EXISTS expense_categories (
   id     SERIAL PRIMARY KEY,

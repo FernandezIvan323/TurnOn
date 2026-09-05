@@ -1,10 +1,14 @@
-export const money = (v) =>
-  new Intl.NumberFormat("es-CO", {
+import { getSettings } from "./settings";
+
+export const money = (v) => {
+  const { currency, locale } = getSettings();
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "COP",
+    currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(Number(v || 0));
+};
 
 export const payMethodLabel = (m) =>
   ({ cash: "Efectivo", card: "Tarjeta", transfer: "Transferencia", mixed: "Mixto" }[m] || m || "—");

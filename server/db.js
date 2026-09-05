@@ -183,6 +183,27 @@ export async function runMigrations() {
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS debt_settled_at TIMESTAMPTZ;
   `);
 
+  // Configuración del negocio (una sola fila)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS settings (
+      id            INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+      business_name VARCHAR(120) NOT NULL DEFAULT 'TurnOn',
+      address       VARCHAR(200),
+      phone         VARCHAR(40),
+      currency      VARCHAR(10)  NOT NULL DEFAULT 'COP',
+      locale        VARCHAR(10)  NOT NULL DEFAULT 'es-CO',
+      timezone      VARCHAR(64)  NOT NULL DEFAULT 'America/Mexico_City',
+      open_hour     TIME,
+      close_hour    TIME,
+      updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    INSERT INTO settings (id, business_name, currency, locale, timezone)
+    VALUES (1, 'TurnOn', 'COP', 'es-CO', 'America/Mexico_City')
+    ON CONFLICT (id) DO NOTHING
+  `);
+
   // Rol 'delivery' + vínculo repartidor <-> usuario (acceso por PIN desde el celular)
   await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`);
   await pool.query(

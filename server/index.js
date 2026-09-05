@@ -21,6 +21,7 @@ import assignmentsRoutes from "./routes/assignments.js";
 import cashClosingsRoutes from "./routes/cashClosings.js";
 import expensesRoutes from "./routes/expenses.js";
 import inventoryRoutes from "./routes/inventory.js";
+import settingsRoutes from "./routes/settings.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.join(__dirname, "..");
@@ -110,6 +111,7 @@ app.use("/api/assignments", assignmentsRoutes);
 app.use("/api/cash-closings", cashClosingsRoutes);
 app.use("/api/expenses", expensesRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // Producción LAN: UI + API en el mismo proceso (mismo origen → celulares OK)
 const distPath = path.join(__dirname, "..", "dist");
