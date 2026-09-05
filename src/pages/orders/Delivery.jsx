@@ -564,7 +564,7 @@ function NewOrderModal({ onClose, onCreated }) {
             </div>
 
             <h3 className="text-sm font-semibold text-ink-700 dark:text-obsidian-100 mt-5 mb-2">Carrito</h3>
-            {cart.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500">Agrega productos del menú →��’</div>}
+            {cart.length === 0 && <div className="text-sm text-ink-400 dark:text-obsidian-500">Agrega productos del menú →��’</div>}
             <div className="space-y-2">
               {cart.map((c) => (
                 <div key={c.product_id} className="flex items-center gap-2 text-sm">
@@ -834,7 +834,7 @@ function OrderDetailModal({ order, onClose, onChanged }) {
   );
 }
 
-function HistoryModal({ onClose }) {
+function DeliveryHistoryInline() {
   const [persons, setPersons] = useState([]);
   const [selected, setSelected] = useState(null);
   const [history, setHistory] = useState([]);
@@ -861,57 +861,54 @@ function HistoryModal({ onClose }) {
   const totalEarned = history.reduce((s, o) => s + Number(o.total), 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-      <div className="card flex max-h-[90vh] w-full max-w-4xl flex-col">
-        <div className="flex items-center justify-between border-b border-paper-300 px-5 py-4 dark:border-obsidian-800">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-ink-800 dark:text-obsidian-50">
-            <Clock size={18}/> Historial de repartidores
-          </h2>
-          <button type="button" onClick={onClose} className="btn-ghost"><X size={18}/></button>
+    <div className="mt-6 rounded-2xl border border-paper-200 bg-white dark:border-obsidian-800 dark:bg-obsidian-900">
+      <div className="flex items-center justify-between border-b border-paper-300 px-5 py-4 dark:border-obsidian-800">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-ink-800 dark:text-obsidian-50">
+          <Clock size={18}/> Historial de repartidores
+        </h2>
+      </div>
+      <div className="p-5">
+        <div className="mb-4 flex flex-wrap gap-2">
+          {persons.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => loadHistory(p.id)}
+              className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                selected === p.id
+                  ? "border-wine-500 bg-wine-600 text-white"
+                  : "border-paper-300 bg-paper-50 text-ink-600 hover:bg-paper-200 dark:border-obsidian-700 dark:bg-obsidian-900 dark:text-obsidian-200"
+              }`}
+            >
+              {p.name}
+            </button>
+          ))}
         </div>
-        <div className="flex-1 overflow-y-auto p-5">
-          <div className="mb-4 flex flex-wrap gap-2">
-            {persons.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => loadHistory(p.id)}
-                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
-                  selected === p.id
-                    ? "border-wine-500 bg-wine-600 text-white"
-                    : "border-paper-300 bg-paper-50 text-ink-600 hover:bg-paper-200 dark:border-obsidian-700 dark:bg-obsidian-900 dark:text-obsidian-200"
-                }`}
-              >
-                {p.name}
-              </button>
-            ))}
+        {!selected && (
+          <div className="py-8 text-center text-sm text-ink-400">Selecciona un repartidor</div>
+        )}
+        {loading && <div className="text-sm text-ink-500">Cargando…</div>}
+        {err && (
+          <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
+            {err}
           </div>
-          {!selected && (
-            <div className="py-8 text-center text-sm text-ink-400">Selecciona un repartidor</div>
-          )}
-          {loading && <div className="text-sm text-ink-500">Cargando…</div>}
-          {err && (
-            <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
-              {err}
+        )}
+        {selected && !loading && !err && history.length === 0 && (
+          <div className="py-8 text-center text-sm text-ink-400">{pname} no tiene entregas.</div>
+        )}
+        {selected && !loading && history.length > 0 && (
+          <div>
+            <div className="mb-4 flex items-center justify-between rounded-xl border border-wine-200 bg-wine-50/60 p-3 dark:border-wine-800 dark:bg-wine-900/20">
+              <span className="text-sm font-medium">Total entregado · {pname}</span>
+              <span className="text-lg font-bold text-wine-600 dark:text-wine-300">{money(totalEarned)}</span>
             </div>
-          )}
-          {selected && !loading && !err && history.length === 0 && (
-            <div className="py-8 text-center text-sm text-ink-400">{pname} no tiene entregas.</div>
-          )}
-          {selected && !loading && history.length > 0 && (
-            <div>
-              <div className="card mb-4 flex items-center justify-between border-wine-200 bg-wine-50/60 p-3 dark:border-wine-800 dark:bg-wine-900/20">
-                <span className="text-sm font-medium">Total entregado · {pname}</span>
-                <span className="text-lg font-bold text-wine-600 dark:text-wine-300">{money(totalEarned)}</span>
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {history.map((o) => (
-                  <CompletedDeliveryCard key={o.id} order={o} />
-                ))}
-              </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {history.map((o) => (
+                <CompletedDeliveryCard key={o.id} order={o} />
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1043,6 +1040,18 @@ export default function Delivery() {
     () => orders.filter((o) => o.status === "delivered").length,
     [orders]
   );
+  const deliveredTodayAmount = useMemo(
+    () => orders.filter((o) => o.status === "delivered" && new Date(o.created_at) >= today).reduce((s, o) => s + Number(o.total || 0), 0),
+    [orders]
+  );
+  const cancelledTodayCount = useMemo(
+    () => orders.filter((o) => o.status === "cancelled" && new Date(o.created_at) >= today).length,
+    [orders]
+  );
+  const streetToCollect = useMemo(
+    () => orders.filter((o) => o.status === "on_the_way" && o.payment_status === "pending").reduce((s, o) => s + Number(o.total || 0), 0),
+    [orders]
+  );
 
   useEffect(() => {
     if (filter !== "delivered" && filter !== "cancelled") {
@@ -1120,9 +1129,6 @@ export default function Delivery() {
                 </button>
               ))}
             </div>
-            <button type="button" onClick={() => setHistoryOpen(true)} className="btn-secondary h-9 whitespace-nowrap">
-              <Clock size={16}/> Repartidores
-            </button>
             <button type="button" onClick={() => setOpenNew(true)} className="btn-primary h-9 whitespace-nowrap">
               <Plus size={16}/> Nuevo pedido
             </button>
@@ -1210,7 +1216,31 @@ export default function Delivery() {
         </div>
       )}
 
-      {historyOpen && <HistoryModal onClose={() => setHistoryOpen(false)} />}
+      {filter === "active" && (
+        <>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="card p-3">
+              <div className="text-xs text-ink-500 dark:text-obsidian-400">Entregados hoy</div>
+              <div className="text-xl font-bold tabular-nums text-ink-900 dark:text-white">{deliveredTodayCount}</div>
+              <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">{money(deliveredTodayAmount)}</div>
+            </div>
+            <div className="card p-3">
+              <div className="text-xs text-ink-500 dark:text-obsidian-400">Cancelados hoy</div>
+              <div className="text-xl font-bold tabular-nums text-ink-900 dark:text-white">{cancelledTodayCount}</div>
+            </div>
+            <div className="card p-3">
+              <div className="text-xs text-ink-500 dark:text-obsidian-400">En calle por cobrar</div>
+              <div className="text-xl font-bold tabular-nums text-indigo-700 dark:text-indigo-300">{money(streetToCollect)}</div>
+            </div>
+            <div className="card p-3">
+              <div className="text-xs text-ink-500 dark:text-obsidian-400">Total entregados</div>
+              <div className="text-xl font-bold tabular-nums text-ink-900 dark:text-white">{totalDeliveredCount}</div>
+            </div>
+          </div>
+          <DeliveryHistoryInline />
+        </>
+      )}
+
       {openNew && <NewOrderModal onClose={() => setOpenNew(false)} onCreated={onCreated} />}
       {toAssign && <AssignModal order={toAssign} onClose={() => setToAssign(null)} onAssigned={load} />}
       {toView && <OrderDetailModal order={toView} onClose={() => setToView(null)} onChanged={load} />}
