@@ -192,8 +192,16 @@ export default function Inventory() {
                   <tr key={p.id} className={p.low_stock ? "!bg-rose-50/60 dark:!bg-rose-900/15" : undefined}>
                     <td className="cell-strong">{p.name}</td>
                     <td className="cell-muted">{p.category_name || "—"}</td>
-                    <td className={`text-right font-semibold tabular-nums ${p.low_stock ? "text-rose-700 dark:text-rose-300" : ""}`}>
-                      {p.stock}
+                    <td className="text-right">
+                      <div className={`font-semibold tabular-nums ${p.low_stock ? "text-rose-700 dark:text-rose-300" : "text-ink-800 dark:text-white"}`}>
+                        {p.stock}
+                      </div>
+                      <div className="ml-auto mt-1 h-1.5 w-16 overflow-hidden rounded-full bg-paper-200 dark:bg-obsidian-800">
+                        <div
+                          className={`h-full rounded-full ${p.low_stock ? "bg-rose-500" : "bg-emerald-500"}`}
+                          style={{ width: `${Math.min(100, ((Number(p.stock) || 0) / Math.max(1, (Number(p.min_stock) * 2) || 1)) * 100)}%` }}
+                        />
+                      </div>
                     </td>
                     <td className="text-right cell-muted tabular-nums">{p.min_stock}</td>
                     <td className="text-right">

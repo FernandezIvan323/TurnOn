@@ -292,19 +292,19 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-3 sm:p-4">
+<div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-3 backdrop-blur-sm sm:p-4">
       <div className="card flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden">
-        <div className="flex items-center justify-between border-b border-paper-300 px-4 py-3 dark:border-obsidian-800 sm:px-5 sm:py-4">
+        <div className="flex items-center justify-between bg-gradient-to-r from-sky-500 to-sky-600 px-4 py-3 text-white dark:from-sky-600 dark:to-sky-700 sm:px-5 sm:py-4">
           <div className="min-w-0">
-            <h2 className="text-base font-semibold text-ink-900 dark:text-white sm:text-lg">
+            <h2 className="text-base font-semibold sm:text-lg">
               {table.label || `Mesa ${table.number}`}
-              <span className="ml-2 text-sm font-normal text-ink-500 dark:text-obsidian-400">
+              <span className="ml-2 text-sm font-normal text-white/80">
                 (cap. {table.capacity})
               </span>
             </h2>
-            <div className="text-xs text-ink-500 dark:text-obsidian-400">
+            <div className="text-xs text-white/80">
               Mesero:{" "}
-              <span className="font-medium text-ink-700 dark:text-obsidian-200">
+              <span className="font-semibold text-white">
                 {table.assigned_user_name || "Sin asignar"}
               </span>
               {order && (
@@ -316,7 +316,7 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
               )}
             </div>
           </div>
-          <button type="button" onClick={onClose} className="btn-ghost shrink-0">
+          <button type="button" onClick={onClose} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/15 transition hover:bg-white/25">
             <X size={18} />
           </button>
         </div>

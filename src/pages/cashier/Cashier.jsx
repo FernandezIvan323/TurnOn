@@ -270,11 +270,17 @@ function OrderRow({ order, turn, onClose, onPrepay, onTicket, onView, highlight 
               <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Pagado</span>
             )
           )}
-          <button onClick={() => onView(order)} className="btn-secondary h-9 text-xs">
+          <button
+            onClick={() => onView(order)}
+            className="inline-flex h-9 items-center gap-1 rounded-lg border border-wine-300 px-3 text-xs font-semibold text-wine-700 transition hover:bg-wine-50 dark:border-wine-700 dark:text-wine-300 dark:hover:bg-wine-900/20"
+          >
             <Eye size={12} /> Ver
           </button>
           {order.payment_status === "paid" && onTicket && (
-            <button onClick={() => onTicket(order)} className="btn-secondary h-9 text-xs">
+            <button
+              onClick={() => onTicket(order)}
+              className="inline-flex h-9 items-center gap-1 rounded-lg border border-sky-300 px-3 text-xs font-semibold text-sky-700 transition hover:bg-sky-50 dark:border-sky-700 dark:text-sky-300 dark:hover:bg-sky-900/20"
+            >
               <Printer size={12} /> Ticket
             </button>
           )}
