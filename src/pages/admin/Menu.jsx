@@ -7,7 +7,7 @@ import Modal from "../../components/Modal";
 import { useAuth } from "../../store/auth";
 import { toast } from "../../store/toast";
 import { money } from "../../lib/format";
-import { Plus, Edit2, Trash2, Tag, ShoppingBag, Search, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Edit2, Trash2, Tag, ShoppingBag, Search } from "lucide-react";
 
 function CategoryModal({ cat, onClose, onSaved }) {
   const [name, setName] = useState(cat?.name || "");
@@ -140,28 +140,43 @@ function ReadOnlyCatalog() {
         {grouped.totalShown} producto{grouped.totalShown === 1 ? "" : "s"} disponible{grouped.totalShown === 1 ? "" : "s"}
       </div>
 
-      <div className="space-y-6">
+<div className="space-y-6">
         {grouped.cats.map((c) => (
           <div key={c.id}>
-            <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-3 flex items-center gap-2">
-              <Tag size={16} className="text-wine-600 dark:text-wine-400"/>
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-ink-800 dark:text-obsidian-50">
+              <Tag size={16} className="text-wine-600 dark:text-wine-400" />
               {c.name}
-              <span className="text-xs text-ink-400 dark:text-obsidian-500 font-normal">({c.products.length})</span>
+              <span className="rounded-full bg-wine-100 px-2 py-0.5 text-xs font-bold text-wine-700 dark:bg-wine-900/40 dark:text-wine-300">
+                {c.products.length}
+              </span>
             </h2>
             {c.products.length === 0 ? (
               <div className="text-sm text-ink-400 dark:text-obsidian-500 italic">Sin productos en esta categoría.</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {c.products.map((p) => (
-                  <div key={p.id} className="card p-3 flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
-                      {p.description && <div className="text-xs text-ink-500 dark:text-obsidian-400 mt-0.5">{p.description}</div>}
-                      <div className="text-wine-600 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
+                  <div key={p.id} className="card p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
+                        {p.description && <div className="text-xs text-ink-500 dark:text-obsidian-400 mt-0.5">{p.description}</div>}
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        p.available
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                          : "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
+                      }`}>
+                        {p.available ? "Disponible" : "Agotado"}
+                      </span>
                     </div>
-                    {p.available
-                      ? <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                      : <XCircle size={16} className="text-slate-400 shrink-0 mt-0.5" />}
+                    <div className="mt-2 flex items-end justify-between gap-2">
+                      <div className="text-xl font-bold tabular-nums text-wine-600 dark:text-wine-300">{money(p.price)}</div>
+                      {Number(p.stock) > 0 || Number(p.min_stock) > 0 ? (
+                        <div className={`text-xs font-semibold tabular-nums ${Number(p.stock) === 0 ? "text-rose-700 dark:text-rose-300" : "text-ink-500 dark:text-obsidian-400"}`}>
+                          Stock: {p.stock}
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -170,20 +185,36 @@ function ReadOnlyCatalog() {
         ))}
         {grouped.noCat.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50 mb-3 flex items-center gap-2">
-              <Tag size={16} className="text-ink-400"/>
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-ink-800 dark:text-obsidian-50">
+              <Tag size={16} className="text-ink-400" />
               Sin categoría
+              <span className="rounded-full bg-wine-100 px-2 py-0.5 text-xs font-bold text-wine-700 dark:bg-wine-900/40 dark:text-wine-300">
+                {grouped.noCat.length}
+              </span>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {grouped.noCat.map((p) => (
-                <div key={p.id} className="card p-3 flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
-                    <div className="text-wine-600 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
+                <div key={p.id} className="card p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      p.available
+                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                        : "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
+                    }`}>
+                      {p.available ? "Disponible" : "Agotado"}
+                    </span>
                   </div>
-                  {p.available
-                    ? <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                    : <XCircle size={16} className="text-slate-400 shrink-0 mt-0.5" />}
+                  <div className="mt-2 flex items-end justify-between gap-2">
+                    <div className="text-xl font-bold tabular-nums text-wine-600 dark:text-wine-300">{money(p.price)}</div>
+                    {Number(p.stock) > 0 || Number(p.min_stock) > 0 ? (
+                      <div className={`text-xs font-semibold tabular-nums ${Number(p.stock) === 0 ? "text-rose-700 dark:text-rose-300" : "text-ink-500 dark:text-obsidian-400"}`}>
+                        Stock: {p.stock}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               ))}
             </div>

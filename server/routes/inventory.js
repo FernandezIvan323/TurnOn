@@ -13,7 +13,8 @@ router.get("/", async (_req, res) => {
        CASE
          WHEN COALESCE(p.min_stock, 0) > 0 AND p.stock <= p.min_stock THEN true
          ELSE false
-       END AS low_stock
+       END AS low_stock,
+       (SELECT MAX(sm.created_at) FROM stock_movements sm WHERE sm.product_id = p.id) AS last_movement_at
      FROM products p
      LEFT JOIN categories c ON c.id = p.category_id
      ORDER BY p.name`

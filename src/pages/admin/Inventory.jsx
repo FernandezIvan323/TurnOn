@@ -10,6 +10,17 @@ import { toast } from "../../store/toast";
 import { Search, Plus, Minus, History, Package } from "lucide-react";
 import { money } from "../../lib/format";
 
+function timeAgo(iso) {
+  if (!iso) return "—";
+  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 1) return "ahora";
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} h`;
+  const d = Math.floor(h / 24);
+  return `${d} d`;
+}
+
 function MovementModal({ product, onClose }) {
   const [movements, setMovements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -177,20 +188,30 @@ export default function Inventory() {
       ) : (
         <div className="data-table-wrap">
           <div className="data-table-scroll">
-            <table className="data-table min-w-[32rem]">
+            <table className="data-table min-w-[40rem]">
               <thead>
                 <tr>
                   <th>Producto</th>
                   <th>Categoría</th>
                   <th className="text-right">Stock</th>
                   <th className="text-right">Min.</th>
+                  <th className="text-right">Últ. movimiento</th>
                   <th className="text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((p) => (
                   <tr key={p.id} className={p.low_stock ? "!bg-rose-50/60 dark:!bg-rose-900/15" : undefined}>
-                    <td className="cell-strong">{p.name}</td>
+                    <td className="cell-strong">
+                      {p.name}
+                      <span className={`ml-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                        p.low_stock
+                          ? "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
+                          : "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                      }`}>
+                        {p.low_stock ? "Bajo" : "OK"}
+                      </span>
+                    </td>
                     <td className="cell-muted">{p.category_name || "—"}</td>
                     <td className="text-right">
                       <div className={`font-semibold tabular-nums ${p.low_stock ? "text-rose-700 dark:text-rose-300" : "text-ink-800 dark:text-white"}`}>
@@ -204,6 +225,9 @@ export default function Inventory() {
                       </div>
                     </td>
                     <td className="text-right cell-muted tabular-nums">{p.min_stock}</td>
+                    <td className="text-right cell-muted">
+                      {p.last_movement_at ? timeAgo(p.last_movement_at) : "—"}
+                    </td>
                     <td className="text-right">
                       <button onClick={() => setMovements(p)} className="btn-ghost text-xs" title="Historial" aria-label={`Historial de ${p.name}`}><History size={14}/></button>
                       <button onClick={() => setEditing(p)} className="btn-ghost text-xs" title="Ajustar stock" aria-label={`Ajustar stock de ${p.name}`}><Package size={14}/></button>
@@ -212,7 +236,7 @@ export default function Inventory() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center cell-muted">Sin resultados</td>
+                    <td colSpan={6} className="py-8 text-center cell-muted">Sin resultados</td>
                   </tr>
                 )}
               </tbody>

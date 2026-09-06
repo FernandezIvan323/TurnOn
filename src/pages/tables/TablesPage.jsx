@@ -870,6 +870,7 @@ export default function TablesPage() {
               {t.number}
             </div>
             {t.label && <div className="text-xs text-ink-500">{t.label}</div>}
+            <div className="text-[10px] text-ink-400 dark:text-obsidian-500">Cap. {t.capacity}</div>
           </div>
           <div className="flex flex-col items-end gap-1">
             <div className={`h-3 w-3 rounded-full ${dotClass}`} />
@@ -880,9 +881,13 @@ export default function TablesPage() {
             )}
           </div>
         </div>
-        <div className="mt-2 text-xs text-ink-500">Capacidad: {t.capacity}</div>
-        <div className="mt-1 truncate text-[11px] font-medium text-ink-600 dark:text-obsidian-300">
-          {t.assigned_user_name || "Sin mesero"}
+<div className="mt-2 flex items-center gap-2 text-xs text-ink-500">
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-paper-200 text-[9px] font-bold text-ink-600 dark:bg-obsidian-700 dark:text-obsidian-200">
+            {t.assigned_user_name ? t.assigned_user_name.split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase() : "—"}
+          </div>
+          <span className="truncate text-[11px] font-medium text-ink-600 dark:text-obsidian-300">
+            {t.assigned_user_name || "Sin mesero"}
+          </span>
         </div>
 
         {occ ? (
@@ -893,26 +898,31 @@ export default function TablesPage() {
                 {money(t.current_order_total)}
               </span>
             </div>
-            <div className="flex items-center gap-1 text-[11px] text-ink-500">
-              <Clock size={10} /> {timeAgo(t.current_order_created)}
+            <div className="flex items-center justify-between text-[11px] text-ink-500">
+              <span className="flex items-center gap-1">
+                <Clock size={10} /> {timeAgo(t.current_order_created)}
+              </span>
+              {readyToPay ? (
+                <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                  Lista para cobrar
+                </span>
+              ) : preparing ? (
+                <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                  En cocina
+                </span>
+              ) : (
+                <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">
+                  Pendiente
+                </span>
+              )}
             </div>
-            {readyToPay ? (
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
-                <Receipt size={10} /> Lista para cobrar
-              </div>
-            ) : preparing ? (
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
-                <ChefHat size={10} /> En cocina
-              </div>
-            ) : (
-              <div className="text-[11px] text-rose-700 dark:text-rose-300">
-                Tomando pedido
-              </div>
-            )}
           </div>
         ) : (
-          <div className="mt-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-            Libre
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Libre</span>
+            <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+              Libre
+            </span>
           </div>
         )}
       </button>

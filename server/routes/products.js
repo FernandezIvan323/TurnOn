@@ -7,6 +7,7 @@ const router = Router();
 router.get("/", authRequired, async (_req, res) => {
   const { rows } = await query(
     `SELECT p.id, p.name, p.description, p.price, p.available,
+            p.stock, p.min_stock,
             p.category_id, c.name AS category_name
        FROM products p
        LEFT JOIN categories c ON c.id = p.category_id
