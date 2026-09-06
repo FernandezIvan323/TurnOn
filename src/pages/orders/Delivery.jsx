@@ -33,11 +33,11 @@ const COLUMNS = [
 ];
 
 const DELIVERY_STATUS_ACCENT = {
-  pending: "border-l-amber-500 bg-gradient-to-br from-amber-50/80 to-white dark:from-amber-500/20 dark:to-obsidian-900",
-  preparing: "border-l-blue-500 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-500/20 dark:to-obsidian-900",
-  assigned: "border-l-violet-500 bg-gradient-to-br from-violet-50/80 to-white dark:from-violet-500/20 dark:to-obsidian-900",
-  on_the_way: "border-l-indigo-500 bg-gradient-to-br from-indigo-50/80 to-white dark:from-indigo-500/20 dark:to-obsidian-900",
-  delivered: "border-l-emerald-500 bg-gradient-to-br from-emerald-50/60 to-white dark:from-emerald-500/20 dark:to-obsidian-900",
+  pending: "border-l-amber-500 bg-gradient-to-br from-amber-50/80 to-white dark:from-amber-600/50 dark:to-obsidian-900",
+  preparing: "border-l-blue-500 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-600/50 dark:to-obsidian-900",
+  assigned: "border-l-violet-500 bg-gradient-to-br from-violet-50/80 to-white dark:from-violet-600/50 dark:to-obsidian-900",
+  on_the_way: "border-l-indigo-500 bg-gradient-to-br from-indigo-50/80 to-white dark:from-indigo-600/50 dark:to-obsidian-900",
+  delivered: "border-l-emerald-500 bg-gradient-to-br from-emerald-50/60 to-white dark:from-emerald-600/50 dark:to-obsidian-900",
 };
 
 function OrderCard({ order, turn, isNext, onClick, onAssign, onCancel, onPreparing, onBackPending, onReopen }) {

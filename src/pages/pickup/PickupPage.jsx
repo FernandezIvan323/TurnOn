@@ -32,11 +32,11 @@ const ESTIMATE_PRESETS = [5, 10, 15, 20, 30];
 
 const PICKUP_STATUS_ACCENT = {
   pending:
-    "border-l-amber-500 bg-gradient-to-br from-amber-50/80 to-white dark:from-amber-500/20 dark:to-obsidian-900",
+    "border-l-amber-500 bg-gradient-to-br from-amber-50/80 to-white dark:from-amber-600/50 dark:to-obsidian-900",
   preparing:
-    "border-l-blue-500 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-500/20 dark:to-obsidian-900",
+    "border-l-blue-500 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-600/50 dark:to-obsidian-900",
   ready_to_pay:
-    "border-l-emerald-500 bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-500/20 dark:to-obsidian-900",
+    "border-l-emerald-500 bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-600/50 dark:to-obsidian-900",
 };
 
 function WaitTimeBadge({ createdAt, estimateMin }) {
