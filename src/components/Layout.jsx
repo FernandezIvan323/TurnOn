@@ -7,7 +7,7 @@ import Toaster from "./Toaster";
 import TopNavLinks from "./TopNavLinks";
 import { useAuth } from "../store/auth";
 import { useLayoutPref } from "../hooks/useLayoutPref";
-import { Menu, List, LayoutGrid } from "lucide-react";
+import { Menu, List, LayoutGrid, ArrowLeft } from "lucide-react";
 
 export default function Layout() {
   const { user } = useAuth();
@@ -39,6 +39,16 @@ export default function Layout() {
               >
                 <Menu size={24} />
               </button>
+            )}
+            {isGrid && !onDashboard && (
+              <Link
+                to="/dashboard"
+                className="btn-ghost h-10 w-10 shrink-0 p-0"
+                aria-label="Cerrar sección y volver al inicio"
+                title="Cerrar sección"
+              >
+                <ArrowLeft size={22} />
+              </Link>
             )}
             <Link to="/dashboard" className={`flex min-w-0 items-center gap-2 ${!isGrid ? "lg:hidden" : ""}`}>
               <img

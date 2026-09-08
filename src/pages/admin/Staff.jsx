@@ -18,7 +18,6 @@ function StaffTabs({ value, onChange }) {
         { value: "delivery",    label: "Repartidores", icon: Bike },
         { value: "waiters",     label: "Meseros",      icon: UserPlus },
         { value: "tables",      label: "Mesas",        icon: Utensils },
-        { value: "assignments", label: "Asignar",      icon: UserCog },
       ]}
     />
   );
@@ -699,7 +698,13 @@ function WaiterHistoryModal({ waiter, onClose }) {
                                   : o.payment_method || "—"}
                           </span>
                           <div className="text-right">
-                            <span className="font-bold tabular-nums text-ink-800 dark:text-obsidian-50">
+                            <span className={`font-bold tabular-nums ${
+                              o.payment_status === "paid"
+                                ? "text-emerald-700 dark:text-emerald-300"
+                                : o.payment_status === "debt"
+                                ? "text-rose-700 dark:text-rose-300"
+                                : "text-ink-800 dark:text-obsidian-50"
+                            }`}>
                               {moneyFmt(o.total)}
                             </span>
                             {Number(o.tip) > 0 && (
@@ -754,11 +759,9 @@ export default function Staff() {
         right={
           <div className="flex items-center gap-2">
             <StaffTabs value={tab} onChange={setTab} />
-            {tab !== "assignments" && (
-              <button onClick={() => setCreating(true)} className="btn-primary">
-                <Plus size={16}/> Nuevo
-              </button>
-            )}
+            <button onClick={() => setCreating(true)} className="btn-primary">
+              <Plus size={16}/> Nuevo
+            </button>
           </div>
         }
       />
@@ -814,6 +817,17 @@ export default function Staff() {
                           title={`Crear acceso para ${p.name}`}
                         >
                           <KeyRound size={12} /> Crear acceso
+                        </button>
+                      )}
+                      {p.user_id && (
+                        <button
+                          type="button"
+                          onClick={() => setPinUser({ id: p.user_id, username: p.username, name: p.name })}
+                          className="btn-ghost text-xs"
+                          title={`Cambiar PIN de ${p.name}`}
+                          aria-label={`Cambiar PIN de ${p.name}`}
+                        >
+                          <KeyRound size={14} />
                         </button>
                       )}
                       <button onClick={() => setEditing({ type: "delivery", value: p })} className="btn-ghost text-xs" title={`Editar ${p.name}`} aria-label={`Editar ${p.name}`}><Edit2 size={14}/></button>
@@ -899,6 +913,15 @@ export default function Staff() {
         </div>
       )}
 
+      {tab === "waiters" && (
+        <div className="mt-8">
+          <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink-700 dark:text-white">
+            Asignación de mesas
+          </h3>
+          <AssignmentsTab />
+        </div>
+      )}
+
       {tab === "tables" && (
         <div className="data-table-wrap">
           <div className="data-table-scroll">
@@ -952,7 +975,7 @@ export default function Staff() {
         </div>
       )}
 
-      {tab === "assignments" && <AssignmentsTab />}
+      {/* La asignación de mesas vive dentro del tab Meseros */}
 
       {creating && tab === "delivery" && <DeliveryModal onClose={() => setCreating(false)} onSaved={load} />}
       {creating && tab === "waiters" && <WaiterModal onClose={() => setCreating(false)} onSaved={load} />}

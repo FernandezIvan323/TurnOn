@@ -26,7 +26,7 @@ export default function OrderCard({ order, onClick, footer = null, rotateIndex =
       onClick={onClick}
       className={`block w-full overflow-hidden rounded-2xl border border-paper-200 border-l-4 bg-gradient-to-br text-left shadow-soft transition hover:-translate-y-0.5 hover:border-wine-400 hover:shadow-pop dark:border-obsidian-700 dark:hover:border-wine-500/50 ${accent.border} ${accent.bg}`}
     >
-      <div className="p-4">
+      <div className="p-3">
         <div className="mb-2 flex items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1 text-[11px] font-semibold tabular-nums text-ink-500 dark:text-obsidian-400">
             <Clock size={11} /> #{order.id} · {formatTime(order.closed_at || order.created_at)}
@@ -37,21 +37,21 @@ export default function OrderCard({ order, onClick, footer = null, rotateIndex =
         </div>
 
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <TypeIcon size={15} className="shrink-0 text-ink-500 dark:text-obsidian-400" />
-              <h3 className="truncate text-sm font-bold text-ink-900 dark:text-white sm:text-base">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start gap-1.5">
+              <TypeIcon size={15} className="mt-0.5 shrink-0 text-ink-500 dark:text-obsidian-400" />
+              <h3 className="line-clamp-2 text-sm font-bold leading-snug text-ink-900 dark:text-white">
                 {title}
               </h3>
             </div>
             {subtitleParts.length > 0 && (
-              <p className="mt-1 truncate text-xs text-ink-500 dark:text-obsidian-400">
+              <p className="mt-1 line-clamp-1 text-xs text-ink-500 dark:text-obsidian-400">
                 {subtitleParts.join(" · ")}
               </p>
             )}
           </div>
           <div className="shrink-0 text-right">
-            <div className="text-lg font-bold tabular-nums text-ink-900 dark:text-white sm:text-xl">
+            <div className="text-base font-bold tabular-nums text-ink-900 dark:text-white sm:text-lg">
               {money(order.total)}
             </div>
             <div className="text-[10px] font-medium text-ink-400 dark:text-obsidian-500">

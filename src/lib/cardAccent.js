@@ -1,4 +1,5 @@
 import { Utensils, Truck, ShoppingBag } from "lucide-react";
+import { statusLabels, payMethodLabel } from "./format";
 
 /**
  * Acentos semánticos por estado de pedido + paleta rotativa.
@@ -107,3 +108,33 @@ export const TYPE_ICON = {
   delivery: Truck,
   pickup: ShoppingBag,
 };
+
+/**
+ * Banda de estado (fondo + texto) para las ventanas de detalle.
+ * Devuelve { label, className }.
+ */
+export function statusBanner(order) {
+  if (!order) return { label: "", className: "bg-paper-100 text-ink-700 dark:bg-obsidian-800 dark:text-obsidian-200" };
+  let cls = "bg-paper-100 text-ink-700 dark:bg-obsidian-800 dark:text-obsidian-200";
+  let label = statusLabels[order.status] || order.status;
+
+  if (order.payment_status === "debt") {
+    cls = "bg-rose-100 text-rose-900 dark:bg-rose-900/40 dark:text-rose-200";
+    label = "Deuda";
+  } else if (order.payment_status === "paid") {
+    cls = "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200";
+    label = `Pagado · ${payMethodLabel(order.payment_method)}`;
+  } else {
+    const map = {
+      cancelled: "bg-rose-100 text-rose-900 dark:bg-rose-900/40 dark:text-rose-200",
+      on_the_way: "bg-indigo-100 text-indigo-900 dark:bg-indigo-900/40 dark:text-indigo-200",
+      preparing: "bg-blue-100 text-blue-900 dark:bg-blue-900/40 dark:text-blue-200",
+      ready_to_pay: "bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200",
+      assigned: "bg-violet-100 text-violet-900 dark:bg-violet-900/40 dark:text-violet-200",
+      pending: "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200",
+      delivered: "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200",
+    };
+    cls = map[order.status] || cls;
+  }
+  return { label, className: cls };
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../lib/api";
 import DetailModal from "./DetailModal";
 import OrderCard from "./OrderCard";
+import OrderDetailModal from "./OrderDetailModal";
 import { money } from "../lib/format";
 
 /**
@@ -12,6 +13,7 @@ export default function RiderHistoryModal({ rider, onClose }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
+  const [viewOrder, setViewOrder] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,10 +59,11 @@ export default function RiderHistoryModal({ rider, onClose }) {
       ) : (
         <div className="space-y-2">
           {history.map((o, i) => (
-            <OrderCard key={o.id} order={o} rotateIndex={i} />
+            <OrderCard key={o.id} order={o} rotateIndex={i} onClick={() => setViewOrder(o)} />
           ))}
         </div>
       )}
+      {viewOrder && <OrderDetailModal order={viewOrder} onClose={() => setViewOrder(null)} />}
     </DetailModal>
   );
 }

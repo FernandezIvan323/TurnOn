@@ -2,15 +2,23 @@ import { X } from "lucide-react";
 
 /**
  * Shell unificado de ventana de detalle (moderno, color vivido por tipo).
- * Borde superior de color, cabecera jerarquizada, backdrop oscurecido.
+ * Borde superior de color, cabecera jerarquizada, banda de estado opcional.
  */
 const TYPE_HEADER = {
-  table: "from-sky-500 to-sky-600",
-  delivery: "from-indigo-500 to-indigo-600",
+  table: "from-sky-600 to-sky-700",
+  delivery: "from-indigo-600 to-indigo-700",
   pickup: "from-amber-500 to-amber-600",
 };
 
-export default function DetailModal({ title, badge, type = "table", amount, onClose, children }) {
+export default function DetailModal({
+  title,
+  badge,
+  type = "table",
+  amount,
+  onClose,
+  status, // { label, className }
+  children,
+}) {
   const headerGrad = TYPE_HEADER[type] || TYPE_HEADER.table;
 
   return (
@@ -28,10 +36,10 @@ export default function DetailModal({ title, badge, type = "table", amount, onCl
         <div className={`relative bg-gradient-to-r ${headerGrad} px-5 py-4 text-white`}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <span className="inline-flex rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide">
+              <span className="inline-flex rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide">
                 {badge}
               </span>
-              <h2 className="mt-1.5 text-xl font-bold leading-tight">{title}</h2>
+              <h2 className="mt-1.5 truncate text-xl font-bold leading-tight">{title}</h2>
               {amount != null && (
                 <div className="mt-1 text-2xl font-extrabold tabular-nums">{amount}</div>
               )}
@@ -39,7 +47,7 @@ export default function DetailModal({ title, badge, type = "table", amount, onCl
             <button
               type="button"
               onClick={onClose}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/15 text-white transition hover:bg-white/25"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/20 transition hover:bg-white/30"
               aria-label="Cerrar"
             >
               <X size={20} />
@@ -47,7 +55,14 @@ export default function DetailModal({ title, badge, type = "table", amount, onCl
           </div>
         </div>
 
-        <div className="max-h-[70vh] overflow-y-auto p-5">{children}</div>
+        {/* Banda de estado */}
+        {status && (
+          <div className={`px-5 py-2 text-sm font-semibold ${status.className}`}>
+            {status.label}
+          </div>
+        )}
+
+        <div className="max-h-[60vh] overflow-y-auto p-5">{children}</div>
       </div>
     </div>
   );

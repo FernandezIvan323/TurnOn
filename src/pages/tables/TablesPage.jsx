@@ -677,34 +677,45 @@ function TableHistoryModal({ onClose }) {
               Mesa {selectedTable.number} sin pedidos previos.
             </div>
           )}
-          {selectedTable && !loading && history.length > 0 && (
+{selectedTable && !loading && history.length > 0 && (
             <div className="space-y-2">
-              {history.map((o) => (
-                <div
-                  key={o.id}
-                  className="card flex items-center justify-between p-3 text-sm"
-                >
-                  <div>
-                    <div className="font-medium text-ink-900 dark:text-white">
-                      #{o.id}
-                    </div>
-                    <div className="text-xs text-ink-500">
-                      {o.user_name && `por ${o.user_name}`} ·{" "}
-                      {o.closed_at
-                        ? new Date(o.closed_at).toLocaleDateString()
-                        : new Date(o.created_at).toLocaleDateString()}
+              {history.map((o) => {
+                const borderCls =
+                  o.status === "paid" || o.status === "delivered"
+                    ? "border-l-emerald-500"
+                    : o.status === "cancelled"
+                    ? "border-l-rose-500"
+                    : o.status === "ready_to_pay"
+                    ? "border-l-amber-500"
+                    : o.status === "preparing"
+                    ? "border-l-blue-500"
+                    : "border-l-rose-500";
+                return (
+                  <div key={o.id} className={`card border-l-4 p-3 ${borderCls}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-ink-900 dark:text-white">
+                          Pedido #{o.id}
+                        </div>
+                        <div className="text-xs text-ink-600 dark:text-obsidian-400">
+                          {o.user_name ? `por ${o.user_name}` : "—"} ·{" "}
+                          {o.closed_at
+                            ? new Date(o.closed_at).toLocaleDateString()
+                            : new Date(o.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <div className="font-bold tabular-nums text-ink-900 dark:text-white">
+                          {money(o.total)}
+                        </div>
+                        <span className={`badge text-[10px] ${statusColors[o.status] || ""}`}>
+                          {statusLabels[o.status] || o.status}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold">{money(o.total)}</div>
-                    <span
-                      className={`badge text-[10px] ${statusColors[o.status]}`}
-                    >
-                      {statusLabels[o.status]}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

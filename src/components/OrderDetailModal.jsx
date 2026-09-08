@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../lib/api";
 import DetailModal from "./DetailModal";
 import { money, payMethodLabel } from "../lib/format";
+import { statusBanner } from "../lib/cardAccent";
 import { Phone, MapPin, Truck, CreditCard } from "lucide-react";
 
 /**
@@ -41,6 +42,7 @@ export default function OrderDetailModal({ order, onClose }) {
       badge={typeLabel}
       type={detail?.type || "table"}
       amount={money(detail?.total)}
+      status={statusBanner(detail)}
       onClose={onClose}
     >
       {/* Datos */}

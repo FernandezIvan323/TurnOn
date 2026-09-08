@@ -12,6 +12,7 @@ import {
   statusColors,
 } from "../../lib/format";
 import { kanbanColumnClass, KANBAN_COUNT_PILL } from "../../lib/kanbanTones";
+import { statusBanner } from "../../lib/cardAccent";
 import Modal from "../../components/Modal";
 import SharedOrderCard from "../../components/OrderCard";
 import RiderHistoryModal from "../../components/RiderHistoryModal";
@@ -657,6 +658,7 @@ function OrderDetailModal({ order, onClose, onChanged }) {
       badge="Domicilio"
       type="delivery"
       amount={money(order.total)}
+      status={statusBanner(order)}
       onClose={onClose}
     >
       <div className="mb-4 grid grid-cols-2 gap-3 text-sm">
@@ -1070,7 +1072,7 @@ export default function Delivery() {
               No hay pedidos {filter === "delivered" ? "entregados" : "cancelados"}.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {(enriched.length ? enriched : filtered).map((o, i) => (
                 <CompletedDeliveryCard
                   key={o.id}
