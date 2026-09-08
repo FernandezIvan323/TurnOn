@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../lib/api";
 import DetailModal from "./DetailModal";
 import { money, payMethodLabel } from "../lib/format";
-import { statusBanner } from "../lib/cardAccent";
+import { statusBanner, TYPE_ICON } from "../lib/cardAccent";
 import { Phone, MapPin, Truck, CreditCard } from "lucide-react";
 
 /**
@@ -35,6 +35,7 @@ export default function OrderDetailModal({ order, onClose }) {
   const items = detail?.items || [];
   const typeLabel =
     detail?.type === "table" ? "Mesa" : detail?.type === "pickup" ? "Para llevar" : "Domicilio";
+  const TypeIcon = TYPE_ICON[detail?.type] || TYPE_ICON.table;
 
   return (
     <DetailModal
@@ -46,63 +47,69 @@ export default function OrderDetailModal({ order, onClose }) {
       onClose={onClose}
     >
       {/* Datos */}
-      <div className="mb-4 grid grid-cols-2 gap-3 text-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-ink-400 dark:text-obsidian-500">Tipo</span>
-          <b className="text-ink-900 dark:text-white">{typeLabel}</b>
+      <div className="rounded-xl border border-paper-200 bg-paper-50/60 p-3 dark:border-obsidian-700 dark:bg-obsidian-950/40">
+        <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ink-500 dark:text-obsidian-400">
+          <TypeIcon size={16} className="text-wine-600 dark:text-wine-300" />
+          Información
         </div>
-        <div className="flex items-center gap-2">
-          <CreditCard size={14} className="text-ink-400" />
-          <b className="text-ink-900 dark:text-white">
-            {detail?.payment_method ? payMethodLabel(detail.payment_method) : "—"}
-          </b>
-        </div>
-
-        {detail?.type === "table" ? (
-          <div className="col-span-2 flex items-center gap-2">
-            <span className="text-ink-400 dark:text-obsidian-500">Mesa</span>
+        <div className="grid grid-cols-2 gap-3 text-sm sm:text-base">
+          <div className="flex items-center gap-2">
+            <span className="text-ink-400 dark:text-obsidian-500">Tipo</span>
+            <b className="text-ink-900 dark:text-white">{typeLabel}</b>
+          </div>
+          <div className="flex items-center gap-2">
+            <CreditCard size={16} className="text-ink-400" />
             <b className="text-ink-900 dark:text-white">
-              {detail?.table_number || "—"}
-              {detail?.table_label ? ` · ${detail.table_label}` : ""}
+              {detail?.payment_method ? payMethodLabel(detail.payment_method) : "—"}
             </b>
           </div>
-        ) : (
-          <>
-            <div className="flex items-center gap-2">
-              <span className="text-ink-400 dark:text-obsidian-500">Cliente</span>
-              <b className="truncate text-ink-900 dark:text-white">{detail?.customer_name || "—"}</b>
-            </div>
-            <div className="flex items-center gap-2">
-              <Phone size={14} className="text-ink-400" />
-              <span className="text-ink-700 dark:text-obsidian-200">{detail?.customer_phone || "—"}</span>
-            </div>
-            {(detail?.customer_address || detail?.customer_neighborhood) && (
-              <div className="col-span-2 flex items-start gap-2">
-                <MapPin size={14} className="mt-0.5 shrink-0 text-ink-400" />
-                <span className="text-ink-700 dark:text-obsidian-200">
-                  {[detail?.customer_neighborhood, detail?.customer_address].filter(Boolean).join(" · ")}
-                </span>
-              </div>
-            )}
-            {detail?.delivery_name && (
-              <div className="flex items-center gap-2">
-                <Truck size={14} className="text-indigo-500" />
-                <b className="text-ink-900 dark:text-white">{detail.delivery_name}</b>
-              </div>
-            )}
-          </>
-        )}
 
-        {Number(detail?.tip) > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-ink-400 dark:text-obsidian-500">Propina</span>
-            <b className="text-emerald-700 dark:text-emerald-300">{money(detail.tip)}</b>
-          </div>
-        )}
+          {detail?.type === "table" ? (
+            <div className="col-span-2 flex items-center gap-2">
+              <span className="text-ink-400 dark:text-obsidian-500">Mesa</span>
+              <b className="text-ink-900 dark:text-white">
+                {detail?.table_number || "—"}
+                {detail?.table_label ? ` · ${detail.table_label}` : ""}
+              </b>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-ink-400 dark:text-obsidian-500">Cliente</span>
+                <b className="truncate text-ink-900 dark:text-white">{detail?.customer_name || "—"}</b>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone size={16} className="text-ink-400" />
+                <span className="text-ink-700 dark:text-obsidian-200">{detail?.customer_phone || "—"}</span>
+              </div>
+              {(detail?.customer_address || detail?.customer_neighborhood) && (
+                <div className="col-span-2 flex items-start gap-2">
+                  <MapPin size={16} className="mt-0.5 shrink-0 text-ink-400" />
+                  <span className="text-ink-700 dark:text-obsidian-200">
+                    {[detail?.customer_neighborhood, detail?.customer_address].filter(Boolean).join(" · ")}
+                  </span>
+                </div>
+              )}
+              {detail?.delivery_name && (
+                <div className="flex items-center gap-2">
+                  <Truck size={16} className="text-indigo-500" />
+                  <b className="text-ink-900 dark:text-white">{detail.delivery_name}</b>
+                </div>
+              )}
+            </>
+          )}
+
+          {Number(detail?.tip) > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-ink-400 dark:text-obsidian-500">Propina</span>
+              <b className="text-emerald-700 dark:text-emerald-300">{money(detail.tip)}</b>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Productos */}
-      <p className="mb-2 text-xs font-bold uppercase tracking-widest text-ink-500 dark:text-obsidian-400">
+      <p className="mb-2 mt-5 flex items-center gap-2 border-t border-paper-200 pt-4 text-xs font-bold uppercase tracking-widest text-ink-500 dark:border-obsidian-800 dark:text-obsidian-400">
         Productos
       </p>
       <div className="space-y-1.5">
@@ -114,7 +121,7 @@ export default function OrderDetailModal({ order, onClose }) {
           items.map((it, i) => (
             <div
               key={it.id ?? i}
-              className="flex items-center justify-between border-b border-paper-200 py-1.5 text-sm last:border-0 dark:border-obsidian-800"
+              className="flex items-center justify-between rounded-lg border border-paper-200 px-3 py-2 text-sm last:border-0 dark:border-obsidian-800"
             >
               <div className="min-w-0">
                 <div className="font-medium text-ink-800 dark:text-obsidian-50">

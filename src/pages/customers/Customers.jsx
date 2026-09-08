@@ -3,11 +3,12 @@ import api from "../../lib/api";
 import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
 import Modal from "../../components/Modal";
+import ConfirmModal from "../../components/ConfirmModal";
 import EmptyState from "../../components/EmptyState";
 import { TableSkeleton } from "../../components/Skeleton";
 import { toast } from "../../store/toast";
 import { money, formatDate } from "../../lib/format";
-import { Search, Phone, MapPin, StickyNote, Plus, Edit2, Users } from "lucide-react";
+import { Search, Phone, MapPin, StickyNote, Plus, Edit2, Trash2, Users } from "lucide-react";
 
 function CustomerModal({ customer, onClose, onSaved }) {
   const [form, setForm] = useState({
@@ -111,9 +112,21 @@ export default function Customers() {
   const [q, setQ] = useState("");
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState(null);
+const [editing, setEditing] = useState(null);
   const [creating, setCreating] = useState(false);
   const [viewing, setViewing] = useState(null);
+  const [toDelete, setToDelete] = useState(null);
+
+  const confirmDelete = async () => {
+    try {
+      await api.delete(`/customers/${toDelete.id}`);
+      toast.success("Cliente eliminado");
+      setToDelete(null);
+      search(q);
+    } catch (e) {
+      toast.error(e.response?.data?.error || e.message);
+    }
+  };
 
   const search = async (term) => {
     setLoading(true);
@@ -167,9 +180,10 @@ export default function Customers() {
                     <td className="cell-strong">{c.name}</td>
                     <td>{c.phone}</td>
                     <td className="cell-muted">{c.address || "—"}</td>
-                    <td className="text-right">
+<td className="text-right">
                       <button onClick={() => setViewing(c)} className="btn-ghost text-xs">Historial</button>
                       <button onClick={() => setEditing(c)} className="btn-ghost text-xs" aria-label={`Editar ${c.name}`}><Edit2 size={14}/></button>
+                      <button onClick={() => setToDelete(c)} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" aria-label={`Eliminar ${c.name}`}><Trash2 size={14}/></button>
                     </td>
                   </tr>
                 ))}
@@ -181,7 +195,16 @@ export default function Customers() {
 
       {creating && <CustomerModal onClose={() => setCreating(false)} onSaved={() => search(q)} />}
       {editing && <CustomerModal customer={editing} onClose={() => setEditing(null)} onSaved={() => search(q)} />}
-      {viewing && <HistoryModal customer={viewing} onClose={() => setViewing(null)} />}
+{viewing && <HistoryModal customer={viewing} onClose={() => setViewing(null)} />}
+      {toDelete && (
+        <ConfirmModal
+          title="Eliminar cliente"
+          message={`¿Eliminar a ${toDelete.name}? Sus pedidos pasarán a no tener cliente asignado. Esta acción no se puede deshacer.`}
+          confirmText="Eliminar"
+          onConfirm={confirmDelete}
+          onCancel={() => setToDelete(null)}
+        />
+      )}
     </div>
   );
 }

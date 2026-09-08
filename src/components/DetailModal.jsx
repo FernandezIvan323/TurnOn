@@ -5,9 +5,9 @@ import { X } from "lucide-react";
  * Borde superior de color, cabecera jerarquizada, banda de estado opcional.
  */
 const TYPE_HEADER = {
-  table: "from-sky-600 to-sky-700",
-  delivery: "from-indigo-600 to-indigo-700",
-  pickup: "from-amber-500 to-amber-600",
+  table: "from-sky-700 to-sky-800",
+  delivery: "from-indigo-700 to-indigo-800",
+  pickup: "from-amber-600 to-amber-700",
 };
 
 export default function DetailModal({
@@ -36,12 +36,12 @@ export default function DetailModal({
         <div className={`relative bg-gradient-to-r ${headerGrad} px-5 py-4 text-white`}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <span className="inline-flex rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide">
+              <span className="inline-flex rounded-full bg-white/25 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide">
                 {badge}
               </span>
-              <h2 className="mt-1.5 truncate text-xl font-bold leading-tight">{title}</h2>
+              <h2 className="mt-1.5 truncate text-2xl font-bold leading-tight">{title}</h2>
               {amount != null && (
-                <div className="mt-1 text-2xl font-extrabold tabular-nums">{amount}</div>
+                <div className="mt-0.5 text-2xl font-extrabold tabular-nums">{amount}</div>
               )}
             </div>
             <button

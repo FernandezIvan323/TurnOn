@@ -857,7 +857,7 @@ export default function Staff() {
                   <th>Usuario</th>
                   <th>Nombre</th>
                   <th>Mesas</th>
-                  <th>Estado</th>
+                  <th>Acceso</th>
                   <th className="text-right">Acciones</th>
                 </tr>
               </thead>
@@ -890,7 +890,7 @@ export default function Staff() {
                       </td>
                       <td>
                         <span className={`badge ${w.active ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-obsidian-800 dark:text-obsidian-400"}`}>
-                          {w.active ? "Activo" : "Inactivo"}
+                          {w.active ? "Con acceso" : "Sin acceso"}
                         </span>
                       </td>
                       <td className="space-x-1 text-right">

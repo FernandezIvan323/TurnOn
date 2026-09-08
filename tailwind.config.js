@@ -29,6 +29,20 @@ export default {
           800: "#4a0506",
           900: "#2e0304",
         },
+        // "rose" se redefina al rojo saturado de la marca para unificar el rojo
+        // de peligro/negativo (deudas, gastos, eliminar, dashboard) con 'wine'.
+        rose: {
+          50:  "#FFF5F5",
+          100: "#FFE0E0",
+          200: "#FFC0C0",
+          300: "#e5383b",
+          400: "#d32f2f",
+          500: "#ba181b",
+          600: "#a4161a",
+          700: "#660708",
+          800: "#4a0506",
+          900: "#2e0304",
+        },
         // Light surfaces — blanco moderno (fondo y cards #fff)
         paper: {
           50:  "#ffffff",

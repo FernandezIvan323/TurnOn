@@ -45,11 +45,6 @@ export default function RiderHistoryModal({ rider, onClose }) {
       amount={`${rider.deliveries || history.length} domicilios · ${money(rider.revenue ?? total)}`}
       onClose={onClose}
     >
-      <div className="mb-3 flex items-center justify-between rounded-xl border border-indigo-200 bg-indigo-50/60 px-3 py-2 text-sm dark:border-indigo-800 dark:bg-indigo-900/20">
-        <span className="font-semibold text-indigo-800 dark:text-indigo-200">Total entregado</span>
-        <span className="text-lg font-bold text-indigo-700 dark:text-indigo-300">{money(total)}</span>
-      </div>
-
       {loading ? (
         <div className="text-sm text-ink-500">Cargando pedidos…</div>
       ) : err ? (

@@ -294,31 +294,34 @@ function OrderModal({ table, onClose, onChanged, onGoCashier, isAdmin }) {
   return (
 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-3 backdrop-blur-sm sm:p-4">
       <div className="card flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden">
-        <div className="flex items-center justify-between bg-gradient-to-r from-sky-500 to-sky-600 px-4 py-3 text-white dark:from-sky-600 dark:to-sky-700 sm:px-5 sm:py-4">
-          <div className="min-w-0">
-            <h2 className="text-base font-semibold sm:text-lg">
-              {table.label || `Mesa ${table.number}`}
-              <span className="ml-2 text-sm font-normal text-white/80">
-                (cap. {table.capacity})
+        <div className="bg-gradient-to-r from-sky-700 to-sky-800 px-5 py-4 text-white">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <span className="inline-flex rounded-full bg-white/25 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide">
+                Mesa
               </span>
-            </h2>
-            <div className="text-xs text-white/80">
-              Mesero:{" "}
-              <span className="font-semibold text-white">
-                {table.assigned_user_name || "Sin asignar"}
-              </span>
-              {order && (
-                <>
-                  {" "}
-                  · Pedido #{order.id} · abierto {formatTime(order.created_at)} · hace{" "}
-                  {timeAgo(order.created_at)}
-                </>
-              )}
+              <h2 className="mt-1.5 text-2xl font-bold leading-tight">
+                {table.label || `Mesa ${table.number}`}
+              </h2>
+              <div className="text-sm text-white/85">
+                {isAdmin
+                  ? "El cajero cobra; el mesero gestiona el pedido"
+                  : "Mesero: "}
+                <span className="font-semibold text-white">
+                  {isAdmin ? "" : table.assigned_user_name || "Sin asignar"}
+                </span>
+                {order && (
+                  <>
+                    {" "}
+                    · Pedido #{order.id} · {formatTime(order.created_at)}
+                  </>
+                )}
+              </div>
             </div>
+            <button type="button" onClick={onClose} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/20 transition hover:bg-white/30">
+              <X size={20} />
+            </button>
           </div>
-          <button type="button" onClick={onClose} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/15 transition hover:bg-white/25">
-            <X size={18} />
-          </button>
         </div>
 
         {order && order.status === "ready_to_pay" && (
@@ -880,8 +883,8 @@ export default function TablesPage() {
             <div className="text-2xl font-bold text-ink-900 dark:text-white">
               {t.number}
             </div>
-            {t.label && <div className="text-xs text-ink-500">{t.label}</div>}
-            <div className="text-[10px] text-ink-400 dark:text-obsidian-500">Cap. {t.capacity}</div>
+            {t.label && <div className="text-xs text-ink-500 dark:text-obsidian-400">{t.label}</div>}
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Cap. {t.capacity}</div>
           </div>
           <div className="flex flex-col items-end gap-1">
             <div className={`h-3 w-3 rounded-full ${dotClass}`} />
@@ -892,11 +895,11 @@ export default function TablesPage() {
             )}
           </div>
         </div>
-<div className="mt-2 flex items-center gap-2 text-xs text-ink-500">
+<div className="mt-2 flex items-center gap-2 text-xs text-ink-500 dark:text-obsidian-400">
           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-paper-200 text-[9px] font-bold text-ink-600 dark:bg-obsidian-700 dark:text-obsidian-200">
             {t.assigned_user_name ? t.assigned_user_name.split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase() : "—"}
           </div>
-          <span className="truncate text-[11px] font-medium text-ink-600 dark:text-obsidian-300">
+          <span className="truncate text-xs font-medium text-ink-600 dark:text-obsidian-300">
             {t.assigned_user_name || "Sin mesero"}
           </span>
         </div>
@@ -929,9 +932,8 @@ export default function TablesPage() {
             </div>
           </div>
         ) : (
-          <div className="mt-2 flex items-center justify-between">
-            <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Libre</span>
-            <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+          <div className="mt-2 flex items-center">
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
               Libre
             </span>
           </div>
