@@ -6,7 +6,8 @@ import Modal from "../../components/Modal";
 import SegmentedControl from "../../components/SegmentedControl";
 import { useAuth } from "../../store/auth";
 import { toast } from "../../store/toast";
-import { Plus, Edit2, Trash2, X, Bike, Utensils, UserCog, Check, PlusCircle, XCircle, UserPlus, Clock, KeyRound } from "lucide-react";
+import { money } from "../../lib/format";
+import { Plus, Edit2, Trash2, X, Bike, Utensils, UserCog, Check, PlusCircle, XCircle, UserPlus, Clock, KeyRound, CalendarDays, ChevronRight, ArrowLeft } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal";
 
 function StaffTabs({ value, onChange }) {
@@ -502,224 +503,208 @@ function AssignmentsTab() {
   );
 }
 
+function formatDayLabel(iso) {
+  if (!iso) return "—";
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("es-CO", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 function WaiterHistoryModal({ waiter, onClose }) {
-  const [orders, setOrders] = useState([]);
+  const [days, setDays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [range, setRange] = useState("all"); // all | 7 | 30
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const { data } = await api.get(`/reports/waiter-history?user_id=${waiter.id}`);
-        setOrders(Array.isArray(data) ? data : []);
-      } catch (e) {
-        setError(e.response?.data?.error || e.message || "No se pudo cargar");
-        setOrders([]);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    setLoading(true);
+    setError(null);
+    api
+      .get("/reports/my-work-days", { params: { user_id: waiter.id } })
+      .then((r) => setDays(r.data || []))
+      .catch((e) => setError(e.response?.data?.error || e.message))
+      .finally(() => setLoading(false));
   }, [waiter.id]);
 
-  const moneyFmt = (n) =>
-    new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(Number(n || 0));
-
-  const filtered = useMemo(() => {
-    if (range === "all") return orders;
-    const days = Number(range);
-    const cut = Date.now() - days * 86400000;
-    return orders.filter((o) => new Date(o.created_at).getTime() >= cut);
-  }, [orders, range]);
-
-  const paid = filtered.filter((o) => o.payment_status === "paid");
-  const totalVentas = paid.reduce((s, o) => s + Number(o.total), 0);
-  const totalPropinas = paid.reduce((s, o) => s + Number(o.tip || 0), 0);
-
-  const byDay = useMemo(() => {
-    const map = new Map();
-    for (const o of filtered) {
-      const d = new Date(o.created_at);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key).push(o);
+  const openDay = async (date) => {
+    setSelectedDate(date);
+    setDetail(null);
+    setDetailLoading(true);
+    try {
+      const { data } = await api.get(`/reports/my-work-days/${date}`, { params: { user_id: waiter.id } });
+      setDetail(data);
+    } catch (e) {
+      setError(e.response?.data?.error || e.message);
+    } finally {
+      setDetailLoading(false);
     }
-    return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
-  }, [filtered]);
+  };
 
-  const dayLabel = (key) => {
-    const [y, m, d] = key.split("-").map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString("es-CO", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    });
+  const closeDay = () => {
+    setSelectedDate(null);
+    setDetail(null);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="card flex max-h-[90vh] w-full max-w-2xl flex-col p-0"
+        className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-paper-200 bg-white shadow-pop dark:border-obsidian-700 dark:bg-obsidian-900"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 border-b border-paper-200 bg-white p-4 dark:border-obsidian-700 dark:bg-obsidian-900">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">
-                Historial · {waiter.name}
-              </h2>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <span className="rounded-lg bg-paper-100 px-2 py-1 text-xs font-medium dark:bg-obsidian-800">
-                  {filtered.length} pedido{filtered.length !== 1 ? "s" : ""}
-                </span>
-                <span className="rounded-lg bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-                  Ventas {moneyFmt(totalVentas)}
-                </span>
-                <span className="rounded-lg bg-sky-50 px-2 py-1 text-xs font-medium text-sky-800 dark:bg-sky-900/30 dark:text-sky-300">
-                  Propinas {moneyFmt(totalPropinas)}
-                </span>
-              </div>
-            </div>
-            <button type="button" onClick={onClose} className="btn-ghost shrink-0">
-              <X size={18} />
-            </button>
-          </div>
-          <div className="mt-3 flex gap-1">
-            {[
-              { k: "all", l: "Todo" },
-              { k: "7", l: "7 días" },
-              { k: "30", l: "30 días" },
-            ].map((r) => (
-              <button
-                key={r.k}
-                type="button"
-                onClick={() => setRange(r.k)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
-                  range === r.k
-                    ? "bg-wine-600 text-white"
-                    : "bg-paper-100 text-ink-600 dark:bg-obsidian-800 dark:text-obsidian-200"
-                }`}
-              >
-                {r.l}
-              </button>
-            ))}
-          </div>
+        <div className="flex items-center justify-between border-b border-paper-300 px-5 py-4 dark:border-obsidian-800">
+          <h2 className="text-lg font-semibold text-ink-900 dark:text-white">
+            Historial · {waiter.name}
+          </h2>
+          <button type="button" onClick={onClose} className="btn-ghost" aria-label="Cerrar">
+            <X size={18} />
+          </button>
         </div>
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
-          {loading ? (
-            <div className="py-8 text-center text-ink-400 dark:text-obsidian-500">Cargando…</div>
-          ) : error ? (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
+
+        <div className="flex-1 overflow-y-auto p-5">
+          {error && (
+            <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
               {error}
             </div>
-          ) : byDay.length === 0 ? (
-            <div className="py-8 text-center text-ink-400 dark:text-obsidian-500">
-              No hay pedidos en este período.
-              <div className="mt-1 text-xs">Asigná mesas en la pestaña Asignar para que tome pedidos.</div>
-            </div>
-          ) : (
-            byDay.map(([day, dayOrders]) => (
-              <div key={day}>
-                <div className="sticky top-0 z-[1] mb-2 flex items-center justify-between gap-2 border-b border-paper-300 bg-paper-100 px-2 py-1.5 dark:border-obsidian-600 dark:bg-obsidian-800">
-                  <span className="text-xs font-bold capitalize text-ink-900 dark:text-white">
-                    {dayLabel(day)}
-                  </span>
-                  <span className="shrink-0 rounded-md bg-white px-1.5 py-0.5 text-[10px] font-semibold text-ink-700 dark:bg-obsidian-950 dark:text-obsidian-100">
-                    {dayOrders.length} pedido{dayOrders.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {dayOrders.map((o) => (
-                    <div
-                      key={o.id}
-                      className="overflow-hidden rounded-xl border border-paper-200 dark:border-obsidian-700"
-                    >
-                      <div className="flex items-center justify-between bg-paper-100 px-3 py-2 text-xs font-medium text-ink-800 dark:bg-obsidian-800 dark:text-white">
-                        <span className="text-ink-800 dark:text-white">
-                          {new Date(o.created_at).toLocaleTimeString("es-CO", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                          {" · "}
-                          {o.type === "table"
-                            ? `Mesa ${o.table_number || "?"}${o.table_label ? ` · ${o.table_label}` : ""}`
-                            : o.type === "pickup"
-                              ? "Para llevar"
-                              : "Domicilio"}
-                        </span>
-                        <span
-                          className={`badge text-[10px] ${
-                            o.payment_status === "paid"
-                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
-                              : o.payment_status === "debt"
-                                ? "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
-                                : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                          }`}
-                        >
-                          {o.payment_status === "paid"
-                            ? "Pagado"
-                            : o.payment_status === "debt"
-                              ? "Deuda"
-                              : o.payment_status === "pending"
-                                ? "Pendiente"
-                                : o.payment_status}
-                        </span>
-                      </div>
-                      <div className="space-y-1 px-3 py-2">
-                        {(o.items || []).length > 0 && (
-                          <div className="space-y-0.5 text-xs text-ink-600 dark:text-obsidian-200">
-                            {o.items.map((item, i) => (
-                              <div key={i} className="flex justify-between gap-2">
-                                <span>
-                                  {item.quantity}— {item.name_snapshot}
-                                </span>
-                                <span className="tabular-nums shrink-0">
-                                  {moneyFmt(item.unit_price * item.quantity)}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between border-t border-paper-200 pt-1.5 text-sm dark:border-obsidian-700">
-                          <span className="text-xs text-ink-500">
-                            {o.payment_method === "cash"
-                              ? "Efectivo"
-                              : o.payment_method === "card"
-                                ? "Tarjeta"
-                                : o.payment_method === "transfer"
-                                  ? "Transferencia"
-                                  : o.payment_method || "—"}
-                          </span>
-                          <div className="text-right">
-                            <span className={`font-bold tabular-nums ${
-                              o.payment_status === "paid"
-                                ? "text-emerald-700 dark:text-emerald-300"
-                                : o.payment_status === "debt"
-                                ? "text-rose-700 dark:text-rose-300"
-                                : "text-ink-800 dark:text-obsidian-50"
-                            }`}>
-                              {moneyFmt(o.total)}
+          )}
+
+          {selectedDate ? (
+            <>
+              <button type="button" onClick={closeDay} className="btn-secondary mb-4 text-sm">
+                <ArrowLeft size={16} /> Días
+              </button>
+              {detailLoading ? (
+                <div className="text-sm text-ink-500">Cargando día…</div>
+              ) : detail ? (
+                <>
+                  <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="card p-3">
+                      <div className="text-[11px] text-ink-500 dark:text-obsidian-400">Cuentas</div>
+                      <div className="text-xl font-bold text-ink-900 dark:text-white">{detail.summary.orders_count}</div>
+                    </div>
+                    <div className="card p-3">
+                      <div className="text-[11px] text-ink-500 dark:text-obsidian-400">Vendido</div>
+                      <div className="text-xl font-bold text-ink-900 dark:text-white">{money(detail.summary.total_sales)}</div>
+                    </div>
+                    <div className="card p-3">
+                      <div className="text-[11px] text-ink-500 dark:text-obsidian-400">Propinas</div>
+                      <div className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{money(detail.summary.total_tips)}</div>
+                    </div>
+                    <div className="card p-3">
+                      <div className="text-[11px] text-ink-500 dark:text-obsidian-400">Mesas</div>
+                      <div className="text-xl font-bold text-ink-900 dark:text-white">{detail.summary.tables_served}</div>
+                    </div>
+                  </div>
+                  {detail.orders.length === 0 ? (
+                    <div className="card p-8 text-center text-sm text-ink-500">Sin pedidos este día.</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {detail.orders.map((o) => (
+                        <div key={o.id} className="overflow-hidden rounded-xl border border-paper-300 dark:border-obsidian-700">
+                          <div className="flex flex-wrap items-center justify-between gap-2 bg-paper-100 px-3 py-2 text-xs font-medium text-ink-800 dark:bg-obsidian-800 dark:text-white">
+                            <span>
+                              {new Date(o.created_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+                              {o.closed_at ? ` → ${new Date(o.closed_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}` : ""}
                             </span>
-                            {Number(o.tip) > 0 && (
-                              <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">
-                                +{moneyFmt(o.tip)} propina
-                              </span>
+                            <span className={`badge text-[10px] ${
+                              o.payment_status === "paid"
+                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                                : o.payment_status === "debt"
+                                  ? "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
+                                  : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                            }`}>
+                              {o.payment_status === "paid" ? "Pagado" : o.payment_status === "debt" ? "Deuda" : "Pendiente"}
+                            </span>
+                          </div>
+                          <div className="space-y-1.5 px-3 py-2">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-ink-800 dark:text-obsidian-50">
+                              <Utensils size={14} className="shrink-0 text-wine-600 dark:text-wine-300" />
+                              {o.type === "table"
+                                ? `Mesa ${o.table_number ?? "?"}${o.table_label ? ` · ${o.table_label}` : ""}`
+                                : o.type === "pickup" ? "Para llevar" : "Domicilio"}
+                              {o.customer_name && <span className="font-normal text-ink-500 dark:text-obsidian-400">· {o.customer_name}</span>}
+                            </div>
+                            {(o.items || []).length > 0 && (
+                              <div className="space-y-1.5">
+                                {o.items.map((item, i) => (
+                                  <div key={i} className="flex items-center gap-2">
+                                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-wine-100 text-xs font-bold tabular-nums text-wine-700 dark:bg-wine-900/40 dark:text-wine-300">
+                                      {item.quantity}
+                                    </span>
+                                    <span className="flex-1 text-sm text-ink-700 dark:text-obsidian-200">
+                                      {item.name_snapshot}
+                                      {item.notes ? <span className="text-xs text-amber-700 dark:text-amber-400"> ({item.notes})</span> : ""}
+                                    </span>
+                                    <span className="shrink-0 text-sm tabular-nums text-ink-500 dark:text-obsidian-400">
+                                      {money(Number(item.unit_price) * Number(item.quantity))}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
                             )}
+                            <div className="flex items-center justify-between border-t border-paper-200 pt-1.5 text-sm dark:border-obsidian-700">
+                              <span className="text-xs text-ink-500 dark:text-obsidian-400">
+                                {o.payment_method === "cash" ? "Efectivo" : o.payment_method === "card" ? "Tarjeta" : o.payment_method === "transfer" ? "Transferencia" : o.payment_method || "—"}
+                              </span>
+                              <div className="text-right">
+                                <span className={`font-bold tabular-nums ${
+                                  o.payment_status === "paid" ? "text-emerald-700 dark:text-emerald-300" : o.payment_status === "debt" ? "text-rose-700 dark:text-rose-300" : "text-ink-800 dark:text-obsidian-50"
+                                }`}>
+                                  {money(o.total)}
+                                </span>
+                                {Number(o.tip) > 0 && (
+                                  <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">+{money(o.tip)} propina</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))
+                  )}
+                </>
+              ) : null}
+            </>
+          ) : loading ? (
+            <div className="py-8 text-center text-ink-400 dark:text-obsidian-500">Cargando…</div>
+          ) : days.length === 0 ? (
+            <div className="py-10 text-center">
+              <CalendarDays size={32} className="mx-auto mb-2 text-ink-400" />
+              <div className="font-semibold text-ink-800 dark:text-white">Sin días registrados</div>
+              <p className="mt-1 text-sm text-ink-500 dark:text-obsidian-400">Cuando cobre cuentas, aparecerán acá por día.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {days.map((d) => (
+                <button
+                  key={d.date}
+                  type="button"
+                  onClick={() => openDay(d.date)}
+                  className="card flex w-full items-center gap-3 p-4 text-left transition hover:border-wine-400 hover:shadow-pop dark:hover:border-wine-500"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-wine-50 text-wine-700 dark:bg-wine-900/40 dark:text-wine-300">
+                    <CalendarDays size={20} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold capitalize text-ink-900 dark:text-white">{formatDayLabel(d.date)}</div>
+                    <div className="mt-0.5 text-xs text-ink-500 dark:text-obsidian-400">
+                      {d.orders_count} cuenta{d.orders_count === 1 ? "" : "s"}
+                      {" · "}{d.tables_served} mesa{d.tables_served === 1 ? "" : "s"}
+                      {" · "}Propina {money(d.total_tips)}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold tabular-nums text-ink-900 dark:text-white">{money(d.total_sales)}</div>
+                    <ChevronRight size={16} className="ml-auto mt-0.5 text-ink-400" />
+                  </div>
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -854,7 +839,6 @@ export default function Staff() {
             <table className="data-table min-w-[32rem]">
               <thead>
                 <tr>
-                  <th>Usuario</th>
                   <th>Nombre</th>
                   <th>Mesas</th>
                   <th>Acceso</th>
@@ -866,7 +850,6 @@ export default function Staff() {
                   const wTables = tables.filter((t) => Number(t.assigned_user_id) === Number(w.id));
                   return (
                     <tr key={w.id}>
-                      <td className="font-mono cell-muted">@{w.username}</td>
                       <td className="cell-strong">{w.name}</td>
                       <td>
                         {wTables.length === 0 ? (
@@ -889,9 +872,20 @@ export default function Staff() {
                         )}
                       </td>
                       <td>
-                        <span className={`badge ${w.active ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-obsidian-800 dark:text-obsidian-400"}`}>
-                          {w.active ? "Con acceso" : "Sin acceso"}
-                        </span>
+                        {w.active ? (
+                          <div className="flex flex-col">
+                            <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                              Con acceso
+                            </span>
+                            <span className="mt-0.5 text-[10px] text-ink-500 dark:text-obsidian-500">
+                              @{w.username}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="badge bg-slate-100 text-slate-600 dark:bg-obsidian-800 dark:text-obsidian-300">
+                            Sin acceso
+                          </span>
+                        )}
                       </td>
                       <td className="space-x-1 text-right">
                         <button type="button" onClick={() => setPinUser(w)} className="btn-ghost text-xs" title={`Cambiar PIN de ${w.name}`} aria-label={`Cambiar PIN de ${w.name}`}><KeyRound size={14}/></button>
@@ -902,7 +896,7 @@ export default function Staff() {
                 })}
                 {waiters.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center cell-muted">
+                    <td colSpan={4} className="py-8 text-center cell-muted">
                       No hay meseros. Crea uno con &quot;Nuevo&quot; en esta pestaña.
                     </td>
                   </tr>

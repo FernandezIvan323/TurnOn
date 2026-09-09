@@ -175,15 +175,18 @@ function WaiterView() {
                         )}
                       </div>
                       {o.items?.length > 0 && (
-                        <div className="space-y-0.5 text-xs text-ink-600 dark:text-obsidian-200">
+                        <div className="space-y-1.5">
                           {o.items.map((item, i) => (
-                            <div key={i} className="flex justify-between gap-2">
-                              <span>
-                                {item.quantity}× {item.name_snapshot}
-                                {item.notes ? ` (${item.notes})` : ""}
+                            <div key={i} className="flex items-center gap-2">
+                              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-wine-100 text-sm font-bold tabular-nums text-wine-700 dark:bg-wine-900/40 dark:text-wine-300">
+                                {item.quantity}
                               </span>
-                              <span className="tabular-nums shrink-0">
-                                {money(Number(item.unit_price) * item.quantity)}
+                              <span className="flex-1 text-sm font-medium text-ink-800 dark:text-obsidian-100">
+                                {item.name_snapshot}
+                                {item.notes ? <span className="text-xs text-amber-700 dark:text-amber-400"> ({item.notes})</span> : ""}
+                              </span>
+                              <span className="shrink-0 text-sm font-semibold tabular-nums text-ink-600 dark:text-obsidian-300">
+                                {money(Number(item.unit_price) * Number(item.quantity))}
                               </span>
                             </div>
                           ))}
@@ -406,16 +409,19 @@ function DriverView() {
                             {[o.customer_neighborhood, o.customer_address].filter(Boolean).join(" · ")}
                           </div>
                         )}
-                        {o.items?.length > 0 && (
-                          <div className="space-y-0.5 text-xs text-ink-600 dark:text-obsidian-200">
+{o.items?.length > 0 && (
+                          <div className="space-y-1.5">
                             {o.items.map((item, i) => (
-                              <div key={i} className="flex justify-between gap-2">
-                                <span>
-                                  {item.quantity}× {item.name_snapshot}
-                                  {item.notes ? ` (${item.notes})` : ""}
+                              <div key={i} className="flex items-center gap-2">
+                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-indigo-100 text-sm font-bold tabular-nums text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                                  {item.quantity}
                                 </span>
-                                <span className="tabular-nums shrink-0">
-                                  {money(Number(item.unit_price) * item.quantity)}
+                                <span className="flex-1 text-sm font-medium text-ink-800 dark:text-obsidian-100">
+                                  {item.name_snapshot}
+                                  {item.notes ? <span className="text-xs text-amber-700 dark:text-amber-400"> ({item.notes})</span> : ""}
+                                </span>
+                                <span className="shrink-0 text-sm font-semibold tabular-nums text-ink-600 dark:text-obsidian-300">
+                                  {money(Number(item.unit_price) * Number(item.quantity))}
                                 </span>
                               </div>
                             ))}

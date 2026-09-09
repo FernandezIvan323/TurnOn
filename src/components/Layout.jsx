@@ -43,11 +43,10 @@ export default function Layout() {
             {isGrid && !onDashboard && (
               <Link
                 to="/dashboard"
-                className="btn-ghost h-10 w-10 shrink-0 p-0"
-                aria-label="Cerrar sección y volver al inicio"
-                title="Cerrar sección"
+                className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-paper-300 bg-white px-3 text-sm font-semibold text-ink-700 transition hover:bg-paper-100 dark:border-obsidian-700 dark:bg-obsidian-900 dark:text-obsidian-100 dark:hover:bg-obsidian-800"
+                title="Cerrar sección y volver al inicio"
               >
-                <ArrowLeft size={22} />
+                <ArrowLeft size={18} /> Volver
               </Link>
             )}
             <Link to="/dashboard" className={`flex min-w-0 items-center gap-2 ${!isGrid ? "lg:hidden" : ""}`}>

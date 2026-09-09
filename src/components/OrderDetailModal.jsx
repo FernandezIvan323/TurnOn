@@ -65,13 +65,19 @@ export default function OrderDetailModal({ order, onClose }) {
           </div>
 
           {detail?.type === "table" ? (
-            <div className="col-span-2 flex items-center gap-2">
-              <span className="text-ink-400 dark:text-obsidian-500">Mesa</span>
-              <b className="text-ink-900 dark:text-white">
-                {detail?.table_number || "—"}
-                {detail?.table_label ? ` · ${detail.table_label}` : ""}
-              </b>
-            </div>
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-ink-400 dark:text-obsidian-500">Mesa</span>
+                <b className="text-ink-900 dark:text-white">
+                  {detail?.table_number || "—"}
+                  {detail?.table_label ? ` · ${detail.table_label}` : ""}
+                </b>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-ink-400 dark:text-obsidian-500">Mesero</span>
+                <b className="text-ink-900 dark:text-white">{detail?.user_name || "—"}</b>
+              </div>
+            </>
           ) : (
             <>
               <div className="flex items-center gap-2">
@@ -121,16 +127,21 @@ export default function OrderDetailModal({ order, onClose }) {
           items.map((it, i) => (
             <div
               key={it.id ?? i}
-              className="flex items-center justify-between rounded-lg border border-paper-200 px-3 py-2 text-sm last:border-0 dark:border-obsidian-800"
+              className="flex items-center gap-3 rounded-lg border border-paper-200 px-3 py-2 dark:border-obsidian-800"
             >
-              <div className="min-w-0">
-                <div className="font-medium text-ink-800 dark:text-obsidian-50">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-wine-100 text-base font-bold tabular-nums text-wine-700 dark:bg-wine-900/40 dark:text-wine-300">
+                {it.quantity}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-base font-semibold text-ink-800 dark:text-obsidian-50">
                   {it.name_snapshot}
-                  {it.notes && <span className="text-xs text-amber-700 dark:text-amber-400"> · {it.notes}</span>}
+                  {it.notes && <span className="text-sm text-amber-700 dark:text-amber-400"> · {it.notes}</span>}
                 </div>
-                <div className="text-xs text-ink-500 dark:text-obsidian-400">{money(it.unit_price)} c/u</div>
+                <div className="text-sm text-ink-500 dark:text-obsidian-400">{money(it.unit_price)} c/u</div>
               </div>
-              <div className="shrink-0 font-semibold text-ink-700 dark:text-obsidian-100">×{it.quantity}</div>
+              <span className="shrink-0 font-bold tabular-nums text-ink-900 dark:text-white">
+                {money(Number(it.unit_price) * Number(it.quantity))}
+              </span>
             </div>
           ))
         )}
