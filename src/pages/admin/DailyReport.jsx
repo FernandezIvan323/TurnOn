@@ -5,7 +5,7 @@ import { useAuth } from "../../store/auth";
 import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import { todayLocalISO } from "../../lib/date";
 import { money } from "../../lib/format";
-import { Printer, ArrowLeft, Wallet, CreditCard, Building2, Receipt } from "lucide-react";
+import { Printer, ArrowLeft, Wallet, CreditCard, Building2, Receipt, Utensils, Truck, ShoppingBag, AlertTriangle, Bike, TrendingDown } from "lucide-react";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -44,6 +44,9 @@ export default function DailyReport() {
   const s = data?.summary;
   const e = data?.expenses;
   const net = s ? Number(s.total_sales) + Number(s.total_tips) - Number(e?.total_expenses || 0) : 0;
+  const debts = data?.debts || [];
+  const riders = (data?.riders || []).filter((r) => Number(r.deliveries) > 0);
+  const totalToSettle = riders.reduce((sum, r) => sum + Number(r.cash_to_settle || 0), 0);
 
   return (
     <div>
@@ -91,23 +94,27 @@ export default function DailyReport() {
             </div>
           </div>
 
-          {/* Pedidos */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="card p-3 text-center">
-              <div className="text-xs text-ink-400 dark:text-obsidian-500">Total pedidos</div>
-              <div className="text-lg font-bold">{s?.orders || 0}</div>
-            </div>
-            <div className="card p-3 text-center">
-              <div className="text-xs text-ink-400 dark:text-obsidian-500">Mesas</div>
-              <div className="text-lg font-bold">{s?.table_count || 0}</div>
-            </div>
-            <div className="card p-3 text-center">
-              <div className="text-xs text-ink-400 dark:text-obsidian-500">Domicilios</div>
-              <div className="text-lg font-bold">{s?.delivery_count || 0}</div>
-            </div>
-            <div className="card p-3 text-center">
-              <div className="text-xs text-ink-400 dark:text-obsidian-500">Para llevar</div>
-              <div className="text-lg font-bold">{s?.pickup_count || 0}</div>
+          {/* Dinero por canal */}
+          <div className="card p-4">
+            <h2 className="font-semibold text-ink-700 dark:text-obsidian-100 mb-3 flex items-center gap-2">
+              <Receipt size={16}/> Dinero por canal
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="rounded-xl bg-sky-50 p-3 text-center dark:bg-sky-900/20">
+                <div className="flex items-center justify-center gap-1 text-xs font-medium text-sky-700 dark:text-sky-300"><Utensils size={14}/> Mesas</div>
+                <div className="mt-1 text-lg font-bold tabular-nums text-ink-900 dark:text-white">{money(s?.table_sales || 0)}</div>
+                <div className="text-xs text-ink-500 dark:text-obsidian-400">{s?.table_count || 0} pedidos</div>
+              </div>
+              <div className="rounded-xl bg-indigo-50 p-3 text-center dark:bg-indigo-900/20">
+                <div className="flex items-center justify-center gap-1 text-xs font-medium text-indigo-700 dark:text-indigo-300"><Truck size={14}/> Domicilios</div>
+                <div className="mt-1 text-lg font-bold tabular-nums text-ink-900 dark:text-white">{money(s?.delivery_sales || 0)}</div>
+                <div className="text-xs text-ink-500 dark:text-obsidian-400">{s?.delivery_count || 0} pedidos</div>
+              </div>
+              <div className="rounded-xl bg-amber-50 p-3 text-center dark:bg-amber-900/20">
+                <div className="flex items-center justify-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-300"><ShoppingBag size={14}/> Para llevar</div>
+                <div className="mt-1 text-lg font-bold tabular-nums text-ink-900 dark:text-white">{money(s?.pickup_sales || 0)}</div>
+                <div className="text-xs text-ink-500 dark:text-obsidian-400">{s?.pickup_count || 0} pedidos</div>
+              </div>
             </div>
           </div>
 
@@ -136,6 +143,53 @@ export default function DailyReport() {
             </div>
           )}
 
+          {/* Deudas del día */}
+          <div className="card p-4">
+            <h2 className="font-semibold text-ink-700 dark:text-obsidian-100 mb-2 flex items-center gap-2">
+              <AlertTriangle size={16}/> Deudas del día
+            </h2>
+            {debts.length === 0 ? (
+              <div className="py-3 text-center text-sm text-ink-400 dark:text-obsidian-500">Sin deudas este día.</div>
+            ) : (
+              <div className="space-y-1.5">
+                {debts.map((d) => (
+                  <div key={d.id} className="flex items-center justify-between rounded-lg border border-rose-200 bg-rose-50/60 px-3 py-2 text-sm dark:border-rose-800 dark:bg-rose-900/20">
+                    <span className="font-medium text-ink-800 dark:text-obsidian-50">
+                      #{d.id} · {d.type === "table" ? `Mesa ${d.table_number || "?"}` : d.customer_name || "Cliente"}
+                    </span>
+                    <span className="font-bold tabular-nums text-rose-700 dark:text-rose-300">{money(d.total)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* A rendir por repartidor */}
+          <div className="card p-4">
+            <h2 className="font-semibold text-ink-700 dark:text-obsidian-100 mb-2 flex items-center gap-2">
+              <Bike size={16}/> A rendir por repartidor
+            </h2>
+            {riders.length === 0 ? (
+              <div className="py-3 text-center text-sm text-ink-400 dark:text-obsidian-500">Sin domicilios este día.</div>
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  {riders.map((r) => (
+                    <div key={r.id} className="flex items-center justify-between rounded-lg border border-paper-200 px-3 py-2 text-sm dark:border-obsidian-800">
+                      <span className="font-medium text-ink-800 dark:text-obsidian-50">{r.name}</span>
+                      <span className="text-xs text-ink-500 dark:text-obsidian-400">{r.deliveries} entregas</span>
+                      <span className="font-bold tabular-nums text-emerald-700 dark:text-emerald-300">{money(r.cash_to_settle || 0)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-paper-200 pt-2 text-sm dark:border-obsidian-800">
+                  <span className="font-medium text-ink-600 dark:text-obsidian-300">Total a rendir (efectivo)</span>
+                  <span className="font-bold tabular-nums text-emerald-700 dark:text-emerald-300">{money(totalToSettle)}</span>
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Productos más vendidos */}
           <div className="card p-4">
             <h2 className="font-semibold text-ink-700 dark:text-obsidian-100 mb-2">Productos más vendidos</h2>
@@ -143,7 +197,6 @@ export default function DailyReport() {
               <thead>
                 <tr>
                   <th>Producto</th>
-                  <th>Categoría</th>
                   <th className="text-right">Cantidad</th>
                   <th className="text-right">Ingresos</th>
                 </tr>
@@ -152,50 +205,40 @@ export default function DailyReport() {
                 {data.top_products?.map((p, i) => (
                   <tr key={i}>
                     <td className="font-medium">{p.name}</td>
-                    <td className="cell-muted">{p.category || "—"}</td>
                     <td className="text-right tabular-nums">{p.qty}</td>
                     <td className="text-right font-semibold tabular-nums">{money(p.revenue)}</td>
                   </tr>
                 ))}
                 {(!data.top_products || data.top_products.length === 0) && (
-                  <tr><td colSpan={4} className="py-3 text-center cell-muted">Sin ventas</td></tr>
+                  <tr><td colSpan={3} className="py-3 text-center cell-muted">Sin ventas</td></tr>
                 )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Ventas por categoría */}
-          <div className="card p-4">
-            <h2 className="font-semibold text-ink-700 dark:text-obsidian-100 mb-2">Ventas por categoría</h2>
-            <table className="data-table-embed">
-              <thead>
-                <tr>
-                  <th>Categoría</th>
-                  <th className="text-right">Unidades</th>
-                  <th className="text-right">Ingresos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.by_category?.map((c, i) => (
-                  <tr key={i}>
-                    <td className="font-medium">{c.category}</td>
-                    <td className="text-right tabular-nums">{c.qty}</td>
-                    <td className="text-right font-semibold tabular-nums">{money(c.revenue)}</td>
-                  </tr>
-                ))}
               </tbody>
             </table>
           </div>
 
           {/* Gastos del día */}
           <div className="card p-4">
-            <h2 className="font-semibold text-ink-700 dark:text-obsidian-100 mb-2">Gastos del día</h2>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-ink-500 dark:text-obsidian-400">Total de gastos</span>
-              <span className="font-bold text-rose-700 dark:text-rose-300">{money(e?.total_expenses || 0)}</span>
-            </div>
-            <div className="text-xs text-ink-400 dark:text-obsidian-500 mt-1">
-              {e?.count || 0} gasto{(e?.count || 0) !== 1 ? "s" : ""} registrado{(e?.count || 0) !== 1 ? "s" : ""}
+            <h2 className="font-semibold text-ink-700 dark:text-obsidian-100 mb-2 flex items-center gap-2">
+              <TrendingDown size={16}/> Gastos del día
+            </h2>
+            {(!data.expense_detail || data.expense_detail.length === 0) ? (
+              <div className="py-3 text-center text-sm text-ink-400 dark:text-obsidian-500">Sin gastos registrados.</div>
+            ) : (
+              <div className="space-y-1.5">
+                {data.expense_detail.map((g) => (
+                  <div key={g.id} className="flex items-center justify-between rounded-lg border border-paper-200 px-3 py-2 text-sm dark:border-obsidian-800">
+                    <div className="min-w-0">
+                      <div className="font-medium text-ink-800 dark:text-obsidian-50">{g.category_name || "Gasto"}</div>
+                      {g.description && <div className="text-xs text-ink-500 dark:text-obsidian-400">{g.description}</div>}
+                    </div>
+                    <span className="font-semibold tabular-nums text-rose-700 dark:text-rose-300">{money(g.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="mt-3 flex items-center justify-between border-t border-paper-200 pt-2 text-sm dark:border-obsidian-800">
+              <span className="font-medium text-ink-600 dark:text-obsidian-300">Total de gastos</span>
+              <span className="font-bold tabular-nums text-rose-700 dark:text-rose-300">{money(e?.total_expenses || 0)}</span>
             </div>
           </div>
 

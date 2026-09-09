@@ -37,6 +37,21 @@ export default function RiderHistoryModal({ rider, onClose }) {
 
   const total = history.reduce((s, o) => s + Number(o.total || 0), 0);
 
+  // Agrupa por día (fecha local de creación)
+  const grouped = history.reduce((acc, o) => {
+    const d = new Date(o.created_at);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(o);
+    return acc;
+  }, {});
+  const dayGroups = Object.entries(grouped).sort((a, b) => b[0].localeCompare(a[0]));
+
+  const dayLabel = (iso) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" });
+  };
+
   return (
     <DetailModal
       title={rider.name}
@@ -52,10 +67,25 @@ export default function RiderHistoryModal({ rider, onClose }) {
       ) : history.length === 0 ? (
         <div className="py-8 text-center text-sm text-ink-400">Sin entregas.</div>
       ) : (
-        <div className="space-y-2">
-          {history.map((o, i) => (
-            <OrderCard key={o.id} order={o} rotateIndex={i} onClick={() => setViewOrder(o)} />
-          ))}
+        <div className="space-y-5">
+          {dayGroups.map(([day, orders]) => {
+            const dayTotal = orders.reduce((s, o) => s + Number(o.total || 0), 0);
+            return (
+              <div key={day}>
+                <div className="mb-2 flex items-center justify-between border-b border-paper-200 pb-1.5 dark:border-obsidian-800">
+                  <span className="text-sm font-bold capitalize text-ink-900 dark:text-white">{dayLabel(day)}</span>
+                  <span className="text-xs text-ink-500 dark:text-obsidian-400">
+                    {orders.length} pedido{orders.length !== 1 ? "s" : ""} · <b className="text-ink-900 dark:text-white">{money(dayTotal)}</b>
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {orders.map((o, i) => (
+                    <OrderCard key={o.id} order={o} rotateIndex={i} onClick={() => setViewOrder(o)} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
       {viewOrder && <OrderDetailModal order={viewOrder} onClose={() => setViewOrder(null)} />}

@@ -455,13 +455,16 @@ router.get("/daily-complete", async (req, res) => {
   const day = orderDaySql("");
   const dayO = orderDaySql("o");
 
-  const [sales, byCategory, topProducts, expenses, tipData, paymentMethods] = await Promise.all([
+  const [sales, byCategory, topProducts, expenses, tipData, paymentMethods, debts, riders, expenseDetail] = await Promise.all([
     query(
       `SELECT COUNT(*)::int AS orders,
               COALESCE(SUM(total),0)::numeric AS total_sales,
               COUNT(*) FILTER (WHERE type='delivery')::int AS delivery_count,
               COUNT(*) FILTER (WHERE type='table')::int AS table_count,
               COUNT(*) FILTER (WHERE type='pickup')::int AS pickup_count,
+              COALESCE(SUM(total) FILTER (WHERE type='table'),0)::numeric AS table_sales,
+              COALESCE(SUM(total) FILTER (WHERE type='delivery'),0)::numeric AS delivery_sales,
+              COALESCE(SUM(total) FILTER (WHERE type='pickup'),0)::numeric AS pickup_sales,
               COALESCE(AVG(total),0)::numeric AS avg_ticket
          FROM orders
         WHERE payment_status='paid'
@@ -519,6 +522,37 @@ router.get("/daily-complete", async (req, res) => {
         GROUP BY payment_method
         ORDER BY total DESC`, [d]
     ),
+    query(
+      `SELECT o.id, o.total, o.type, o.created_at,
+              t.number AS table_number, t.label AS table_label,
+              c.name AS customer_name
+         FROM orders o
+         LEFT JOIN tables t ON t.id = o.table_id
+         LEFT JOIN customers c ON c.id = o.customer_id
+        WHERE o.payment_status = 'debt'
+          AND ${dayO} = $1
+        ORDER BY o.created_at DESC`, [d]
+    ),
+    query(
+      `SELECT dp.id, dp.name,
+              COUNT(o.id)::int AS deliveries,
+              COALESCE(SUM(o.total),0)::numeric AS revenue,
+              COALESCE(SUM(o.total) FILTER (WHERE o.payment_method = 'cash'),0)::numeric AS cash_to_settle
+         FROM delivery_persons dp
+         LEFT JOIN orders o ON o.delivery_person_id = dp.id
+                           AND o.payment_status='paid'
+                           AND ${day} = $1
+        GROUP BY dp.id
+        ORDER BY deliveries DESC`, [d]
+    ),
+    query(
+      `SELECT e.id, e.expense_date, e.amount, e.description, e.payment_method,
+              c.name AS category_name, c.icon AS category_icon
+         FROM expenses e
+         LEFT JOIN expense_categories c ON c.id = e.category_id
+        WHERE e.expense_date = $1
+        ORDER BY e.created_at DESC`, [d]
+    ),
   ]);
 
   const s = sales.rows[0];
@@ -533,11 +567,18 @@ router.get("/daily-complete", async (req, res) => {
       table_count: s.table_count,
       pickup_count: s.pickup_count,
       avg_ticket: s.avg_ticket,
+      // Dinero por canal
+      table_sales: s.table_sales,
+      delivery_sales: s.delivery_sales,
+      pickup_sales: s.pickup_sales,
     },
     payment_methods: paymentMethods.rows,
     expenses: expenses.rows[0],
+    expense_detail: expenseDetail.rows,
     by_category: byCategory.rows,
     top_products: topProducts.rows,
+    debts: debts.rows,
+    riders: riders.rows,
   });
 });
 
