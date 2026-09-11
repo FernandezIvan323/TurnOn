@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { loadSettings } from "./lib/settings";
+import { useAuth } from "./store/auth";
 import Layout from "./components/Layout";
 import RequireRole from "./components/RequireRole";
 import Landing from "./pages/Landing";
@@ -34,9 +35,24 @@ function WaiterOnly({ children }) {
 }
 
 export default function App() {
+  const init = useAuth((s) => s.init);
+  const ready = useAuth((s) => s.ready);
+
   useEffect(() => {
     loadSettings();
-  }, []);
+    init();
+  }, [init]);
+
+  if (!ready) {
+    return (
+      <div className="flex min-h-svh items-center justify-center app-shell">
+        <div className="flex items-center gap-3">
+          <img src="/favicon.svg" alt="" className="h-9 w-9 rounded-lg object-cover ring-1 ring-black/10 dark:ring-white/15" />
+          <span className="text-lg font-bold text-ink-900 dark:text-white">TurnOn</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Routes>

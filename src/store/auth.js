@@ -1,10 +1,36 @@
 import { create } from "zustand";
 import api from "../lib/api";
 
+function storedUser() {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    return null;
+  }
+}
+
 export const useAuth = create((set) => ({
-  user: JSON.parse(localStorage.getItem("user") || "null"),
+  user: storedUser(),
   loading: false,
   error: null,
+  // Indica si ya se validó (o no hay) sesión al arrancar. Evita el flash
+  // de contenido incorrecto (dashboard) antes de redirigir al login.
+  ready: !localStorage.getItem("token"),
+
+  init: async () => {
+    if (!localStorage.getItem("token")) {
+      set({ ready: true });
+      return;
+    }
+    try {
+      const { data } = await api.get("/auth/me");
+      set({ user: data.user, ready: true });
+    } catch {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      set({ user: null, ready: true });
+    }
+  },
 
   login: async (username, pin) => {
     set({ loading: true, error: null });

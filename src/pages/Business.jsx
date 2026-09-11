@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../lib/api";
 import Header from "../components/Header";
 import SegmentedControl from "../components/SegmentedControl";
+import BarChart from "../components/BarChart";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { useAuth } from "../store/auth";
 import { toast } from "../store/toast";
@@ -11,11 +12,20 @@ import { setSettings } from "../lib/settings";
 import {
   Store,
   TrendingUp,
+  TrendingDown,
   Clock,
   Save,
   Loader2,
   Users,
   CalendarDays,
+  Wallet,
+  CreditCard,
+  Building2,
+  Receipt,
+  Truck,
+  Utensils,
+  ShoppingBag,
+  DollarSign,
 } from "lucide-react";
 
 function isoDaysAgo(days) {
@@ -24,16 +34,15 @@ function isoDaysAgo(days) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function StatCard({ label, value, hint, icon: Icon }) {
+function Trend({ current, previous }) {
+  if (!previous || Number(previous) === 0) return null;
+  const diff = ((Number(current) - Number(previous)) / Number(previous)) * 100;
+  const up = diff >= 0;
+  const Icon = up ? TrendingUp : TrendingDown;
   return (
-    <div className="card p-4">
-      <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-ink-600 dark:text-white">
-        <Icon size={14} className="text-wine-600 dark:text-wine-300" />
-        {label}
-      </div>
-      <div className="text-2xl font-bold tabular-nums text-ink-900 dark:text-white">{value}</div>
-      {hint && <div className="mt-1 text-xs text-ink-500 dark:text-obsidian-400">{hint}</div>}
-    </div>
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold ${up ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+      <Icon size={12} /> {Math.abs(diff).toFixed(1)}%
+    </span>
   );
 }
 
@@ -111,9 +120,17 @@ function CuentaTab() {
   );
 }
 
+const PAYMENT_DEFS = {
+  cash: { label: "Efectivo", icon: Wallet, color: "text-emerald-700 dark:text-emerald-300", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+  card: { label: "Tarjeta", icon: CreditCard, color: "text-blue-700 dark:text-blue-300", bg: "bg-blue-50 dark:bg-blue-900/20" },
+  transfer: { label: "Transferencia", icon: Building2, color: "text-indigo-700 dark:text-indigo-300", bg: "bg-indigo-50 dark:bg-indigo-900/20" },
+  mixed: { label: "Mixto", icon: Receipt, color: "text-amber-700 dark:text-amber-300", bg: "bg-amber-50 dark:bg-amber-900/20" },
+};
+
 function CrecimientoTab() {
   const [range, setRange] = useState("7");
-  const [data, setData] = useState(null);
+  const [sales, setSales] = useState(null);
+  const [history, setHistory] = useState([]);
   const [times, setTimes] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -124,19 +141,53 @@ function CrecimientoTab() {
     setLoading(true);
     Promise.all([
       api.get("/reports/sales", { params: { from, to } }),
+      api.get("/reports/daily-history", { params: { limit: days } }),
       api.get("/dashboard/business"),
     ])
-      .then(([sales, t]) => {
-        setData(sales.data);
+      .then(([sl, hi, t]) => {
+        setSales(sl.data);
+        setHistory(hi.data || []);
         setTimes(t.data);
       })
       .finally(() => setLoading(false));
   }, [range]);
 
-  const c = data?.current || {};
+  const c = sales?.current || {};
+  const prev = sales?.previous || {};
+  const salesTotal = Number(c.sales || 0);
+  const expensesTotal = history.reduce((s, h) => s + Number(h.expenses || 0), 0);
+  const netTotal = history.reduce((s, h) => s + Number(h.net || 0), 0);
 
   const fmt = (iso) =>
     iso ? new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "—";
+
+  const barData = (sales?.days || []).map((d) => {
+    const [, m, day] = d.date.split("-");
+    return { label: `${Number(day)}/${m}`, value: Number(d.sales) };
+  });
+
+  const channels = [
+    { label: "Mesas", icon: Utensils, value: Number(c.table_sales || 0), bar: "bg-sky-500", text: "text-sky-700 dark:text-sky-300" },
+    { label: "Domicilios", icon: Truck, value: Number(c.delivery_sales || 0), bar: "bg-indigo-500", text: "text-indigo-700 dark:text-indigo-300" },
+    { label: "Para llevar", icon: ShoppingBag, value: Number(c.pickup_sales || 0), bar: "bg-amber-500", text: "text-amber-700 dark:text-amber-300" },
+  ];
+  const channelMax = Math.max(1, ...channels.map((ch) => ch.value));
+
+  const methods = Object.entries(c.payment_methods || {}).map(([k, v]) => ({
+    key: k,
+    value: Number(v || 0),
+  }));
+  const methodsTotal = methods.reduce((s, m) => s + m.value, 0);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="card h-24 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -145,20 +196,121 @@ function CrecimientoTab() {
         onChange={setRange}
         options={[{ value: "7", label: "7 días" }, { value: "30", label: "30 días" }]}
       />
-      {loading ? (
-        <div className="text-sm text-ink-500">Cargando…</div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard icon={TrendingUp} label="Ventas" value={money(c.sales || 0)} hint="En el período" />
-          <StatCard icon={Store} label="Pedidos" value={c.orders || 0} hint="Pagados" />
-          <StatCard icon={Users} label="Ticket promedio" value={money(c.avg_ticket || 0)} hint="" />
-          <StatCard icon={TrendingUp} label="Propinas" value={money(c.tips || 0)} hint="Del período" />
-          <StatCard icon={CalendarDays} label="Días trabajados (mes)" value={times?.work_days_month || 0} hint="" />
-          <StatCard icon={Clock} label="Primer pedido de hoy" value={fmt(times?.first_order)} hint="" />
-          <StatCard icon={Clock} label="Último pedido de hoy" value={fmt(times?.last_order)} hint="" />
-          <StatCard icon={Store} label="Pedidos pagados (mes)" value={times?.paid_orders_month || 0} hint="" />
+
+      {/* Hero: ventas + ganancia neta */}
+      <div className="grid gap-3 lg:grid-cols-2">
+        <div className="card border-l-4 border-l-wine-500 p-5">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-obsidian-400">
+            <DollarSign size={14} className="text-wine-600 dark:text-wine-300" /> Ventas del período
+          </div>
+          <div className="mt-1 flex items-end gap-3">
+            <span className="text-4xl font-extrabold tabular-nums text-ink-900 dark:text-white">{money(salesTotal)}</span>
+            <Trend current={salesTotal} previous={prev.sales} />
+          </div>
         </div>
-      )}
+        <div className="card border-l-4 border-l-emerald-500 p-5">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-obsidian-400">
+            <TrendingUp size={14} className="text-emerald-600 dark:text-emerald-300" /> Ganancia neta
+          </div>
+          <div className="mt-1 text-4xl font-extrabold tabular-nums text-emerald-700 dark:text-emerald-300">{money(netTotal)}</div>
+          <div className="mt-1 text-xs text-ink-500 dark:text-obsidian-400">Ventas − gastos ({money(expensesTotal)} gastos)</div>
+        </div>
+      </div>
+
+      {/* KPIs secundarios */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="card p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-ink-500 dark:text-obsidian-400"><Store size={14} className="text-wine-600 dark:text-wine-300" /> Pedidos</div>
+          <div className="mt-1 flex items-end gap-2">
+            <span className="text-2xl font-bold tabular-nums text-ink-900 dark:text-white">{c.orders || 0}</span>
+            <Trend current={c.orders} previous={prev.orders} />
+          </div>
+        </div>
+        <div className="card p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-ink-500 dark:text-obsidian-400"><Receipt size={14} className="text-wine-600 dark:text-wine-300" /> Ticket promedio</div>
+          <div className="mt-1 text-2xl font-bold tabular-nums text-ink-900 dark:text-white">{money(c.avg_ticket || 0)}</div>
+        </div>
+        <div className="card p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-ink-500 dark:text-obsidian-400"><TrendingUp size={14} className="text-wine-600 dark:text-wine-300" /> Propinas</div>
+          <div className="mt-1 flex items-end gap-2">
+            <span className="text-2xl font-bold tabular-nums text-ink-900 dark:text-white">{money(c.tips || 0)}</span>
+            <Trend current={c.tips} previous={prev.tips} />
+          </div>
+        </div>
+        <div className="card p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-ink-500 dark:text-obsidian-400"><Users size={14} className="text-wine-600 dark:text-wine-300" /> Clientes / mesas</div>
+          <div className="mt-1 text-2xl font-bold tabular-nums text-ink-900 dark:text-white">
+            {c.table_orders || 0} · {c.delivery_orders || 0} · {c.pickup_orders || 0}
+          </div>
+          <div className="text-xs text-ink-400 dark:text-obsidian-500">M · D · L</div>
+        </div>
+      </div>
+
+      {/* Gráfico + desglose por canal */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="card p-4 lg:col-span-2">
+          <h3 className="mb-3 text-sm font-semibold text-ink-900 dark:text-white">Ventas por día</h3>
+          <BarChart data={barData} vertical maxBars={31} height={160} barColor="bg-wine-500 dark:bg-wine-400" showValues={false} />
+        </div>
+        <div className="card p-4">
+          <h3 className="mb-3 text-sm font-semibold text-ink-900 dark:text-white">Por canal</h3>
+          <div className="space-y-3">
+            {channels.map((ch) => (
+              <div key={ch.label}>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="inline-flex items-center gap-1.5 font-medium text-ink-700 dark:text-obsidian-200"><ch.icon size={14} className={ch.text} /> {ch.label}</span>
+                  <span className={`font-semibold tabular-nums ${ch.text}`}>{money(ch.value)}</span>
+                </div>
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-paper-200 dark:bg-obsidian-800">
+                  <div className={`h-full rounded-full ${ch.bar}`} style={{ width: `${(ch.value / channelMax) * 100}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Métodos de pago + operativo */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="card p-4 lg:col-span-2">
+          <h3 className="mb-3 text-sm font-semibold text-ink-900 dark:text-white">Métodos de pago</h3>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {methods.map((m) => {
+              const def = PAYMENT_DEFS[m.key] || { label: m.key, icon: Receipt, color: "text-ink-600 dark:text-obsidian-200", bg: "bg-paper-100 dark:bg-obsidian-800" };
+              const pct = methodsTotal > 0 ? Math.round((m.value / methodsTotal) * 100) : 0;
+              return (
+                <div key={m.key} className={`rounded-xl p-3 text-center ${def.bg}`}>
+                  <def.icon size={18} className={`mx-auto mb-1 ${def.color}`} />
+                  <div className="text-xs text-ink-500 dark:text-obsidian-400">{def.label}</div>
+                  <div className={`text-sm font-bold ${def.color}`}>{money(m.value)}</div>
+                  <div className="text-[10px] text-ink-400 dark:text-obsidian-500">{pct}%</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="card p-4">
+          <h3 className="mb-3 text-sm font-semibold text-ink-900 dark:text-white">Operativo</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-ink-500 dark:text-obsidian-400">Días trabajados (mes)</span>
+              <b className="text-ink-900 dark:text-white">{times?.work_days_month || 0}</b>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-ink-500 dark:text-obsidian-400">Pedidos pagados (mes)</span>
+              <b className="text-ink-900 dark:text-white">{times?.paid_orders_month || 0}</b>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-ink-500 dark:text-obsidian-400">Primer pedido hoy</span>
+              <b className="tabular-nums text-ink-900 dark:text-white">{fmt(times?.first_order)}</b>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-ink-500 dark:text-obsidian-400">Último pedido hoy</span>
+              <b className="tabular-nums text-ink-900 dark:text-white">{fmt(times?.last_order)}</b>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
