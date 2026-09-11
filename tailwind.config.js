@@ -29,20 +29,6 @@ export default {
           800: "#4a0506",
           900: "#2e0304",
         },
-        // "rose" se redefina al rojo saturado de la marca para unificar el rojo
-        // de peligro/negativo (deudas, gastos, eliminar, dashboard) con 'wine'.
-        rose: {
-          50:  "#FFF5F5",
-          100: "#FFE0E0",
-          200: "#FFC0C0",
-          300: "#e5383b",
-          400: "#d32f2f",
-          500: "#ba181b",
-          600: "#a4161a",
-          700: "#660708",
-          800: "#4a0506",
-          900: "#2e0304",
-        },
         // Light surfaces — blanco moderno (fondo y cards #fff)
         paper: {
           50:  "#ffffff",
@@ -66,18 +52,39 @@ export default {
           900: "#18181b",
           950: "#09090b",
         },
-        obsidian: {
-           950: "#0b090a",
-           900: "#161a1d",
-           800: "#26292d",
-           700: "#3a3f45",
-           600: "#4a5056",
-           500: "#7d8389",
-           400: "#9aa0a6",
-           300: "#c5cad0",
-           200: "#dfe2e6",
-           100: "#eceef0",
-           50:  "#f5f6f7",
+obsidian: {
+            950: "#0b090a",
+            900: "#161a1d",
+            800: "#26292d",
+            700: "#3a3f45",
+            600: "#4a5056",
+            500: "#7d8389",
+            400: "#9aa0a6",
+            300: "#c5cad0",
+            200: "#dfe2e6",
+            100: "#eceef0",
+            50:  "#f5f6f7",
+         },
+         // ── Light mode: tonos más saturados (el sistema era demasiado
+         // tenue en claro). Se ajusta SOLO el nivel "-50" de estas
+         // paletas; no afecta a dark ni a los tonos de contraste.
+         amber:   { 50: "#fff3c4" },
+         blue:    { 50: "#dbeafe" },
+         emerald: { 50: "#d1fae5" },
+         indigo:  { 50: "#e0e7ff" },
+         sky:     { 50: "#e0f2fe" },
+         violet:  { 50: "#ede9fe" },
+         rose: {
+           50:  "#FFF5F5",  // ya estaba. Rose se redirige a wine en otros tonos
+           100: "#FFE0E0",
+           200: "#FFC0C0",
+           300: "#e5383b",
+           400: "#d32f2f",
+           500: "#ba181b",
+           600: "#a4161a",
+           700: "#660708",
+           800: "#4a0506",
+           900: "#2e0304"
          },
       },
       fontFamily: {
