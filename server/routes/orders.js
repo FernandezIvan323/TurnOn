@@ -43,6 +43,17 @@ async function deductStockForOrder(client, orderId) {
        VALUES ($1, 'exit', $2, $3)`,
       [item.product_id, item.quantity, `Pedido #${orderId}`]
     );
+    // Insumos (receta): descuenta la cantidad por unidad × cantidad vendida
+    const { rows: recipe } = await client.query(
+      "SELECT insumo_id, quantity FROM product_insumos WHERE product_id = $1",
+      [item.product_id]
+    );
+    for (const r of recipe) {
+      await client.query(
+        "UPDATE insumos SET stock = GREATEST(stock - $2, 0) WHERE id = $1",
+        [r.insumo_id, Number(r.quantity) * item.quantity]
+      );
+    }
   }
   await client.query(
     "UPDATE orders SET stock_deducted = TRUE WHERE id = $1",
@@ -77,6 +88,17 @@ async function restoreStockForOrder(client, orderId) {
        VALUES ($1, 'entry', $2, $3)`,
       [item.product_id, item.quantity, `Reapertura pedido #${orderId}`]
     );
+    // Restaura insumos de la receta
+    const { rows: recipe } = await client.query(
+      "SELECT insumo_id, quantity FROM product_insumos WHERE product_id = $1",
+      [item.product_id]
+    );
+    for (const r of recipe) {
+      await client.query(
+        "UPDATE insumos SET stock = stock + $2 WHERE id = $1",
+        [r.insumo_id, Number(r.quantity) * item.quantity]
+      );
+    }
   }
   await client.query(
     "UPDATE orders SET stock_deducted = FALSE WHERE id = $1",

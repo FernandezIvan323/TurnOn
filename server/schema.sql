@@ -161,6 +161,30 @@ CREATE TABLE IF NOT EXISTS expense_categories (
   active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+-- Insumos (ingredientes) — control separado de los productos vendidos.
+-- Un producto puede usar varios insumos (receta) y viceversa.
+CREATE TABLE IF NOT EXISTS insumos (
+  id          SERIAL PRIMARY KEY,
+  name        VARCHAR(120) NOT NULL UNIQUE,
+  unit        VARCHAR(20) NOT NULL DEFAULT 'unidad',  -- kg, L, oz, porción, unidad...
+  stock       NUMERIC(10,2) NOT NULL DEFAULT 0,
+  min_stock   NUMERIC(10,2) NOT NULL DEFAULT 0,
+  active      BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Receta: qué insumo(s) consume cada producto y cuánto por unidad vendida
+CREATE TABLE IF NOT EXISTS product_insumos (
+  id          SERIAL PRIMARY KEY,
+  product_id  INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  insumo_id   INT NOT NULL REFERENCES insumos(id) ON DELETE CASCADE,
+  quantity    NUMERIC(10,2) NOT NULL DEFAULT 0,       -- cuántas unidades del insumo por 1 producto
+  UNIQUE (product_id, insumo_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_product_insumos_product ON product_insumos(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_insumos_insumo  ON product_insumos(insumo_id);
+
 CREATE TABLE IF NOT EXISTS expenses (
   id             SERIAL PRIMARY KEY,
   expense_date   DATE NOT NULL,
