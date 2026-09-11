@@ -7,6 +7,7 @@ import Modal from "../../components/Modal";
 import { useAuth } from "../../store/auth";
 import { toast } from "../../store/toast";
 import { money } from "../../lib/format";
+import { rotateAccent } from "../../lib/cardAccent";
 import { Plus, Edit2, Trash2, Tag, ShoppingBag, Search } from "lucide-react";
 
 function CategoryModal({ cat, onClose, onSaved }) {
@@ -154,31 +155,30 @@ function ReadOnlyCatalog() {
               <div className="text-sm text-ink-400 dark:text-obsidian-500 italic">Sin productos en esta categoría.</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {c.products.map((p) => (
-                  <div key={p.id} className="card p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
-                        {p.description && <div className="text-xs text-ink-500 dark:text-obsidian-400 mt-0.5">{p.description}</div>}
-                      </div>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                        p.available
-                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
-                          : "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
-                      }`}>
-                        {p.available ? "Disponible" : "Agotado"}
-                      </span>
-                    </div>
-                    <div className="mt-2 flex items-end justify-between gap-2">
-                      <div className="text-xl font-bold tabular-nums text-wine-600 dark:text-wine-300">{money(p.price)}</div>
-                      {Number(p.stock) > 0 || Number(p.min_stock) > 0 ? (
-                        <div className={`text-xs font-semibold tabular-nums ${Number(p.stock) === 0 ? "text-rose-700 dark:text-rose-300" : "text-ink-500 dark:text-obsidian-400"}`}>
-                          Stock: {p.stock}
+                {c.products.map((p, i) => {
+                  const accent = rotateAccent(i);
+                  return (
+                    <div key={p.id} className={`rounded-2xl border border-l-4 border-paper-200 bg-gradient-to-br p-3 transition hover:-translate-y-0.5 hover:shadow-pop dark:border-obsidian-700 ${accent.border} ${accent.bg}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-ink-900 dark:text-white">{p.name}</div>
+                          {p.description && <div className="text-xs text-ink-500 dark:text-obsidian-400 mt-0.5">{p.description}</div>}
                         </div>
-                      ) : null}
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${accent.badge}`}>
+                          {p.available ? "Disponible" : "Agotado"}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-end justify-between gap-2">
+                        <div className="text-xl font-bold tabular-nums text-wine-600 dark:text-wine-300">{money(p.price)}</div>
+                        {Number(p.stock) > 0 || Number(p.min_stock) > 0 ? (
+                          <div className={`text-xs font-semibold tabular-nums ${Number(p.stock) === 0 ? "text-rose-700 dark:text-rose-300" : "text-ink-500 dark:text-obsidian-400"}`}>
+                            Stock: {p.stock}
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -193,30 +193,29 @@ function ReadOnlyCatalog() {
               </span>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {grouped.noCat.map((p) => (
-                <div key={p.id} className="card p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
-                    </div>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                      p.available
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
-                        : "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
-                    }`}>
-                      {p.available ? "Disponible" : "Agotado"}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex items-end justify-between gap-2">
-                    <div className="text-xl font-bold tabular-nums text-wine-600 dark:text-wine-300">{money(p.price)}</div>
-                    {Number(p.stock) > 0 || Number(p.min_stock) > 0 ? (
-                      <div className={`text-xs font-semibold tabular-nums ${Number(p.stock) === 0 ? "text-rose-700 dark:text-rose-300" : "text-ink-500 dark:text-obsidian-400"}`}>
-                        Stock: {p.stock}
+              {grouped.noCat.map((p, i) => {
+                const accent = rotateAccent(i);
+                return (
+                  <div key={p.id} className={`rounded-2xl border border-l-4 border-paper-200 bg-gradient-to-br p-3 transition hover:-translate-y-0.5 hover:shadow-pop dark:border-obsidian-700 ${accent.border} ${accent.bg}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-ink-900 dark:text-white">{p.name}</div>
                       </div>
-                    ) : null}
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${accent.badge}`}>
+                        {p.available ? "Disponible" : "Agotado"}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-end justify-between gap-2">
+                      <div className="text-xl font-bold tabular-nums text-wine-600 dark:text-wine-300">{money(p.price)}</div>
+                      {Number(p.stock) > 0 || Number(p.min_stock) > 0 ? (
+                        <div className={`text-xs font-semibold tabular-nums ${Number(p.stock) === 0 ? "text-rose-700 dark:text-rose-300" : "text-ink-500 dark:text-obsidian-400"}`}>
+                          Stock: {p.stock}
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

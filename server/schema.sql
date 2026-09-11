@@ -145,6 +145,8 @@ CREATE TABLE IF NOT EXISTS settings (
   business_name VARCHAR(120) NOT NULL DEFAULT 'TurnOn',
   address       VARCHAR(200),
   phone         VARCHAR(40),
+  email         VARCHAR(120),
+  website       VARCHAR(200),
   currency      VARCHAR(10)  NOT NULL DEFAULT 'COP',
   locale        VARCHAR(10)  NOT NULL DEFAULT 'es-CO',
   timezone      VARCHAR(64)  NOT NULL DEFAULT 'America/Mexico_City',

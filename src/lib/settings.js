@@ -8,6 +8,8 @@ let state = {
   business_name: "TurnOn",
   address: null,
   phone: null,
+  email: null,
+  website: null,
   currency: "COP",
   locale: "es-CO",
   timezone: "America/Mexico_City",

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import Header from "../components/Header";
+import Modal from "../components/Modal";
 import SegmentedControl from "../components/SegmentedControl";
 import BarChart from "../components/BarChart";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
@@ -26,6 +27,11 @@ import {
   Utensils,
   ShoppingBag,
   DollarSign,
+  Pencil,
+  MapPin,
+  Phone,
+  Mail,
+  Globe,
 } from "lucide-react";
 
 function isoDaysAgo(days) {
@@ -48,21 +54,87 @@ function Trend({ current, previous }) {
 
 function CuentaTab() {
   const [form, setForm] = useState(null);
+  const [editing, setEditing] = useState(false);
+
+  const load = () => api.get("/settings").then((r) => setForm(r.data));
+  useEffect(() => { load(); }, []);
+
+  if (!form) return <div className="text-sm text-ink-500">Cargando…</div>;
+
+  const rows = [
+    { icon: MapPin, label: "Dirección", value: form.address || "—" },
+    { icon: Phone, label: "Teléfono", value: form.phone || "—" },
+    { icon: Mail, label: "Email", value: form.email || "—" },
+    { icon: Globe, label: "Sitio web", value: form.website || "—" },
+  ];
+
+  return (
+    <div className="max-w-2xl space-y-4">
+      <div className="card p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-obsidian-400">
+              <Store size={14} className="text-wine-600 dark:text-wine-300" /> Nombre del negocio
+            </div>
+            <div className="mt-1 text-xl font-bold text-ink-900 dark:text-white">{form.business_name || "TurnOn"}</div>
+          </div>
+          <button onClick={() => setEditing(true)} className="btn-secondary h-9">
+            <Pencil size={15} /> Editar información de la cuenta
+          </button>
+        </div>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {rows.map((r) => (
+            <div key={r.label} className="flex items-center gap-2 rounded-lg bg-paper-50 px-3 py-2 dark:bg-obsidian-950/40">
+              <r.icon size={15} className="text-ink-400 dark:text-obsidian-500" />
+              <div className="min-w-0">
+                <div className="text-xs text-ink-500 dark:text-obsidian-400">{r.label}</div>
+                <div className="truncate text-sm text-ink-800 dark:text-obsidian-50">{r.value}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Moneda</div>
+            <div className="font-medium text-ink-900 dark:text-white">{form.currency || "COP"}</div>
+          </div>
+          <div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Zona horaria</div>
+            <div className="font-medium text-ink-900 dark:text-white">{form.timezone || "—"}</div>
+          </div>
+          <div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Horario</div>
+            <div className="font-medium text-ink-900 dark:text-white">
+              {form.open_hour || "—"} → {form.close_hour || "—"}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">Locale</div>
+            <div className="font-medium text-ink-900 dark:text-white">{form.locale || "es-CO"}</div>
+          </div>
+        </div>
+      </div>
+
+      {editing && <CuentaModal initial={form} onClose={() => setEditing(false)} onSaved={(d) => { setForm(d); setSettings(d); }} />}
+    </div>
+  );
+}
+
+function CuentaModal({ initial, onClose, onSaved }) {
+  const [form, setForm] = useState(initial);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    api.get("/settings").then((r) => setForm(r.data));
-  }, []);
-
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = async () => {
     setSaving(true);
     try {
       const { data } = await api.put("/settings", form);
-      setForm(data);
       setSettings(data);
       toast.success("Datos del negocio guardados");
+      onSaved(data);
+      onClose();
     } catch (e) {
       toast.error(e.response?.data?.error || e.message);
     } finally {
@@ -70,53 +142,64 @@ function CuentaTab() {
     }
   };
 
-  if (!form) return <div className="text-sm text-ink-500">Cargando…</div>;
-
   return (
-    <div className="max-w-2xl space-y-4">
-      <div>
-        <label className="label">Nombre del negocio</label>
-        <input className="input" value={form.business_name || ""} onChange={(e) => set("business_name", e.target.value)} maxLength={120} />
-      </div>
-      <div>
-        <label className="label">Dirección</label>
-        <input className="input" value={form.address || ""} onChange={(e) => set("address", e.target.value)} maxLength={200} placeholder="Av. Siempre Viva 123" />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
+    <Modal open onClose={onClose} title={<span className="flex items-center gap-2"><Store size={18} /> Editar información de la cuenta</span>} size="lg">
+      <div className="space-y-4">
         <div>
-          <label className="label">Teléfono</label>
-          <input className="input" value={form.phone || ""} onChange={(e) => set("phone", e.target.value)} maxLength={40} />
+          <label className="label">Nombre del negocio</label>
+          <input className="input" value={form.business_name || ""} onChange={(e) => set("business_name", e.target.value)} maxLength={120} />
         </div>
         <div>
-          <label className="label">Moneda (código ISO)</label>
-          <input className="input" value={form.currency || "COP"} onChange={(e) => set("currency", e.target.value.toUpperCase())} maxLength={3} placeholder="COP" />
+          <label className="label">Dirección</label>
+          <input className="input" value={form.address || ""} onChange={(e) => set("address", e.target.value)} maxLength={200} placeholder="Av. Siempre Viva 123" />
         </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Teléfono</label>
+            <input className="input" value={form.phone || ""} onChange={(e) => set("phone", e.target.value)} maxLength={40} />
+          </div>
+          <div>
+            <label className="label">Email</label>
+            <input className="input" type="email" value={form.email || ""} onChange={(e) => set("email", e.target.value)} maxLength={120} placeholder="contacto@local.com" />
+          </div>
+        </div>
+        <div>
+          <label className="label">Sitio web / red social</label>
+          <input className="input" value={form.website || ""} onChange={(e) => set("website", e.target.value)} maxLength={200} placeholder="https://…" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Moneda (código ISO)</label>
+            <input className="input" value={form.currency || "COP"} onChange={(e) => set("currency", e.target.value.toUpperCase())} maxLength={3} placeholder="COP" />
+          </div>
+          <div>
+            <label className="label">Locale</label>
+            <input className="input" value={form.locale || "es-CO"} onChange={(e) => set("locale", e.target.value)} placeholder="es-CO" />
+          </div>
+        </div>
         <div>
           <label className="label">Zona horaria</label>
           <input className="input" value={form.timezone || ""} onChange={(e) => set("timezone", e.target.value)} placeholder="America/Mexico_City" />
         </div>
-        <div>
-          <label className="label">Locale</label>
-          <input className="input" value={form.locale || "es-CO"} onChange={(e) => set("locale", e.target.value)} placeholder="es-CO" />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Hora de apertura</label>
+            <input className="input" type="time" value={form.open_hour || ""} onChange={(e) => set("open_hour", e.target.value)} />
+          </div>
+          <div>
+            <label className="label">Hora de cierre</label>
+            <input className="input" type="time" value={form.close_hour || ""} onChange={(e) => set("close_hour", e.target.value)} />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 border-t border-paper-200 pt-3 dark:border-obsidian-800">
+          <button onClick={onClose} className="btn-secondary">Cancelar</button>
+          <button onClick={save} disabled={saving} className="btn-primary">
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            Guardar
+          </button>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Hora de apertura</label>
-          <input className="input" type="time" value={form.open_hour || ""} onChange={(e) => set("open_hour", e.target.value)} />
-        </div>
-        <div>
-          <label className="label">Hora de cierre</label>
-          <input className="input" type="time" value={form.close_hour || ""} onChange={(e) => set("close_hour", e.target.value)} />
-        </div>
-      </div>
-      <button onClick={save} disabled={saving} className="btn-primary">
-        {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-        Guardar datos
-      </button>
-    </div>
+    </Modal>
   );
 }
 
@@ -328,10 +411,11 @@ export default function Business() {
     <div>
       <Header title="Negocio" subtitle="Datos del local y crecimiento" />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-col items-center no-print">
         <SegmentedControl
           value={tab}
           onChange={setTab}
+          size="lg"
           options={[
             { value: "cuenta", label: "Cuenta", icon: Store },
             { value: "crecimiento", label: "Crecimiento", icon: TrendingUp },

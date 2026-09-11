@@ -190,6 +190,8 @@ export async function runMigrations() {
       business_name VARCHAR(120) NOT NULL DEFAULT 'TurnOn',
       address       VARCHAR(200),
       phone         VARCHAR(40),
+      email         VARCHAR(120),
+      website       VARCHAR(200),
       currency      VARCHAR(10)  NOT NULL DEFAULT 'COP',
       locale        VARCHAR(10)  NOT NULL DEFAULT 'es-CO',
       timezone      VARCHAR(64)  NOT NULL DEFAULT 'America/Mexico_City',
@@ -197,6 +199,10 @@ export async function runMigrations() {
       close_hour    TIME,
       updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
+  `);
+  await pool.query(`
+    ALTER TABLE settings ADD COLUMN IF NOT EXISTS email VARCHAR(120);
+    ALTER TABLE settings ADD COLUMN IF NOT EXISTS website VARCHAR(200);
   `);
   await pool.query(`
     INSERT INTO settings (id, business_name, currency, locale, timezone)

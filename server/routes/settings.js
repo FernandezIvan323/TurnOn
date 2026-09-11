@@ -8,6 +8,8 @@ const DEFAULTS = {
   business_name: "TurnOn",
   address: null,
   phone: null,
+  email: null,
+  website: null,
   currency: "COP",
   locale: "es-CO",
   timezone: "America/Mexico_City",
@@ -22,6 +24,8 @@ function normalize(row) {
     business_name: row.business_name ?? DEFAULTS.business_name,
     address: row.address ?? null,
     phone: row.phone ?? null,
+    email: row.email ?? null,
+    website: row.website ?? null,
     currency: row.currency ?? DEFAULTS.currency,
     locale: row.locale ?? DEFAULTS.locale,
     timezone: row.timezone ?? DEFAULTS.timezone,
@@ -60,18 +64,24 @@ router.put("/", authRequired, requireRole("admin"), async (req, res) => {
     typeof b.address === "string" ? b.address.trim().slice(0, 200) || null : null;
   const phone =
     typeof b.phone === "string" ? b.phone.trim().slice(0, 40) || null : null;
+  const email =
+    typeof b.email === "string" ? b.email.trim().slice(0, 120) || null : null;
+  const website =
+    typeof b.website === "string" ? b.website.trim().slice(0, 200) || null : null;
 
   const timeRe = /^\d{2}:\d{2}(:\d{2})?$/;
   const open_hour = typeof b.open_hour === "string" && timeRe.test(b.open_hour) ? b.open_hour : null;
   const close_hour = typeof b.close_hour === "string" && timeRe.test(b.close_hour) ? b.close_hour : null;
 
   const { rows } = await query(
-    `INSERT INTO settings (id, business_name, address, phone, currency, locale, timezone, open_hour, close_hour, updated_at)
-     VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, NOW())
+    `INSERT INTO settings (id, business_name, address, phone, email, website, currency, locale, timezone, open_hour, close_hour, updated_at)
+     VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
      ON CONFLICT (id) DO UPDATE SET
        business_name = EXCLUDED.business_name,
        address       = EXCLUDED.address,
        phone         = EXCLUDED.phone,
+       email         = EXCLUDED.email,
+       website       = EXCLUDED.website,
        currency      = EXCLUDED.currency,
        locale        = EXCLUDED.locale,
        timezone      = EXCLUDED.timezone,
@@ -79,7 +89,7 @@ router.put("/", authRequired, requireRole("admin"), async (req, res) => {
        close_hour    = EXCLUDED.close_hour,
        updated_at    = NOW()
      RETURNING *`,
-    [business_name, address, phone, currency, locale, timezone, open_hour, close_hour]
+    [business_name, address, phone, email, website, currency, locale, timezone, open_hour, close_hour]
   );
 
   res.json(normalize(rows[0]));
