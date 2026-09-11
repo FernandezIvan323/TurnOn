@@ -105,6 +105,24 @@ export function rotateAccent(index) {
   return ROTATE_ACCENTS[index % ROTATE_ACCENTS.length];
 }
 
+/**
+ * Paleta estilo "tile" (la usada en el historial de repartidores):
+ * borde completo de color + fondo sólido tenue. Una card por color.
+ * Clases completas para aplicar directo a un bloque con `border`.
+ */
+export const TILE_ACCENTS = [
+  "border-violet-300 bg-violet-50/40 dark:border-violet-700 dark:bg-violet-900/20",
+  "border-indigo-300 bg-indigo-50/40 dark:border-indigo-700 dark:bg-indigo-900/20",
+  "border-sky-300 bg-sky-50/40 dark:border-sky-700 dark:bg-sky-900/20",
+  "border-emerald-300 bg-emerald-50/40 dark:border-emerald-700 dark:bg-emerald-900/20",
+  "border-amber-300 bg-amber-50/40 dark:border-amber-700 dark:bg-amber-900/20",
+  "border-rose-300 bg-rose-50/40 dark:border-rose-700 dark:bg-rose-900/20",
+];
+
+export function tileAccent(index) {
+  return TILE_ACCENTS[index % TILE_ACCENTS.length];
+}
+
 export const TYPE_ICON = {
   table: Utensils,
   delivery: Truck,
