@@ -43,10 +43,10 @@ export default function Layout() {
             {isGrid && !onDashboard && (
               <Link
                 to="/dashboard"
-                className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-paper-300 bg-white px-3 text-sm font-semibold text-ink-700 transition hover:bg-paper-100 dark:border-obsidian-700 dark:bg-obsidian-900 dark:text-obsidian-100 dark:hover:bg-obsidian-800"
-                title="Cerrar sección y volver al inicio"
+                className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-wine-600 px-3.5 text-sm font-semibold text-white transition hover:bg-wine-700"
+                title="Salir de la sección (volver al inicio)"
               >
-                <ArrowLeft size={18} /> Volver
+                <ArrowLeft size={18} /> Salir
               </Link>
             )}
             <Link to="/dashboard" className={`flex min-w-0 items-center gap-2 ${!isGrid ? "lg:hidden" : ""}`}>

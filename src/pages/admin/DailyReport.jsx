@@ -175,14 +175,17 @@ export default function DailyReport() {
               <>
                 <div className="space-y-1.5">
                   {riders.map((r) => (
-                    <div key={r.id} className="flex items-center justify-between rounded-lg border border-paper-200 px-3 py-2 text-sm dark:border-obsidian-800">
-                      <span className="font-medium text-ink-800 dark:text-obsidian-50">{r.name}</span>
+                    <div key={r.id} className="flex items-center gap-3 rounded-lg bg-indigo-50/60 px-3 py-2 text-sm dark:bg-indigo-900/20">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                        <Bike size={15} />
+                      </span>
+                      <span className="min-w-0 flex-1 font-medium text-ink-800 dark:text-obsidian-50">{r.name}</span>
                       <span className="text-xs text-ink-500 dark:text-obsidian-400">{r.deliveries} entregas</span>
                       <span className="font-bold tabular-nums text-emerald-700 dark:text-emerald-300">{money(r.cash_to_settle || 0)}</span>
                     </div>
                   ))}
                 </div>
-                <div className="mt-3 flex items-center justify-between border-t border-paper-200 pt-2 text-sm dark:border-obsidian-800">
+                <div className="mt-3 flex items-center justify-between rounded-lg border-t border-paper-200 pt-2 text-sm dark:border-obsidian-800">
                   <span className="font-medium text-ink-600 dark:text-obsidian-300">Total a rendir (efectivo)</span>
                   <span className="font-bold tabular-nums text-emerald-700 dark:text-emerald-300">{money(totalToSettle)}</span>
                 </div>
@@ -193,27 +196,24 @@ export default function DailyReport() {
           {/* Productos más vendidos */}
           <div className="card p-4">
             <h2 className="font-semibold text-ink-700 dark:text-obsidian-100 mb-2">Productos más vendidos</h2>
-            <table className="data-table-embed">
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th className="text-right">Cantidad</th>
-                  <th className="text-right">Ingresos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.top_products?.map((p, i) => (
-                  <tr key={i}>
-                    <td className="font-medium">{p.name}</td>
-                    <td className="text-right tabular-nums">{p.qty}</td>
-                    <td className="text-right font-semibold tabular-nums">{money(p.revenue)}</td>
-                  </tr>
+            {(!data.top_products || data.top_products.length === 0) ? (
+              <div className="py-3 text-center cell-muted">Sin ventas</div>
+            ) : (
+              <div className="space-y-1.5">
+                {data.top_products.map((p, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-lg border border-paper-200 px-3 py-2 text-sm dark:border-obsidian-800">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-wine-600 text-sm font-bold text-white">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
+                      <div className="text-xs text-ink-500 dark:text-obsidian-400">{p.qty} unidades</div>
+                    </div>
+                    <span className="font-semibold tabular-nums text-wine-600 dark:text-wine-300">{money(p.revenue)}</span>
+                  </div>
                 ))}
-                {(!data.top_products || data.top_products.length === 0) && (
-                  <tr><td colSpan={3} className="py-3 text-center cell-muted">Sin ventas</td></tr>
-                )}
-              </tbody>
-            </table>
+              </div>
+            )}
           </div>
 
           {/* Gastos del día */}
@@ -252,7 +252,7 @@ export default function DailyReport() {
               </div>
               <div className="flex justify-between">
                 <span>+ Propinas</span>
-                <span className="font-semibold">{money(s?.total_tips || 0)}</span>
+                <span className="font-semibold text-emerald-700 dark:text-emerald-300">{money(s?.total_tips || 0)}</span>
               </div>
               <div className="flex justify-between">
                 <span>− Gastos</span>

@@ -808,15 +808,15 @@ export default function Staff() {
                         <button
                           type="button"
                           onClick={() => setPinUser({ id: p.user_id, username: p.username, name: p.name })}
-                          className="btn-ghost text-xs"
+                          className="btn-ghost h-9 w-9 p-0"
                           title={`Cambiar PIN de ${p.name}`}
                           aria-label={`Cambiar PIN de ${p.name}`}
                         >
-                          <KeyRound size={14} />
+                          <KeyRound size={17} />
                         </button>
                       )}
-                      <button onClick={() => setEditing({ type: "delivery", value: p })} className="btn-ghost text-xs" title={`Editar ${p.name}`} aria-label={`Editar ${p.name}`}><Edit2 size={14}/></button>
-                      <button onClick={() => setConfirmDelete({ type: "delivery", id: p.id, name: p.name })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" title={`Eliminar ${p.name}`} aria-label={`Eliminar ${p.name}`}><Trash2 size={14}/></button>
+                      <button onClick={() => setEditing({ type: "delivery", value: p })} className="btn-ghost h-9 w-9 p-0" title={`Editar ${p.name}`} aria-label={`Editar ${p.name}`}><Edit2 size={17}/></button>
+                      <button onClick={() => setConfirmDelete({ type: "delivery", id: p.id, name: p.name })} className="btn-ghost h-9 w-9 p-0 text-rose-600 dark:text-rose-400" title={`Eliminar ${p.name}`} aria-label={`Eliminar ${p.name}`}><Trash2 size={17}/></button>
                     </td>
                   </tr>
                 ))}
@@ -874,22 +874,22 @@ export default function Staff() {
                       <td>
                         {w.active ? (
                           <div className="flex flex-col">
-                            <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                              Con acceso
+                            <span className="badge bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                              <KeyRound size={10} className="mr-1 inline" /> Con acceso
                             </span>
                             <span className="mt-0.5 text-[10px] text-ink-500 dark:text-obsidian-500">
                               @{w.username}
                             </span>
                           </div>
                         ) : (
-                          <span className="badge bg-slate-100 text-slate-600 dark:bg-obsidian-800 dark:text-obsidian-300">
+                          <span className="badge bg-paper-200 text-ink-600 dark:bg-obsidian-800 dark:text-obsidian-300">
                             Sin acceso
                           </span>
                         )}
                       </td>
                       <td className="space-x-1 text-right">
-                        <button type="button" onClick={() => setPinUser(w)} className="btn-ghost text-xs" title={`Cambiar PIN de ${w.name}`} aria-label={`Cambiar PIN de ${w.name}`}><KeyRound size={14}/></button>
-                        <button type="button" onClick={() => setHistoryWaiter(w)} className="btn-ghost text-xs" title={`Ver historial de ${w.name}`} aria-label={`Ver historial de ${w.name}`}><Clock size={14}/></button>
+                        <button type="button" onClick={() => setPinUser(w)} className="btn-ghost h-9 w-9 p-0" title={`Cambiar PIN de ${w.name}`} aria-label={`Cambiar PIN de ${w.name}`}><KeyRound size={17}/></button>
+                        <button type="button" onClick={() => setHistoryWaiter(w)} className="btn-ghost h-9 w-9 p-0" title={`Ver historial de ${w.name}`} aria-label={`Ver historial de ${w.name}`}><Clock size={17}/></button>
                       </td>
                     </tr>
                   );
@@ -950,9 +950,9 @@ export default function Staff() {
                         <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Libre</span>
                       )}
                     </td>
-                    <td className="text-right">
-                        <button onClick={() => setEditing({ type: "table", value: t })} className="btn-ghost text-xs" title={`Editar mesa ${t.number}`} aria-label={`Editar mesa ${t.number}`}><Edit2 size={14}/></button>
-                        <button onClick={() => setConfirmDelete({ type: "table", id: t.id, name: `mesa ${t.number}` })} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" title={`Eliminar mesa ${t.number}`} aria-label={`Eliminar mesa ${t.number}`}><Trash2 size={14}/></button>
+<td className="text-right">
+                        <button onClick={() => setEditing({ type: "table", value: t })} className="btn-ghost h-9 w-9 p-0" title={`Editar mesa ${t.number}`} aria-label={`Editar mesa ${t.number}`}><Edit2 size={17}/></button>
+                        <button onClick={() => setConfirmDelete({ type: "table", id: t.id, name: `mesa ${t.number}` })} className="btn-ghost h-9 w-9 p-0 text-rose-600 dark:text-rose-400" title={`Eliminar mesa ${t.number}`} aria-label={`Eliminar mesa ${t.number}`}><Trash2 size={17}/></button>
                     </td>
                   </tr>
                 ))}

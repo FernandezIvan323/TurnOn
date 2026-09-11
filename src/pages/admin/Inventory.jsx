@@ -229,8 +229,8 @@ export default function Inventory() {
                       {p.last_movement_at ? timeAgo(p.last_movement_at) : "—"}
                     </td>
                     <td className="text-right">
-                      <button onClick={() => setMovements(p)} className="btn-ghost text-xs" title="Historial" aria-label={`Historial de ${p.name}`}><History size={14}/></button>
-                      <button onClick={() => setEditing(p)} className="btn-ghost text-xs" title="Ajustar stock" aria-label={`Ajustar stock de ${p.name}`}><Package size={14}/></button>
+                      <button onClick={() => setMovements(p)} className="btn-ghost h-9 w-9 p-0" title="Historial" aria-label={`Historial de ${p.name}`}><History size={17}/></button>
+                      <button onClick={() => setEditing(p)} className="btn-ghost h-9 w-9 p-0" title="Ajustar stock" aria-label={`Ajustar stock de ${p.name}`}><Package size={17}/></button>
                     </td>
                   </tr>
                 ))}

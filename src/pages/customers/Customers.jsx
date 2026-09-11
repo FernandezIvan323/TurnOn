@@ -181,9 +181,9 @@ const [editing, setEditing] = useState(null);
                     <td>{c.phone}</td>
                     <td className="cell-muted">{c.address || "—"}</td>
 <td className="text-right">
-                      <button onClick={() => setViewing(c)} className="btn-ghost text-xs">Historial</button>
-                      <button onClick={() => setEditing(c)} className="btn-ghost text-xs" aria-label={`Editar ${c.name}`}><Edit2 size={14}/></button>
-                      <button onClick={() => setToDelete(c)} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" aria-label={`Eliminar ${c.name}`}><Trash2 size={14}/></button>
+                      <button onClick={() => setViewing(c)} className="btn-ghost h-9 px-2 text-xs">Historial</button>
+                      <button onClick={() => setEditing(c)} className="btn-ghost h-9 w-9 p-0" aria-label={`Editar ${c.name}`}><Edit2 size={17}/></button>
+                      <button onClick={() => setToDelete(c)} className="btn-ghost h-9 w-9 p-0 text-rose-600 dark:text-rose-400" aria-label={`Eliminar ${c.name}`}><Trash2 size={17}/></button>
                     </td>
                   </tr>
                 ))}
