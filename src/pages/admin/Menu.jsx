@@ -283,22 +283,27 @@ function AdminMenu() {
               <div className="text-sm text-ink-400 dark:text-obsidian-500">Sin productos en esta categoría.</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {c.products.map((p) => (
-                  <div key={p.id} className="card p-3 flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
-                      {p.description && <div className="text-xs text-ink-500 dark:text-obsidian-400">{p.description}</div>}
-                      <div className="text-wine-600 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      {!p.available && <span className="badge bg-slate-100 text-slate-500 dark:bg-obsidian-800 dark:text-obsidian-400">No disponible</span>}
-                      <div className="flex gap-1">
-                        <button onClick={() => setEditingProd(p)} className="btn-ghost text-xs" title={`Editar ${p.name}`} aria-label={`Editar producto ${p.name}`}><Edit2 size={14}/></button>
-                        <button onClick={() => setConfirmDeleteProd(p)} className="btn-ghost text-xs text-rose-600 dark:text-rose-400" title={`Eliminar ${p.name}`} aria-label={`Eliminar producto ${p.name}`}><Trash2 size={14}/></button>
+{c.products.map((p, i) => {
+                  const accent = rotateAccent(i);
+                  return (
+                    <div key={p.id} className={`rounded-2xl border border-l-4 border-paper-200 bg-gradient-to-br p-3 transition hover:-translate-y-0.5 hover:shadow-pop dark:border-obsidian-700 ${accent.border} ${accent.bg}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-ink-900 dark:text-white">{p.name}</div>
+                          {p.description && <div className="text-xs text-ink-500 dark:text-obsidian-400">{p.description}</div>}
+                          <div className="text-wine-600 dark:text-wine-300 font-semibold mt-1">{money(p.price)}</div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {!p.available && <span className="badge bg-slate-100 text-slate-500 dark:bg-obsidian-800 dark:text-obsidian-400">No disponible</span>}
+                          <div className="flex gap-1">
+                            <button onClick={() => setEditingProd(p)} className="btn-ghost h-8 w-8 p-0" title={`Editar ${p.name}`} aria-label={`Editar producto ${p.name}`}><Edit2 size={16}/></button>
+                            <button onClick={() => setConfirmDeleteProd(p)} className="btn-ghost h-8 w-8 p-0 text-rose-600 dark:text-rose-400" title={`Eliminar ${p.name}`} aria-label={`Eliminar producto ${p.name}`}><Trash2 size={16}/></button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -307,14 +312,23 @@ function AdminMenu() {
           <div className="card p-4">
             <h3 className="font-semibold text-ink-800 dark:text-obsidian-50 mb-3">Sin categoría</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {noCat.map((p) => (
-                <div key={p.id} className="card p-3 flex items-center justify-between">
-                  <div>
-                    <div className="font-medium text-ink-800 dark:text-obsidian-50">{p.name}</div>
-                    <div className="text-wine-600 dark:text-wine-300 font-semibold">{money(p.price)}</div>
+{noCat.map((p, i) => {
+                const accent = rotateAccent(i);
+                return (
+                  <div key={p.id} className={`rounded-2xl border border-l-4 border-paper-200 bg-gradient-to-br p-3 transition hover:-translate-y-0.5 hover:shadow-pop dark:border-obsidian-700 ${accent.border} ${accent.bg}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-ink-900 dark:text-white">{p.name}</div>
+                        <div className="text-wine-600 dark:text-wine-300 font-semibold">{money(p.price)}</div>
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={() => setEditingProd(p)} className="btn-ghost h-8 w-8 p-0" title={`Editar ${p.name}`} aria-label={`Editar producto ${p.name}`}><Edit2 size={16}/></button>
+                        <button onClick={() => setConfirmDeleteProd(p)} className="btn-ghost h-8 w-8 p-0 text-rose-600 dark:text-rose-400" title={`Eliminar ${p.name}`} aria-label={`Eliminar producto ${p.name}`}><Trash2 size={16}/></button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
