@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import api from "../../lib/api";
 import Header from "../../components/Header";
 import EmptyState from "../../components/EmptyState";
@@ -19,7 +18,6 @@ import {
   Banknote,
   Building2,
   Wallet,
-  CalendarDays,
   ChevronRight,
   Hourglass,
   Navigation,
@@ -279,11 +277,6 @@ export default function DriverHome() {
       <Header
         title="Mis entregas"
         subtitle={`Hola ${user.name.split(" ")[0]} — esto es lo que tenés en la calle`}
-        right={
-          <Link to="/my-history" className="btn-secondary text-sm">
-            <CalendarDays size={14} /> Mi historial
-          </Link>
-        }
       />
 
       {/* KPIs */}

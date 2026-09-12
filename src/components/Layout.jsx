@@ -70,15 +70,17 @@ export default function Layout() {
 
           {/* Derecha: toggle + tema */}
           <div className="flex flex-1 items-center justify-end gap-1">
-            <button
-              type="button"
-              onClick={toggle}
-              className="btn-ghost h-10 w-10 shrink-0 p-0"
-              title={isGrid ? "Cambiar a vista de lista" : "Cambiar a vista de grilla"}
-              aria-label={isGrid ? "Cambiar a vista de lista" : "Cambiar a vista de grilla"}
-            >
-              {isGrid ? <List size={20} /> : <LayoutGrid size={20} />}
-            </button>
+            {user.role === "admin" && (
+              <button
+                type="button"
+                onClick={toggle}
+                className="btn-ghost h-10 w-10 shrink-0 p-0"
+                title={isGrid ? "Cambiar a vista de lista" : "Cambiar a vista de grilla"}
+                aria-label={isGrid ? "Cambiar a vista de lista" : "Cambiar a vista de grilla"}
+              >
+                {isGrid ? <List size={20} /> : <LayoutGrid size={20} />}
+              </button>
+            )}
             <ThemeToggle />
           </div>
         </header>

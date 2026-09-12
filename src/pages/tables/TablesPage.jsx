@@ -8,7 +8,7 @@ import { money, formatTime, statusLabels, statusColors } from "../../lib/format"
 import { useLiveRefresh } from "../../lib/useLiveRefresh";
 import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import DetailModal from "../../components/DetailModal";
-import { statusBanner } from "../../lib/cardAccent";
+import { statusBanner, tileAccent } from "../../lib/cardAccent";
 import {
   X, Minus, Plus, CheckCircle2, Receipt, Clock, ChefHat, ArrowLeft, Utensils, History, AlertTriangle,
 } from "lucide-react";
@@ -393,21 +393,21 @@ return (
               Mesa libre. Tocá el primer producto para abrir la cuenta.
             </p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-              {products.map((p) => (
+              {products.map((p, i) => (
                 <button
                   key={p.id}
                   type="button"
                   disabled={busy}
                   onClick={() => createOrder(p.id)}
-                  className="card p-3 text-left transition hover:border-wine-400 disabled:opacity-60 dark:hover:border-wine-500"
+                  className={`rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-pop disabled:opacity-60 ${tileAccent(i)}`}
                 >
-                  <div className="text-xs text-ink-400 dark:text-obsidian-500">
+                  <div className="text-xs text-ink-500 dark:text-obsidian-400">
                     {p.category_name || "—"}
                   </div>
-                  <div className="text-sm font-medium text-ink-900 dark:text-white">
+                  <div className="font-semibold text-ink-900 dark:text-white">
                     {p.name}
                   </div>
-                  <div className="mt-1 font-semibold text-wine-600 dark:text-wine-300">
+                  <div className="mt-1 font-semibold text-wine-700 dark:text-wine-300">
                     {money(p.price)}
                   </div>
                 </button>
@@ -448,13 +448,16 @@ return (
               {items.map((it) => (
                 <div
                   key={`${it.product_id}-${it.notes || ""}-${it.id}`}
-                  className="flex items-center gap-2 border-b border-paper-200 py-1.5 text-sm dark:border-obsidian-800"
+                  className="flex items-center gap-3 rounded-lg border border-paper-200 px-3 py-2 dark:border-obsidian-800"
                 >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-wine-100 text-base font-bold tabular-nums text-wine-700 dark:bg-wine-900/40 dark:text-wine-300">
+                    {it.quantity}
+                  </span>
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-ink-900 dark:text-white">
+                    <div className="text-base font-semibold text-ink-900 dark:text-white">
                       {it.name_snapshot}
                     </div>
-                    <div className="text-xs text-ink-500 dark:text-obsidian-400">
+                    <div className="text-sm text-ink-500 dark:text-obsidian-400">
                       {money(it.unit_price)} c/u
                     </div>
                   </div>
@@ -469,9 +472,6 @@ return (
                       >
                         <Minus size={14} />
                       </button>
-                      <span className="min-w-[2.25rem] text-center text-base font-bold tabular-nums text-ink-900 dark:text-white">
-                        {it.quantity}—
-                      </span>
                       <button
                         type="button"
                         disabled={busy}
@@ -483,7 +483,9 @@ return (
                       </button>
                     </div>
                   ) : (
-                    <div className="font-semibold tabular-nums">{it.quantity}—</div>
+                    <span className="shrink-0 font-bold tabular-nums text-ink-900 dark:text-white">
+                      {money(Number(it.unit_price) * Number(it.quantity))}
+                    </span>
                   )}
                 </div>
               ))}
@@ -507,27 +509,27 @@ return (
                   Ya no se agregan productos. El cajero cobra desde Caja.
                 </p>
               ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {products.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      disabled={busy}
-                      onClick={() => addItem(p.id)}
-                      className="card p-3 text-left transition hover:border-wine-400 disabled:opacity-60 dark:hover:border-wine-500"
-                    >
-                      <div className="text-xs text-ink-400 dark:text-obsidian-500">
-                        {p.category_name || "—"}
-                      </div>
-                      <div className="text-sm font-medium text-ink-900 dark:text-white">
-                        {p.name}
-                      </div>
-                      <div className="mt-1 font-semibold text-wine-600 dark:text-wine-300">
-                        {money(p.price)}
-                      </div>
-                    </button>
-                  ))}
-                </div>
+<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {products.map((p, i) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        disabled={busy}
+                        onClick={() => addItem(p.id)}
+                        className={`rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-pop disabled:opacity-60 ${tileAccent(i)}`}
+                      >
+                        <div className="text-xs text-ink-500 dark:text-obsidian-400">
+                          {p.category_name || "—"}
+                        </div>
+                        <div className="font-semibold text-ink-900 dark:text-white">
+                          {p.name}
+                        </div>
+                        <div className="mt-1 font-semibold text-wine-700 dark:text-wine-300">
+                          {money(p.price)}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
               )}
             </div>
           )}

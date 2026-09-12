@@ -20,12 +20,25 @@ import {
   ShoppingBag,
   Clock,
   Package,
+  Download,
+  FileText,
+  FileSpreadsheet,
 } from "lucide-react";
 
 function daysSince(iso) {
   if (!iso) return 0;
   const diff = Date.now() - new Date(iso).getTime();
   return Math.floor(diff / 86400000);
+}
+
+function downloadBlob(filename, content, mime = "text/plain") {
+  const blob = new Blob(["\ufeff" + content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 const PAY_LABELS = {
@@ -295,20 +308,92 @@ export default function Debts() {
   const totalDebt = orders.reduce((s, o) => s + Number(o.total), 0);
   const pending = tab === "pending";
 
+  const orderTitle = (o) =>
+    o.customer_name || (o.table_number ? `Mesa ${o.table_number}` : "Sin nombre");
+
+  const rows = () =>
+    orders.map((o) => {
+      const date = o.closed_at
+        ? formatDate(o.closed_at)
+        : o.debt_settled_at
+          ? formatDate(o.debt_settled_at)
+          : "";
+      return {
+        id: o.id,
+        tipo: typeLabels[o.type] || o.type,
+        cliente: orderTitle(o),
+        monto: Number(o.total),
+        fecha: date,
+        metodo: o.payment_method ? payMethodLabel(o.payment_method) : "",
+      };
+    });
+
+  const exportCsv = () => {
+    const data = rows();
+    const header = "Pedido,Tipo,Cliente,Monto,Fecha,Metodo";
+    const lines = data.map((r) =>
+      [r.id, r.tipo, `"${r.cliente}"`, r.monto.toFixed(2), r.fecha, `"${r.metodo}"`].join(",")
+    );
+    downloadBlob(`deudas-${Date.now()}.csv`, [header, ...lines].join("\n"), "text/csv");
+    toast.success("CSV descargado");
+  };
+
+  const exportTxt = () => {
+    const data = rows();
+    const total = data.reduce((s, r) => s + r.monto, 0);
+    const lines = data.map((r) =>
+      `#${r.id} · ${r.cliente} · ${r.tipo} · ${money(r.monto)}${r.metodo ? ` (${r.metodo})` : ""}`
+    );
+    const content = `DEUDAS ${pending ? "PENDIENTES" : "COBRADAS"}\n${"-".repeat(40)}\n${lines.join("\n")}\n${"-".repeat(40)}\nTotal: ${money(total)}\n`;
+    downloadBlob(`deudas-${Date.now()}.txt`, content, "text/plain");
+    toast.success("Texto descargado");
+  };
+
+  const exportPdf = () => {
+    const data = rows();
+    const total = data.reduce((s, r) => s + r.monto, 0);
+    const w = window.open("", "_blank", "noopener,noreferrer");
+    if (!w) return toast.error("Permití ventanas emergentes para generar el PDF");
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Deudas</title>
+      <style>body{font-family:sans-serif;padding:24px}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left}th{background:#f5f5f5}</style>
+      </head><body>
+      <h2>Deudas ${pending ? "pendientes" : "cobradas"}</h2>
+      <table><thead><tr><th>Pedido</th><th>Tipo</th><th>Cliente</th><th>Monto</th><th>Fecha</th><th>Método</th></tr></thead><tbody>
+      ${data.map((r) => `<tr><td>#${r.id}</td><td>${r.tipo}</td><td>${r.cliente}</td><td>${money(r.monto)}</td><td>${r.fecha}</td><td>${r.metodo || "—"}</td></tr>`).join("")}
+      </tbody></table>
+      <h3>Total: ${money(total)}</h3>
+      <script>window.onload=function(){window.print();}</script>
+      </body></html>`);
+    w.document.close();
+  };
+
   return (
     <div>
       <Header
         title="Deudas"
         subtitle={pending ? "Pendientes de cobro · Tocá una para ver el pedido" : "Ya cobradas"}
         right={
-          <SegmentedControl
-            value={tab}
-            onChange={setTab}
-            options={[
-              { value: "pending", label: "Pendientes" },
-              { value: "settled", label: "Cobradas" },
-            ]}
-          />
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex gap-1">
+              <button onClick={exportCsv} className="btn-secondary h-9 px-2.5 text-xs" title="Descargar CSV (Excel)">
+                <FileSpreadsheet size={15} /> CSV
+              </button>
+              <button onClick={exportTxt} className="btn-secondary h-9 px-2.5 text-xs" title="Descargar texto (WhatsApp)">
+                <FileText size={15} /> TXT
+              </button>
+              <button onClick={exportPdf} className="btn-secondary h-9 px-2.5 text-xs" title="Imprimir / guardar PDF">
+                <Download size={15} /> PDF
+              </button>
+            </div>
+            <SegmentedControl
+              value={tab}
+              onChange={setTab}
+              options={[
+                { value: "pending", label: "Pendientes" },
+                { value: "settled", label: "Cobradas" },
+              ]}
+            />
+          </div>
         }
       />
 
