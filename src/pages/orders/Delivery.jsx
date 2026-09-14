@@ -17,9 +17,10 @@ import Modal from "../../components/Modal";
 import SharedOrderCard from "../../components/OrderCard";
 import RiderHistoryModal from "../../components/RiderHistoryModal";
 import DetailModal from "../../components/DetailModal";
+import TicketDownload from "../../components/TicketDownload";
 import { diffNewOrders, playBeep, isNotifyMuted, setNotifyMuted } from "../../lib/notify";
 import {
-  Phone, MapPin, Plus, ChevronRight, X, User as UserIcon,
+  Phone, MapPin, Plus, ChevronRight, ChevronDown, X, User as UserIcon,
   CheckCircle2, Truck, XCircle, StickyNote, Search,
   ChefHat, ArrowLeft, RotateCcw, AlertTriangle, Package,
   Clock, Volume2, VolumeX, Bell,
@@ -621,7 +622,7 @@ function AssignModal({ order, onClose, onAssigned }) {
   );
 }
 
-function OrderDetailModal({ order, onClose, onChanged }) {
+function OrderDetailModal({ order, onClose, onChanged, onPaid }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const load = async () => {
@@ -643,6 +644,12 @@ function OrderDetailModal({ order, onClose, onChanged }) {
     await api.post(`/orders/${order.id}/close`, { payment_method: "cash" });
     onChanged();
     onClose();
+    onPaid?.({
+      ...order,
+      payment_status: "paid",
+      payment_method: "cash",
+      closed_at: new Date().toISOString(),
+    });
   };
 
   const markDebt = async () => {
@@ -899,6 +906,8 @@ export default function Delivery() {
   const [muted, setMuted] = useState(() => isNotifyMuted());
   const [newFlash, setNewFlash] = useState(0);
   const [enriched, setEnriched] = useState([]);
+  const [openHours, setOpenHours] = useState(() => new Set());
+  const [ticketOrder, setTicketOrder] = useState(null);
   const knownIdsRef = useRef(null);
 
   const load = async ({ silent = false } = {}) => {
@@ -985,6 +994,37 @@ export default function Delivery() {
     };
   }, [filter, filtered]);
 
+  const deliveredList = enriched.length ? enriched : filtered;
+
+  const hourGroups = useMemo(() => {
+    if (filter !== "delivered") return [];
+    const map = new Map();
+    for (const o of deliveredList) {
+      const d = new Date(o.closed_at || o.created_at);
+      const h = d.getHours();
+      const key = `${String(h).padStart(2, "0")}:00 – ${String(h + 1).padStart(2, "0")}:00`;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(o);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([label, list]) => ({
+        label,
+        count: list.length,
+        total: list.reduce((s, o) => s + Number(o.total || 0), 0),
+        orders: list,
+      }));
+  }, [filter, deliveredList]);
+
+  const toggleHour = (label) => {
+    setOpenHours((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  };
+
   const onCreated = async (payload) => { await api.post("/orders", payload); await load(); };
   const setStatus = async (id, status) => {
     await api.post(`/orders/${id}/status`, { status });
@@ -1066,15 +1106,66 @@ export default function Delivery() {
 
       {loading ? (
         <div className="text-sm text-ink-600 dark:text-white">Cargando…</div>
-      ) : filter === "delivered" || filter === "cancelled" ? (
-        <div>
+      ) : filter === "delivered" ? (
+            <div className="space-y-2">
+              {hourGroups.length === 0 ? (
+                <div className="card p-8 text-center text-sm text-ink-500">
+                  No hay pedidos entregados.
+                </div>
+              ) : (
+                hourGroups.map((g) => {
+                  const open = openHours.has(g.label);
+                  return (
+                    <div key={g.label} className="overflow-hidden rounded-2xl border border-paper-300 dark:border-obsidian-700">
+                      <button
+                        type="button"
+                        onClick={() => toggleHour(g.label)}
+                        className="flex w-full items-center justify-between gap-2 bg-paper-100 px-4 py-2.5 text-left dark:bg-obsidian-800"
+                      >
+                        <span className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
+                          <Clock size={15} className="text-ink-500 dark:text-obsidian-400" />
+                          {g.label}
+                          <span className="rounded-full bg-paper-300/70 px-2 py-0.5 text-[11px] font-bold tabular-nums text-ink-600 dark:bg-obsidian-700 dark:text-obsidian-200">
+                            {g.count}
+                          </span>
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <span className="font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+                            {money(g.total)}
+                          </span>
+                          <ChevronDown
+                            size={16}
+                            className={`text-ink-400 transition-transform ${open ? "rotate-180" : ""}`}
+                          />
+                        </span>
+                      </button>
+                      {open && (
+                        <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-3 bg-paper-50/50 p-3 sm:grid-cols-2 xl:grid-cols-3 dark:bg-obsidian-950/40">
+                          {g.orders.map((o, i) => (
+                            <CompletedDeliveryCard
+                              key={o.id}
+                              order={o}
+                              rotateIndex={i}
+                              onReopen={(x) => setToReopen(x)}
+                              onClick={() => setToView(o)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          ) : (
+            <div>
           <div className="mb-3 text-sm font-medium text-ink-600 dark:text-obsidian-300">
-            {filter === "delivered" ? "Entregados" : "Cancelados"} · {(enriched.length || filtered.length)} pedido
+            Cancelados · {(enriched.length || filtered.length)} pedido
             {(enriched.length || filtered.length) === 1 ? "" : "s"}
           </div>
           {(enriched.length || filtered.length) === 0 ? (
             <div className="card p-8 text-center text-sm text-ink-500">
-              No hay pedidos {filter === "delivered" ? "entregados" : "cancelados"}.
+              No hay pedidos cancelados.
             </div>
           ) : (
             <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -1083,14 +1174,14 @@ export default function Delivery() {
                   key={o.id}
                   order={o}
                   rotateIndex={i}
-                  onReopen={filter === "delivered" ? (x) => setToReopen(x) : undefined}
+                  onReopen={undefined}
                   onClick={() => setToView(o)}
                 />
               ))}
             </div>
           )}
-        </div>
-      ) : (
+            </div>
+          )}
         <div
           className={`mx-auto grid w-full max-w-[1600px] grid-cols-1 gap-4 items-start ${
             filter === "active" ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-2 xl:grid-cols-4"
@@ -1158,7 +1249,8 @@ export default function Delivery() {
 
       {openNew && <NewOrderModal onClose={() => setOpenNew(false)} onCreated={onCreated} />}
       {toAssign && <AssignModal order={toAssign} onClose={() => setToAssign(null)} onAssigned={load} />}
-      {toView && <OrderDetailModal order={toView} onClose={() => setToView(null)} onChanged={load} />}
+      {toView && <OrderDetailModal order={toView} onClose={() => setToView(null)} onChanged={load} onPaid={setTicketOrder} />}
+      {ticketOrder && <TicketDownload order={ticketOrder} onClose={() => setTicketOrder(null)} />}
       {toReopen && <ReopenModal order={toReopen} onClose={() => setToReopen(null)} onReopened={load} />}
       {toCancel && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">

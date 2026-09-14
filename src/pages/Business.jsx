@@ -167,6 +167,10 @@ function CuentaModal({ initial, onClose, onSaved }) {
           <label className="label">Sitio web / red social</label>
           <input className="input" value={form.website || ""} onChange={(e) => set("website", e.target.value)} maxLength={200} placeholder="https://…" />
         </div>
+        <div>
+          <label className="label">Pie del ticket (mensaje de cierre)</label>
+          <input className="input" value={form.ticket_footer || ""} onChange={(e) => set("ticket_footer", e.target.value)} maxLength={140} placeholder="¡Gracias por su preferencia!" />
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Moneda (código ISO)</label>
@@ -282,9 +286,9 @@ function CrecimientoTab() {
 
       {/* Hero: ventas + ganancia neta */}
       <div className="grid gap-3 lg:grid-cols-2">
-        <div className="card border-l-4 border-l-wine-500 p-5">
+        <div className="card border-l-4 border-l-emerald-500 p-5">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-obsidian-400">
-            <DollarSign size={14} className="text-wine-600 dark:text-wine-300" /> Ventas del período
+            <DollarSign size={14} className="text-emerald-600 dark:text-emerald-300" /> Ventas del período
           </div>
           <div className="mt-1 flex items-end gap-3">
             <span className="text-4xl font-extrabold tabular-nums text-ink-900 dark:text-white">{money(salesTotal)}</span>

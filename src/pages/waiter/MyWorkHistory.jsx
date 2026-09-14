@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, CalendarDays, ChevronRight, Utensils, Truck, Banknote, Building2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronRight, Truck, Banknote, Building2 } from "lucide-react";
 import api from "../../lib/api";
 import Header from "../../components/Header";
+import OrderCard from "../../components/OrderCard";
+import OrderDetailModal from "../../components/OrderDetailModal";
 import { useAuth } from "../../store/auth";
 import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import { money, formatTime, payMethodLabel } from "../../lib/format";
@@ -20,14 +22,6 @@ function formatDayLabel(iso) {
   });
 }
 
-function payLabel(method) {
-  if (method === "cash") return "Efectivo";
-  if (method === "card") return "Tarjeta";
-  if (method === "transfer") return "Transferencia";
-  if (method === "mixed") return "Mixto";
-  return method || "—";
-}
-
 function WaiterView() {
   const [days, setDays] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +29,7 @@ function WaiterView() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [viewOrder, setViewOrder] = useState(null);
 
   const loadDays = useCallback(async () => {
     setLoading(true);
@@ -133,84 +128,21 @@ function WaiterView() {
                 Sin pedidos este día.
               </div>
             ) : (
-              <div className="space-y-3">
-                {detail.orders.map((o) => (
-                  <div
+              <div className="space-y-2">
+                {detail.orders.map((o, i) => (
+                  <OrderCard
                     key={o.id}
-                    className="overflow-hidden rounded-xl border border-paper-300 dark:border-obsidian-700"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2 bg-paper-100 px-3 py-2 text-xs font-medium text-ink-800 dark:bg-obsidian-800 dark:text-white">
-                      <span>
-                        {formatTime(o.created_at)}
-                        {o.closed_at ? ` → ${formatTime(o.closed_at)}` : ""}
-                      </span>
-                      <span
-                        className={`badge text-[10px] ${
-                          o.payment_status === "paid"
-                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
-                            : o.payment_status === "debt"
-                              ? "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
-                              : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                        }`}
-                      >
-                        {o.payment_status === "paid"
-                          ? "Pagado"
-                          : o.payment_status === "debt"
-                            ? "Deuda"
-                            : o.payment_status === "pending"
-                              ? "Pendiente"
-                              : o.payment_status}
-                      </span>
-                    </div>
-                    <div className="space-y-1.5 px-3 py-2">
-                      <div className="flex items-center gap-2 text-sm font-semibold text-ink-800 dark:text-obsidian-50">
-                        <Utensils size={14} className="shrink-0 text-wine-600" />
-                        {o.type === "table"
-                          ? `Mesa ${o.table_number ?? "?"}${o.table_label ? ` · ${o.table_label}` : ""}`
-                          : o.type === "pickup"
-                            ? "Para llevar"
-                            : "Domicilio"}
-                        {o.customer_name && (
-                          <span className="font-normal text-ink-500">· {o.customer_name}</span>
-                        )}
-                      </div>
-                      {o.items?.length > 0 && (
-                        <div className="space-y-1.5">
-                          {o.items.map((item, i) => (
-                            <div key={i} className="flex items-center gap-2">
-                              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-wine-100 text-sm font-bold tabular-nums text-wine-700 dark:bg-wine-900/40 dark:text-wine-300">
-                                {item.quantity}
-                              </span>
-                              <span className="flex-1 text-sm font-medium text-ink-800 dark:text-obsidian-100">
-                                {item.name_snapshot}
-                                {item.notes ? <span className="text-xs text-amber-700 dark:text-amber-400"> ({item.notes})</span> : ""}
-                              </span>
-                              <span className="shrink-0 text-sm font-semibold tabular-nums text-ink-600 dark:text-obsidian-300">
-                                {money(Number(item.unit_price) * Number(item.quantity))}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between border-t border-paper-200 pt-1.5 text-sm dark:border-obsidian-700">
-                        <span className="text-xs text-ink-500">{payLabel(o.payment_method)}</span>
-                        <div className="text-right">
-                          <span className="font-bold text-ink-900 dark:text-white">
-                            {money(o.total)}
-                          </span>
-                          {Number(o.tip) > 0 && (
-                            <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">
-                              +{money(o.tip)} propina
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    order={o}
+                    rotateIndex={i}
+                    onClick={() => setViewOrder(o)}
+                  />
                 ))}
               </div>
             )}
           </>
+        )}
+        {viewOrder && (
+          <OrderDetailModal order={viewOrder} onClose={() => setViewOrder(null)} />
         )}
       </div>
     );
@@ -263,7 +195,7 @@ function WaiterView() {
                 onClick={() => openDay(d.date)}
                 className="card flex w-full items-center gap-3 p-4 text-left transition hover:border-wine-400 hover:shadow-pop dark:hover:border-wine-500"
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-wine-50 text-wine-700 dark:bg-wine-900/40 dark:text-wine-300">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
                   <CalendarDays size={20} />
                 </div>
                 <div className="min-w-0 flex-1">

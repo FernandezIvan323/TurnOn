@@ -15,6 +15,7 @@ let state = {
   timezone: "America/Mexico_City",
   open_hour: null,
   close_hour: null,
+  ticket_footer: "¡Gracias por su preferencia!",
 };
 
 export function setSettings(next) {

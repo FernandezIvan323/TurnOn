@@ -9,6 +9,7 @@ import {
 } from "../../lib/format";
 import { kanbanColumnClass, KANBAN_COUNT_PILL } from "../../lib/kanbanTones";
 import { diffNewOrders, playBeep, isNotifyMuted, setNotifyMuted } from "../../lib/notify";
+import TicketDownload from "../../components/TicketDownload";
 import {
   ShoppingBag, Plus, X, Clock, CheckCircle2, ChefHat,
   ChevronRight, StickyNote, Trash2, ArrowRight, Timer,
@@ -441,7 +442,13 @@ function PayModal({ order, onClose, onPaid }) {
     setBusy(true); setErr(null);
     try {
       await api.post(`/orders/${order.id}/close`, { payment_method: method, tip: 0 });
-      onPaid(); onClose();
+      onPaid({
+        ...order,
+        payment_status: "paid",
+        payment_method: method,
+        closed_at: new Date().toISOString(),
+      });
+      onClose();
     } catch (e) {
       setErr(e.response?.data?.error || e.message);
     } finally { setBusy(false); }
@@ -498,6 +505,7 @@ export default function PickupPage() {
   const [toPay, setToPay] = useState(null);
   const [toCancel, setToCancel] = useState(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [ticketOrder, setTicketOrder] = useState(null);
 
   const [muted, setMuted] = useState(() => isNotifyMuted());
   const [newFlash, setNewFlash] = useState(0);
@@ -803,7 +811,17 @@ export default function PickupPage() {
       )}
 
       {openNew && <NewPickupModal onClose={() => setOpenNew(false)} onCreated={onCreated} />}
-      {toPay && <PayModal order={toPay} onClose={() => setToPay(null)} onPaid={load} />}
+      {toPay && (
+        <PayModal
+          order={toPay}
+          onClose={() => setToPay(null)}
+          onPaid={(o) => {
+            setTicketOrder(o);
+            load();
+          }}
+        />
+      )}
+      {ticketOrder && <TicketDownload order={ticketOrder} onClose={() => setTicketOrder(null)} />}
       {toCancel && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
           <div className="card w-full max-w-md p-5">

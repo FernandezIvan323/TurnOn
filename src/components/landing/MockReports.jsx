@@ -1,7 +1,7 @@
 import { BarChart3, TrendingUp, DollarSign, ShoppingBag, Sparkles } from "lucide-react";
 
 const STATS = [
-  { label: "Ventas", value: "$286.400", icon: DollarSign, tone: "text-wine-700 dark:text-wine-300" },
+  { label: "Ventas", value: "$286.400", icon: DollarSign, tone: "text-emerald-700 dark:text-emerald-300" },
   { label: "Pedidos", value: "36", icon: ShoppingBag, tone: "text-sky-700 dark:text-sky-300" },
   { label: "Ticket prom.", value: "$7.955", icon: TrendingUp, tone: "text-emerald-700 dark:text-emerald-300" },
   { label: "Propinas", value: "$12.400", icon: Sparkles, tone: "text-amber-700 dark:text-amber-300" },

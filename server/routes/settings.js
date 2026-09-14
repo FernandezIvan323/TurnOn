@@ -15,6 +15,7 @@ const DEFAULTS = {
   timezone: "America/Mexico_City",
   open_hour: null,
   close_hour: null,
+  ticket_footer: "¡Gracias por su preferencia!",
 };
 
 /** Convierte fila de BD a un objeto plano con defaults. */
@@ -31,6 +32,7 @@ function normalize(row) {
     timezone: row.timezone ?? DEFAULTS.timezone,
     open_hour: row.open_hour ?? null,
     close_hour: row.close_hour ?? null,
+    ticket_footer: row.ticket_footer ?? DEFAULTS.ticket_footer,
   };
 }
 
@@ -68,14 +70,16 @@ router.put("/", authRequired, requireRole("admin"), async (req, res) => {
     typeof b.email === "string" ? b.email.trim().slice(0, 120) || null : null;
   const website =
     typeof b.website === "string" ? b.website.trim().slice(0, 200) || null : null;
+  const ticket_footer =
+    typeof b.ticket_footer === "string" ? b.ticket_footer.trim().slice(0, 140) || DEFAULTS.ticket_footer : DEFAULTS.ticket_footer;
 
   const timeRe = /^\d{2}:\d{2}(:\d{2})?$/;
   const open_hour = typeof b.open_hour === "string" && timeRe.test(b.open_hour) ? b.open_hour : null;
   const close_hour = typeof b.close_hour === "string" && timeRe.test(b.close_hour) ? b.close_hour : null;
 
   const { rows } = await query(
-    `INSERT INTO settings (id, business_name, address, phone, email, website, currency, locale, timezone, open_hour, close_hour, updated_at)
-     VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+    `INSERT INTO settings (id, business_name, address, phone, email, website, currency, locale, timezone, open_hour, close_hour, ticket_footer, updated_at)
+     VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
      ON CONFLICT (id) DO UPDATE SET
        business_name = EXCLUDED.business_name,
        address       = EXCLUDED.address,
@@ -87,9 +91,10 @@ router.put("/", authRequired, requireRole("admin"), async (req, res) => {
        timezone      = EXCLUDED.timezone,
        open_hour     = EXCLUDED.open_hour,
        close_hour    = EXCLUDED.close_hour,
+       ticket_footer = EXCLUDED.ticket_footer,
        updated_at    = NOW()
      RETURNING *`,
-    [business_name, address, phone, email, website, currency, locale, timezone, open_hour, close_hour]
+    [business_name, address, phone, email, website, currency, locale, timezone, open_hour, close_hour, ticket_footer]
   );
 
   res.json(normalize(rows[0]));

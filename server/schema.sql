@@ -152,6 +152,7 @@ CREATE TABLE IF NOT EXISTS settings (
   timezone      VARCHAR(64)  NOT NULL DEFAULT 'America/Mexico_City',
   open_hour     TIME,
   close_hour    TIME,
+  ticket_footer VARCHAR(140) NOT NULL DEFAULT '¡Gracias por su preferencia!',
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

@@ -34,7 +34,7 @@ const MODULES = [
 ];
 
 const KPIS = [
-  { label: "Ventas hoy", value: "$286.400", icon: DollarSign, tone: "text-wine-700 dark:text-wine-300" },
+  { label: "Ventas hoy", value: "$286.400", icon: DollarSign, tone: "text-emerald-700 dark:text-emerald-300" },
   { label: "Por cobrar", value: "3", icon: PackageCheck, tone: "text-sky-700 dark:text-sky-300" },
   { label: "En camino", value: "2", icon: Bike, tone: "text-indigo-700 dark:text-indigo-300" },
 ];

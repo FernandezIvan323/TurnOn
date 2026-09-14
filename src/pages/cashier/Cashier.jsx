@@ -5,7 +5,7 @@ import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
 import { money, formatTime, payMethodLabel, typeLabels, statusLabels, statusColors, typeColors, assignTurns } from "../../lib/format";
 import { useLiveRefresh } from "../../lib/useLiveRefresh";
-import ReceiptTicket from "../../components/ReceiptTicket";
+import TicketDownload from "../../components/TicketDownload";
 import OrderDetailModal from "../../components/OrderDetailModal";
 import Modal from "../../components/Modal";
 import SegmentedControl from "../../components/SegmentedControl";
@@ -480,7 +480,7 @@ export default function Cashier() {
         />
       )}
       {ticketOrder && (
-        <ReceiptTicket
+        <TicketDownload
           order={ticketOrder}
           onClose={() => setTicketOrder(null)}
         />

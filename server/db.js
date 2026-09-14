@@ -197,12 +197,14 @@ export async function runMigrations() {
       timezone      VARCHAR(64)  NOT NULL DEFAULT 'America/Mexico_City',
       open_hour     TIME,
       close_hour    TIME,
+      ticket_footer VARCHAR(140) NOT NULL DEFAULT '¡Gracias por su preferencia!',
       updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
   await pool.query(`
     ALTER TABLE settings ADD COLUMN IF NOT EXISTS email VARCHAR(120);
     ALTER TABLE settings ADD COLUMN IF NOT EXISTS website VARCHAR(200);
+    ALTER TABLE settings ADD COLUMN IF NOT EXISTS ticket_footer VARCHAR(140) NOT NULL DEFAULT '¡Gracias por su preferencia!';
   `);
   await pool.query(`
     INSERT INTO settings (id, business_name, currency, locale, timezone)

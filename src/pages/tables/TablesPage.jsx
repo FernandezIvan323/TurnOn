@@ -10,7 +10,7 @@ import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import DetailModal from "../../components/DetailModal";
 import { statusBanner, tileAccent } from "../../lib/cardAccent";
 import {
-  X, Minus, Plus, CheckCircle2, Receipt, Clock, ChefHat, ArrowLeft, Utensils, History, AlertTriangle,
+  X, Minus, Plus, CheckCircle2, Receipt, Clock, ChefHat, ArrowLeft, Utensils, AlertTriangle,
 } from "lucide-react";
 
 function timeAgo(iso) {
@@ -604,124 +604,12 @@ return (
   );
 }
 
-function TableHistoryModal({ onClose }) {
-  const [tables, setTables] = useState([]);
-  const [selectedTable, setSelectedTable] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    api.get("/tables").then((r) => setTables(r.data));
-  }, []);
-
-  const loadHistory = async (t) => {
-    setSelectedTable(t);
-    setLoading(true);
-    try {
-      const { data } = await api.get(`/orders/table-history/${t.id}`);
-      setHistory(data);
-    } catch {
-      /* ignore */
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-      <div className="card flex max-h-[90vh] w-full max-w-2xl flex-col">
-        <div className="flex items-center justify-between border-b border-paper-300 px-5 py-4 dark:border-obsidian-800">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-ink-900 dark:text-white">
-            <History size={18} /> Historial de mesas
-          </h2>
-          <button type="button" onClick={onClose} className="btn-ghost">
-            <X size={18} />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-5">
-          <div className="mb-4 flex flex-wrap gap-2">
-            {tables.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => loadHistory(t)}
-                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
-                  selectedTable?.id === t.id
-                    ? "border-wine-500 bg-wine-600 text-white"
-                    : "border-paper-300 bg-white text-ink-600 hover:bg-paper-200 dark:border-obsidian-700 dark:bg-obsidian-900 dark:text-obsidian-200"
-                }`}
-              >
-                Mesa {t.number}
-              </button>
-            ))}
-          </div>
-          {!selectedTable && (
-            <div className="py-8 text-center text-sm text-ink-500">
-              Seleccioná una mesa
-            </div>
-          )}
-          {loading && (
-            <div className="text-sm text-ink-500">Cargando…</div>
-          )}
-          {selectedTable && !loading && history.length === 0 && (
-            <div className="py-8 text-center text-sm text-ink-500">
-              Mesa {selectedTable.number} sin pedidos previos.
-            </div>
-          )}
-{selectedTable && !loading && history.length > 0 && (
-            <div className="space-y-2">
-              {history.map((o) => {
-                const borderCls =
-                  o.status === "paid" || o.status === "delivered"
-                    ? "border-l-emerald-500"
-                    : o.status === "cancelled"
-                    ? "border-l-rose-500"
-                    : o.status === "ready_to_pay"
-                    ? "border-l-amber-500"
-                    : o.status === "preparing"
-                    ? "border-l-blue-500"
-                    : "border-l-rose-500";
-                return (
-                  <div key={o.id} className={`card border-l-4 p-3 ${borderCls}`}>
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="font-semibold text-ink-900 dark:text-white">
-                          Pedido #{o.id}
-                        </div>
-                        <div className="text-xs text-ink-600 dark:text-obsidian-400">
-                          {o.user_name ? `por ${o.user_name}` : "—"} ·{" "}
-                          {o.closed_at
-                            ? new Date(o.closed_at).toLocaleDateString()
-                            : new Date(o.created_at).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <div className="font-bold tabular-nums text-ink-900 dark:text-white">
-                          {money(o.total)}
-                        </div>
-                        <span className={`badge text-[10px] ${statusColors[o.status] || ""}`}>
-                          {statusLabels[o.status] || o.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function TablesPage() {
   useDocumentTitle("Mesas");
   const { user } = useAuth();
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
-  const [showHistory, setShowHistory] = useState(false);
+const [selected, setSelected] = useState(null);
   const [viewMode, setViewMode] = useState("all"); // "all" | "byWaiter"
   const nav = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -945,7 +833,7 @@ export default function TablesPage() {
 right={
           isAdmin ? (
             <div className="flex items-center gap-2">
-              <SegmentedControl
+<SegmentedControl
                 value={viewMode}
                 onChange={setViewMode}
                 options={[
@@ -953,13 +841,6 @@ right={
                   { value: "byWaiter", label: "Por mesero" },
                 ]}
               />
-              <button
-                type="button"
-                onClick={() => setShowHistory(true)}
-                className="btn-secondary h-9"
-              >
-                <History size={16} /> Historial
-              </button>
             </div>
           ) : null
         }
@@ -1019,14 +900,11 @@ right={
             load({ silent: true });
           }}
           onChanged={() => load({ silent: true })}
-          onGoCashier={() => {
+onGoCashier={() => {
             setSelected(null);
             nav("/cashier");
           }}
         />
-      )}
-      {showHistory && (
-        <TableHistoryModal onClose={() => setShowHistory(false)} />
       )}
     </div>
   );

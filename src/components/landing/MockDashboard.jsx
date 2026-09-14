@@ -16,7 +16,7 @@ import {
  * Dinero del día → Atención ahora → Del día.
  */
 const money = [
-  { label: "Ventas", value: "$286.400", icon: DollarSign, tone: "text-ink-900 dark:text-white", hint: "+12% vs ayer", hintTone: "text-emerald-600 dark:text-emerald-400" },
+  { label: "Ventas", value: "$286.400", icon: DollarSign, tone: "text-ink-900 dark:text-white", iconTone: "text-emerald-700 dark:text-emerald-300", hint: "+12% vs ayer", hintTone: "text-emerald-600 dark:text-emerald-400" },
   { label: "Gastos", value: "$42.100", icon: TrendingDown, tone: "text-rose-700 dark:text-rose-300", hint: "3 registrados" },
   { label: "Neto", value: "$244.300", icon: TrendingUp, tone: "text-emerald-700 dark:text-emerald-300", hint: "$286.400 − $42.100" },
   { label: "Pedidos", value: "36", icon: Receipt, tone: "text-amber-700 dark:text-amber-300", hint: "Ticket prom. $7.955" },
@@ -100,13 +100,13 @@ export default function MockDashboard({ compact = false }) {
       {/* 1. Dinero del día */}
       <SectionLabel>Dinero del día</SectionLabel>
       <div className="mb-3 grid grid-cols-2 gap-1.5">
-        {money.map(({ label, value, icon: Icon, tone, hint, hintTone }) => (
+        {money.map(({ label, value, icon: Icon, tone, iconTone, hint, hintTone }) => (
           <div key={label} className="rounded-xl border border-paper-200 bg-white p-2 dark:border-obsidian-700 dark:bg-obsidian-900">
             <div className="flex items-center justify-between">
               <span className="truncate text-[9px] font-semibold uppercase tracking-wide text-ink-500 dark:text-obsidian-400">
                 {label}
               </span>
-              <Icon size={11} className={`shrink-0 ${tone}`} />
+              <Icon size={11} className={`shrink-0 ${iconTone || tone}`} />
             </div>
             <p className={`mt-0.5 text-lg font-bold tabular-nums ${tone}`}>{value}</p>
             {hint && <p className={`text-[8px] ${hintTone || "text-ink-400 dark:text-obsidian-500"}`}>{hint}</p>}

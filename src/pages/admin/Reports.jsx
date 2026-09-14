@@ -287,6 +287,7 @@ export default function Reports() {
                   label="Ventas"
                   value={money(sales?.current?.sales || 0)}
                   sub={<TrendPill current={sales?.current?.sales} previous={sales?.previous?.sales} />}
+                  color="bg-emerald-50 text-emerald-700" darkColor="dark:bg-emerald-900/30 dark:text-emerald-300"
                 />
                 <StatCard
                   icon={ShoppingBag}

@@ -281,6 +281,8 @@ function AdminDashboard() {
           label="Ventas"
           value={money(t.total_sales || 0)}
           hint={<Trend current={t.total_sales} previous={data?.yesterday_sales} />}
+          color="bg-emerald-50 text-emerald-700"
+          darkColor="dark:bg-emerald-900/30 dark:text-emerald-300"
         />
         <KpiCard
           icon={TrendingDown}
