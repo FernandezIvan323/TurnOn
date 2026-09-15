@@ -114,13 +114,19 @@ router.get("/users", authRequired, requireRole("admin"), async (_req, res) => {
 });
 
 router.post("/users", authRequired, requireRole("admin"), async (req, res) => {
-  const { username, name, pin, role = "waiter", delivery_person_id = null } = req.body || {};
-  if (!username || !name || !pin) return res.status(400).json({ error: "Faltan datos" });
+  const { username, name, pin, role = "waiter", delivery_person_id = null, active } = req.body || {};
+  if (!username || !name) return res.status(400).json({ error: "Faltan datos" });
   if (!["admin", "waiter", "delivery"].includes(role))
     return res.status(400).json({ error: "Rol inválido" });
-  if (!/^\d{4}$/.test(String(pin)))
-    return res.status(400).json({ error: "El PIN debe ser de 4 dígitos" });
-  const hash = await bcrypt.hash(String(pin), 10);
+
+  // Si active=false se permite omitir el PIN (cuenta creada sin acceso).
+  const isActive = active !== false;
+  let pinToUse = null;
+  if (typeof pin === "string" && /^\d{4}$/.test(pin)) pinToUse = pin;
+  else if (isActive) return res.status(400).json({ error: "El PIN debe ser de 4 dígitos" });
+  else pinToUse = String(1000 + Math.floor(Math.random() * 9000));
+
+  const hash = await bcrypt.hash(pinToUse, 10);
   try {
     if (role === "delivery") {
       if (!delivery_person_id)
@@ -133,8 +139,8 @@ router.post("/users", authRequired, requireRole("admin"), async (req, res) => {
         return res.status(409).json({ error: "Repartidor no existe o ya tiene acceso" });
     }
     const { rows } = await query(
-      "INSERT INTO users (username, name, pin, role) VALUES ($1,$2,$3,$4) RETURNING id, username, name, role, active",
-      [username.toLowerCase(), name, hash, role]
+      "INSERT INTO users (username, name, pin, role, active) VALUES ($1,$2,$3,$4,$5) RETURNING id, username, name, role, active",
+      [username.toLowerCase(), name, hash, role, isActive]
     );
     const user = rows[0];
     if (role === "delivery") {
@@ -190,6 +196,24 @@ router.put("/me/pin", authRequired, async (req, res) => {
   const hash = await bcrypt.hash(String(new_pin), 10);
   await query("UPDATE users SET pin = $2 WHERE id = $1", [req.user.id, hash]);
   res.json({ ok: true });
+});
+
+// Admin: activar/desactivar usuario (quitar/dar acceso al sistema)
+router.put("/users/:id/active", authRequired, requireRole("admin"), async (req, res) => {
+  const userId = Number(req.params.id);
+  if (!Number.isInteger(userId) || userId <= 0)
+    return res.status(400).json({ error: "ID de usuario inválido" });
+  const active = req.body?.active === true || req.body?.active === false
+    ? req.body.active
+    : null;
+  if (active === null)
+    return res.status(400).json({ error: "Se requiere active (booleano)" });
+  const { rows } = await query(
+    "UPDATE users SET active = $2 WHERE id = $1 AND role != 'admin' RETURNING id, username, name, role, active",
+    [userId, active]
+  );
+  if (rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado o es admin" });
+  res.json({ ok: true, user: rows[0] });
 });
 
 export default router;

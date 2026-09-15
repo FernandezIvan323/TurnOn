@@ -5,7 +5,7 @@ import api from "./api";
  * Se usa para formateo de moneda y datos del local. Valores por defecto = COP.
  */
 let state = {
-  business_name: "TurnOn",
+  business_name: "Asados jorge",
   address: null,
   phone: null,
   email: null,

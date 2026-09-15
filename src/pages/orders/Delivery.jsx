@@ -996,18 +996,31 @@ export default function Delivery() {
 
   const deliveredList = enriched.length ? enriched : filtered;
 
-  const hourGroups = useMemo(() => {
+  const hourLabel = (iso) => {
+  const h = new Date(iso).getHours();
+  const suffix = h < 12 ? "AM" : "PM";
+  const h12 = h % 12 || 12;
+  const nextH = (h + 1) % 24;
+  const nextSuffix = nextH < 12 ? "AM" : "PM";
+  return `${h12} ${suffix} – ${nextH % 12 || 12} ${nextSuffix}`;
+};
+
+const hourGroups = useMemo(() => {
     if (filter !== "delivered") return [];
     const map = new Map();
     for (const o of deliveredList) {
-      const d = new Date(o.closed_at || o.created_at);
-      const h = d.getHours();
-      const key = `${String(h).padStart(2, "0")}:00 – ${String(h + 1).padStart(2, "0")}:00`;
+      const key = hourLabel(o.closed_at || o.created_at);
       if (!map.has(key)) map.set(key, []);
       map.get(key).push(o);
     }
+    // Orden descendente por hora (más reciente primero). Como la etiqueta es
+    // e.g. "10:00 AM – 11:00 AM", ordenamos por la hora de la primera clave.
     return Array.from(map.entries())
-      .sort((a, b) => b[0].localeCompare(a[0]))
+      .sort((a, b) => {
+        const ha = new Date(a[1][0].closed_at || a[1][0].created_at).getHours();
+        const hb = new Date(b[1][0].closed_at || b[1][0].created_at).getHours();
+        return hb - ha;
+      })
       .map(([label, list]) => ({
         label,
         count: list.length,
@@ -1106,82 +1119,86 @@ export default function Delivery() {
 
       {loading ? (
         <div className="text-sm text-ink-600 dark:text-white">Cargando…</div>
-      ) : filter === "delivered" ? (
-            <div className="space-y-2">
-              {hourGroups.length === 0 ? (
-                <div className="card p-8 text-center text-sm text-ink-500">
-                  No hay pedidos entregados.
+      ) : filter === "delivered" || filter === "cancelled" ? (
+            <div>
+              {filter === "delivered" ? (
+                <div className="space-y-2">
+                  {hourGroups.length === 0 ? (
+                    <div className="card p-8 text-center text-sm text-ink-500">
+                      No hay pedidos entregados.
+                    </div>
+                  ) : (
+                    hourGroups.map((g) => {
+                      const open = openHours.has(g.label);
+                      return (
+                        <div key={g.label} className="overflow-hidden rounded-2xl border border-paper-300 dark:border-obsidian-700">
+                          <button
+                            type="button"
+                            onClick={() => toggleHour(g.label)}
+                            className="flex w-full items-center justify-between gap-2 bg-paper-100 px-4 py-2.5 text-left dark:bg-obsidian-800"
+                          >
+                            <span className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
+                              <Clock size={15} className="text-ink-500 dark:text-obsidian-400" />
+                              {g.label}
+                              <span className="rounded-full bg-paper-300/70 px-2 py-0.5 text-[11px] font-bold tabular-nums text-ink-600 dark:bg-obsidian-700 dark:text-obsidian-200">
+                                {g.count}
+                              </span>
+                            </span>
+                            <span className="flex items-center gap-2">
+                              <span className="font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+                                {money(g.total)}
+                              </span>
+                              <ChevronDown
+                                size={16}
+                                className={`text-ink-400 transition-transform ${open ? "rotate-180" : ""}`}
+                              />
+                            </span>
+                          </button>
+                          {open && (
+                            <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-3 bg-paper-50/50 p-3 sm:grid-cols-2 xl:grid-cols-3 dark:bg-obsidian-950/40">
+                              {g.orders.map((o, i) => (
+                                <CompletedDeliveryCard
+                                  key={o.id}
+                                  order={o}
+                                  rotateIndex={i}
+                                  onReopen={(x) => setToReopen(x)}
+                                  onClick={() => setToView(o)}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               ) : (
-                hourGroups.map((g) => {
-                  const open = openHours.has(g.label);
-                  return (
-                    <div key={g.label} className="overflow-hidden rounded-2xl border border-paper-300 dark:border-obsidian-700">
-                      <button
-                        type="button"
-                        onClick={() => toggleHour(g.label)}
-                        className="flex w-full items-center justify-between gap-2 bg-paper-100 px-4 py-2.5 text-left dark:bg-obsidian-800"
-                      >
-                        <span className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
-                          <Clock size={15} className="text-ink-500 dark:text-obsidian-400" />
-                          {g.label}
-                          <span className="rounded-full bg-paper-300/70 px-2 py-0.5 text-[11px] font-bold tabular-nums text-ink-600 dark:bg-obsidian-700 dark:text-obsidian-200">
-                            {g.count}
-                          </span>
-                        </span>
-                        <span className="flex items-center gap-2">
-                          <span className="font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
-                            {money(g.total)}
-                          </span>
-                          <ChevronDown
-                            size={16}
-                            className={`text-ink-400 transition-transform ${open ? "rotate-180" : ""}`}
-                          />
-                        </span>
-                      </button>
-                      {open && (
-                        <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-3 bg-paper-50/50 p-3 sm:grid-cols-2 xl:grid-cols-3 dark:bg-obsidian-950/40">
-                          {g.orders.map((o, i) => (
-                            <CompletedDeliveryCard
-                              key={o.id}
-                              order={o}
-                              rotateIndex={i}
-                              onReopen={(x) => setToReopen(x)}
-                              onClick={() => setToView(o)}
-                            />
-                          ))}
-                        </div>
-                      )}
+                <div>
+                  <div className="mb-3 text-sm font-medium text-ink-600 dark:text-obsidian-300">
+                    Cancelados · {(enriched.length || filtered.length)} pedido
+                    {(enriched.length || filtered.length) === 1 ? "" : "s"}
+                  </div>
+                  {(enriched.length || filtered.length) === 0 ? (
+                    <div className="card p-8 text-center text-sm text-ink-500">
+                      No hay pedidos cancelados.
                     </div>
-                  );
-                })
+                  ) : (
+                    <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      {(enriched.length ? enriched : filtered).map((o, i) => (
+                        <CompletedDeliveryCard
+                          key={o.id}
+                          order={o}
+                          rotateIndex={i}
+                          onReopen={undefined}
+                          onClick={() => setToView(o)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           ) : (
-            <div>
-          <div className="mb-3 text-sm font-medium text-ink-600 dark:text-obsidian-300">
-            Cancelados · {(enriched.length || filtered.length)} pedido
-            {(enriched.length || filtered.length) === 1 ? "" : "s"}
-          </div>
-          {(enriched.length || filtered.length) === 0 ? (
-            <div className="card p-8 text-center text-sm text-ink-500">
-              No hay pedidos cancelados.
-            </div>
-          ) : (
-            <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {(enriched.length ? enriched : filtered).map((o, i) => (
-                <CompletedDeliveryCard
-                  key={o.id}
-                  order={o}
-                  rotateIndex={i}
-                  onReopen={undefined}
-                  onClick={() => setToView(o)}
-                />
-              ))}
-            </div>
-          )}
-            </div>
-          )}
         <div
           className={`mx-auto grid w-full max-w-[1600px] grid-cols-1 gap-4 items-start ${
             filter === "active" ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-2 xl:grid-cols-4"

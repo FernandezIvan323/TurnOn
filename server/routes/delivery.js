@@ -8,7 +8,7 @@ router.get("/", authRequired, async (_req, res) => {
   const tz = process.env.DB_TZ || "America/Mexico_City";
   if (!/^[\w/]+$/.test(tz)) throw new Error(`Timezone inválido: ${tz}`);
   const { rows } = await query(
-    `SELECT dp.id, dp.name, dp.phone, dp.status, dp.user_id, u.username,
+    `SELECT dp.id, dp.name, dp.phone, dp.status, dp.user_id, u.username, u.active AS login_active,
        (SELECT COUNT(*) FROM orders o WHERE o.delivery_person_id = dp.id AND o.status = 'on_the_way')::int AS active_orders,
        (SELECT COALESCE(SUM(o.total),0) FROM orders o
           WHERE o.delivery_person_id = dp.id AND o.status = 'on_the_way' AND o.payment_status = 'pending')::numeric AS street_amount,

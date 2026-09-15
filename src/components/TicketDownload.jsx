@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toPng } from "html-to-image";
 import api from "../lib/api";
-import { money, typeLabels, formatTime, payMethodLabel } from "../lib/format";
+import { money, typeLabels, formatTime, formatDate, payMethodLabel } from "../lib/format";
 import { loadSettings, getSettings } from "../lib/settings";
 import { toast } from "../store/toast";
 import { Download, X, Loader2 } from "lucide-react";
 
 /**
  * Ticket de cobro con diseño minimalista propio de TurnOn.
- * Muestra toda la info del pedido y permite descargar el ticket como imagen PNG.
+ * Ventana que muestra la info del pedido y permite descargarla como imagen PNG.
  */
 export default function TicketDownload({ order, onClose }) {
   const [detail, setDetail] = useState(order);
@@ -20,9 +20,7 @@ export default function TicketDownload({ order, onClose }) {
   useEffect(() => {
     let cancelled = false;
     loadSettings()
-      .then((s) => {
-        if (!cancelled && s) setSettings(s);
-      })
+      .then((s) => { if (!cancelled && s) setSettings(s); })
       .catch(() => {});
     if (order?.items?.length) {
       setDetail(order);
@@ -30,13 +28,9 @@ export default function TicketDownload({ order, onClose }) {
     }
     api
       .get(`/orders/${order.id}`)
-      .then(({ data }) => {
-        if (!cancelled) setDetail(data);
-      })
+      .then(({ data }) => { if (!cancelled) setDetail(data); })
       .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [order?.id]);
 
   const items = detail?.items || [];
@@ -44,26 +38,21 @@ export default function TicketDownload({ order, onClose }) {
   const total = Number(detail?.total || 0);
   const grand = total + tip;
   const typeLabel = typeLabels[detail?.type] || detail?.type;
-  const when = detail?.closed_at
-    ? new Date(detail.closed_at).toLocaleString("es-CO", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : new Date().toLocaleString("es-CO", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+  const cobroAt = detail?.closed_at || detail?.created_at;
+  const wasBy =
+    detail?.type === "table"
+      ? detail?.user_name
+      : detail?.delivery_name || null;
+  const wasRole =
+    detail?.type === "table"
+      ? "Meseros"
+      : "Repartidor";
 
   const download = async () => {
     if (!ticketRef.current) return;
     setBusy(true);
     try {
+      // Capturamos con el fondo blanco SIEMPRE (es la "carta").
       const dataUrl = await toPng(ticketRef.current, {
         pixelRatio: 2,
         backgroundColor: "#ffffff",
@@ -85,68 +74,79 @@ export default function TicketDownload({ order, onClose }) {
   const contact = [settings.address, settings.phone].filter(Boolean).join(" · ");
 
   return createPortal(
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 p-4">
-      <div className="flex max-h-[92vh] w-full max-w-sm flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-        {/* Header (fuera del snapshot) */}
-        <div className="flex items-center justify-between border-b border-paper-200 px-4 py-3">
-          <h2 className="text-base font-bold text-ink-900">Ticket de cobro</h2>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/70 p-4">
+      <div className="flex max-h-[92vh] w-full max-w-sm flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-obsidian-900 dark:text-obsidian-50 dark:shadow-none">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-paper-200 px-4 py-3 dark:border-obsidian-800">
+          <h2 className="text-base font-bold text-ink-900 dark:text-obsidian-50">Ticket de cobro</h2>
           <button type="button" onClick={onClose} className="btn-ghost h-9 w-9 p-0" aria-label="Cerrar">
             <X size={18} />
           </button>
         </div>
 
-        {/* Vista previa del ticket (se captura como PNG) */}
-        <div className="min-h-0 flex-1 overflow-y-auto bg-paper-100 p-4">
+        {/* Preview del ticket */}
+        <div className="min-h-0 flex-1 overflow-y-auto bg-paper-100 p-4 dark:bg-obsidian-950">
+          {/* Ticket (fondo blanco fijo) */}
           <div
             ref={ticketRef}
-            className="mx-auto overflow-hidden bg-white"
-            style={{ width: 340, borderRadius: 16, boxShadow: "0 2px 12px rgb(0 0 0 / 0.08)" }}
+            className="mx-auto bg-white"
+            style={{
+              width: 340,
+              borderRadius: 0,
+              boxShadow: "none", // evitar el hueco blanco/marketing bordes
+            }}
           >
-            {/* Marca */}
-            <div className="bg-wine-600 px-5 py-4 text-white">
+            {/* Cabecera "header" con barra de color a todo el ancho */}
+            <div className="w-full bg-wine-600 px-5 py-4 text-white" style={{ margin: 0, padding: "16px 20px" }}>
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md bg-white/15">
                   <img src="/favicon.svg" alt="" className="h-6 w-6 object-cover" />
                 </div>
                 <span className="text-lg font-bold tracking-tight">{brand}</span>
               </div>
-              <div className="mt-0.5 text-[11px] uppercase tracking-widest text-white/80">
+              <div className="mt-0.5 text-[11px] uppercase tracking-widest text-white/85">
                 Comprobante de cobro
               </div>
             </div>
 
             {/* Cuerpo */}
             <div className="px-5 py-4">
+              {/* Linea superior: pedido tipo + fecha de cobro */}
               <div className="flex items-end justify-between border-b border-dashed border-ink-200 pb-3">
                 <div>
                   <div className="text-[11px] uppercase tracking-wide text-ink-400">Pedido</div>
                   <div className="font-mono text-sm font-bold text-ink-900">#{detail?.id}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[11px] uppercase tracking-wide text-ink-400">{typeLabel}</div>
-                  <div className="text-xs font-semibold text-ink-700">{when}</div>
+                  <div className="text-[11px] uppercase tracking-wide text-ink-400">Cobro</div>
+                  <div className="text-xs font-semibold text-ink-700">{cobroAt ? formatDate(cobroAt) : formatDate(new Date().toISOString())}</div>
                 </div>
               </div>
 
-              {detail?.type === "table" && (
-                <div className="mt-2 flex items-center justify-between text-xs text-ink-600">
-                  <span>Mesa</span>
-                  <b>{detail?.table_number}{detail?.table_label ? ` · ${detail.table_label}` : ""}</b>
+              {/* Datos meta */}
+              <div className="mt-2 space-y-1 text-xs text-ink-600">
+                {detail?.type === "table" && (
+                  <div className="flex justify-between">
+                    <span>Mesa</span>
+                    <b>{detail?.table_number}{detail?.table_label ? ` · ${detail.table_label}` : ""}</b>
+                  </div>
+                )}
+                {wasBy && (
+                  <div className="flex justify-between">
+                    <span>{wasRole}</span>
+                    <b>{wasBy}</b>
+                  </div>
+                )}
+                {detail?.customer_name && (
+                  <div className="flex justify-between">
+                    <span>Cliente</span>
+                    <b>{detail.customer_name}</b>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span>Pago</span>
+                  <b>{detail?.payment_method ? payMethodLabel(detail.payment_method) : "—"}</b>
                 </div>
-              )}
-              {detail?.customer_name && (
-                <div className="mt-1 flex items-center justify-between text-xs text-ink-600">
-                  <span>Cliente</span>
-                  <b>{detail.customer_name}</b>
-                </div>
-              )}
-              <div className="mt-1 flex items-center justify-between text-xs text-ink-600">
-                <span>Hora pedido</span>
-                <b>{detail?.created_at ? formatTime(detail.created_at) : "—"}</b>
-              </div>
-              <div className="mt-1 flex items-center justify-between text-xs text-ink-600">
-                <span>Pago</span>
-                <b>{detail?.payment_method ? payMethodLabel(detail.payment_method) : "—"}</b>
               </div>
 
               {/* Items */}
@@ -175,19 +175,15 @@ export default function TicketDownload({ order, onClose }) {
                 )}
               </div>
 
-              {/* Totales */}
-              <div className="mt-3 space-y-1 border-t border-ink-100 pt-3 text-sm">
-                <div className="flex justify-between text-xs text-ink-600">
-                  <span>Subtotal</span>
-                  <span className="tabular-nums">{money(total)}</span>
-                </div>
+              {/* Total */}
+              <div className="mt-3 border-t border-ink-100 pt-3">
                 {tip > 0 && (
                   <div className="flex justify-between text-xs text-ink-600">
                     <span>Propina</span>
                     <span className="tabular-nums">{money(tip)}</span>
                   </div>
                 )}
-                <div className="flex justify-between pt-1 text-base font-bold text-wine-700">
+                <div className="mt-1 flex justify-between text-base font-bold text-wine-700">
                   <span>Total</span>
                   <span className="tabular-nums">{money(grand)}</span>
                 </div>
@@ -195,8 +191,12 @@ export default function TicketDownload({ order, onClose }) {
 
               {/* Pie */}
               <div className="mt-4 border-t border-dashed border-ink-200 pt-3 text-center">
-                <div className="text-xs font-semibold text-ink-800">
-                  {settings.ticket_footer || "¡Gracias por su preferencia!"}
+                <div className="text-xs text-ink-600">{settings.ticket_footer || "¡Gracias por su preferencia!"}</div>
+                {/* Nombre del restaurante + icono */}
+                <div className="mt-1.5 flex items-center justify-center gap-1.5 text-ink-900">
+                  <span className="text-sm">{brand}</span>
+                  <span className="text-xs font-bold text-ink-600">· a su servicio ·</span>
+                  <span className="text-[9px] leading-none text-ink-500" aria-hidden="true">🥩</span>
                 </div>
                 {contact && <div className="mt-1 text-[10px] text-ink-400">{contact}</div>}
               </div>
@@ -205,7 +205,7 @@ export default function TicketDownload({ order, onClose }) {
         </div>
 
         {/* Acciones */}
-        <div className="border-t border-paper-200 px-4 py-3">
+        <div className="border-t border-paper-200 px-4 py-3 dark:border-obsidian-800">
           <button type="button" onClick={download} disabled={busy} className="btn-primary w-full">
             {busy ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
             Descargar imagen

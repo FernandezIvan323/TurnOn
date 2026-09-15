@@ -3,6 +3,8 @@ import api from "../../lib/api";
 import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import Header from "../../components/Header";
 import Modal from "../../components/Modal";
+import OrderCard from "../../components/OrderCard";
+import OrderDetailModal from "../../components/OrderDetailModal";
 import SegmentedControl from "../../components/SegmentedControl";
 import { useAuth } from "../../store/auth";
 import { toast } from "../../store/toast";
@@ -24,68 +26,195 @@ function StaffTabs({ value, onChange }) {
   );
 }
 
-function AccessModal({ person, onClose, onSaved }) {
+/**
+ * Modal de gestión de acceso al sistema (mesero o repartidor).
+ * Primero muestra la información del empleado y el estado de acceso actual;
+ * ya dentro, permite crear acceso, cambiar el PIN o quitar el acceso.
+ * person: mesero → { id(user), username, name, active }
+ *         repartidor → { id(delivery), user_id, username, login_active, name }
+ */
+function AccessManageModal({ person, role, onClose, onSaved }) {
+  const isDelivery = role === "delivery";
+  const accountId = isDelivery ? person.user_id : person.id;
+  const isActive = isDelivery ? person.login_active : person.active;
+  const hasAccess = accountId != null && isActive !== false;
+  const roleLabel = isDelivery ? "Repartidor" : "Mesero";
+
+  const [mode, setMode] = useState("info"); // info | grant | pin
   const [username, setUsername] = useState("");
-  const [name, setName] = useState(person.name);
   const [pin, setPin] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [err, setErr] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState(null);
 
-  const save = async () => {
+  const resetKeys = () => { setUsername(""); setPin(""); setConfirm(""); setErr(null); };
+
+  const validPin = /^\d{4}$/.test(pin);
+
+  const createAccess = async () => {
     setErr(null);
-    if (!username.trim()) return setErr("Ingresá un usuario");
     if (!/^\d{4}$/.test(pin)) return setErr("El PIN debe ser 4 dígitos");
     if (pin !== confirm) return setErr("Los PIN no coinciden");
     setSaving(true);
     try {
-      await api.post("/auth/users", {
-        username: username.trim(),
-        name: name.trim(),
-        pin,
-        role: "delivery",
-        delivery_person_id: person.id,
-      });
-      toast.success(`Acceso creado para ${person.name}`);
+      if (isDelivery) {
+        if (!username.trim()) { setErr("Ingresá un usuario"); setSaving(false); return; }
+        await api.post("/auth/users", {
+          username: username.trim(),
+          name: person.name, pin, role: "delivery", delivery_person_id: person.id,
+        });
+      } else {
+        await api.put(`/auth/users/${accountId}/pin`, { pin });
+        await api.put(`/auth/users/${accountId}/active`, { active: true });
+      }
+      toast.success(`Acceso habilitado para ${person.name}`);
       onSaved(); onClose();
     } catch (e) {
       setErr(e.response?.data?.error || e.message);
     } finally { setSaving(false); }
   };
 
+  const changePin = async () => {
+    setErr(null);
+    if (!/^\d{4}$/.test(pin)) return setErr("El PIN debe ser 4 dígitos");
+    if (pin !== confirm) return setErr("Los PIN no coinciden");
+    setSaving(true);
+    try {
+      await api.put(`/auth/users/${accountId}/pin`, { pin });
+      toast.success(`PIN actualizado para ${person.name}`);
+      onSaved(); onClose();
+    } catch (e) { setErr(e.response?.data?.error || e.message); }
+    finally { setSaving(false); }
+  };
+
+  const revokeAccess = async () => {
+    setSaving(true); setErr(null);
+    try {
+      await api.put(`/auth/users/${accountId}/active`, { active: false });
+      toast.success(`Acceso desactivado para ${person.name}`);
+      onSaved(); onClose();
+    } catch (e) { setErr(e.response?.data?.error || e.message); }
+    finally { setSaving(false); }
+  };
+
+  const btnLabel = mode === "grant" ? (isDelivery && accountId == null ? "Crear acceso" : "Dar acceso")
+    : mode === "pin" ? "Guardar PIN de acceso" : "";
+
   return (
     <Modal
       open
       onClose={onClose}
-      title={<span className="flex items-center gap-2"><KeyRound size={18}/> Crear acceso · {person.name}</span>}
+      title={<span className="flex items-center gap-2"><KeyRound size={18}/> {person.name}</span>}
       size="md"
     >
-      <p className="mb-3 text-sm text-ink-500 dark:text-obsidian-400">
-        Generá un usuario y PIN de 4 dígitos para que {person.name} pueda entrar desde su celular.
-      </p>
-      <label className="label" htmlFor="access-user">Usuario (para login)</label>
-      <input id="access-user" className="input" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoFocus required placeholder="ej. luis" maxLength={30} />
-      <label className="label mt-3" htmlFor="access-name">Nombre completo</label>
-      <input id="access-name" className="input" value={name} onChange={(e) => setName(e.target.value)} required maxLength={60} />
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <div>
-          <label className="label" htmlFor="access-pin">PIN (4 dígitos)</label>
-          <input id="access-pin" className="input" type="password" inputMode="numeric" pattern="\d{4}" maxLength={4} required value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" />
+      {/* Bloque info del empleado */}
+      <div className="mb-4 rounded-xl border border-paper-300 bg-paper-50 p-3 dark:border-obsidian-700 dark:bg-obsidian-900/60">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <div className="text-sm font-semibold text-ink-900 dark:text-white">{person.name}</div>
+            <div className="text-xs text-ink-500 dark:text-obsidian-400">{roleLabel}</div>
+          </div>
+          {hasAccess ? (
+            <span className="badge bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+              <KeyRound size={10} className="mr-1 inline" /> Con acceso
+            </span>
+          ) : (
+            <span className="badge bg-paper-200 text-ink-600 dark:bg-obsidian-800 dark:text-obsidian-300">Sin acceso</span>
+          )}
         </div>
-        <div>
-          <label className="label">Confirmar PIN</label>
-          <input className="input" inputMode="numeric" pattern="\d{4}" value={confirm} onChange={(e) => setConfirm(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" />
-        </div>
+        {hasAccess && (
+          <div className="mt-2 text-xs text-ink-600 dark:text-obsidian-300">
+            Ingresa con el usuario <b className="font-mono">@{person.username || "—"}</b> · {roleLabel}
+          </div>
+        )}
       </div>
-      {err && (
-        <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
-          {err}
-        </div>
+
+      {/* ====== Vista inicial ====== */}
+      {mode === "info" && (
+        <>
+          {hasAccess ? (
+            <div className="space-y-2">
+              <button onClick={() => { setMode("pin"); resetKeys(); }} className="btn-primary w-full">
+                <KeyRound size={15}/> Cambiar PIN
+              </button>
+              <button onClick={revokeAccess} disabled={saving} className="btn-secondary w-full text-rose-600">
+                {saving ? "Desactivando…" : "Quitar acceso"}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm text-ink-600 dark:text-obsidian-300">
+                {isDelivery
+                  ? "Este repartidor aún no tiene acceso al sistema. Asigná un usuario y PIN para que entre desde su celular."
+                  : "Este mesero aún no tiene acceso al sistema. Asigná un PIN para que entre desde su celular."}
+              </p>
+              <button onClick={() => { setMode("grant"); resetKeys(); }} className="btn-primary w-full">
+                <KeyRound size={15}/> {isDelivery ? "Crear acceso" : "Dar acceso"}
+              </button>
+            </div>
+          )}
+        </>
       )}
-      <div className="mt-4 flex justify-end gap-2">
-        <button onClick={onClose} className="btn-secondary">Cancelar</button>
-        <button onClick={save} disabled={saving} className="btn-primary">{saving ? "Creando…" : "Crear acceso"}</button>
-      </div>
+
+      {/* ====== Crear/Habilitar acceso ====== */}
+      {mode === "grant" && (
+        <>
+          {isDelivery && accountId == null && (
+            <>
+              <label className="label">Usuario (para login)</label>
+              <input className="input" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoFocus placeholder="ej. luis" maxLength={30} />
+            </>
+          )}
+          {!(isDelivery && accountId == null) && (
+            <p className="mb-2 text-sm text-ink-600 dark:text-obsidian-300">Ingresá un PIN de 4 dígitos para activar su ingreso.</p>
+          )}
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">PIN (4 dígitos)</label>
+              <input className="input" type="password" inputMode="numeric" maxLength={4} value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" />
+            </div>
+            <div>
+              <label className="label">Confirmar PIN</label>
+              <input className="input" type="password" inputMode="numeric" maxLength={4} value={confirm}
+                onChange={(e) => setConfirm(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" />
+            </div>
+          </div>
+          {err && <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">{err}</div>}
+          <div className="mt-4 flex justify-end gap-2">
+            <button onClick={() => { setMode("info"); resetKeys(); }} className="btn-secondary">Volver</button>
+            <button onClick={createAccess} disabled={saving || !validPin} className="btn-primary">
+              {saving ? "Guardando…" : btnLabel}
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* ====== Cambiar PIN ====== */}
+      {mode === "pin" && (
+        <>
+          <p className="mb-2 text-sm text-ink-600 dark:text-obsidian-300">Ingresá el nuevo PIN de 4 dígitos para <b>@{person.username}</b>.</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Nuevo PIN</label>
+              <input className="input" type="password" inputMode="numeric" maxLength={4} value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" autoFocus />
+            </div>
+            <div>
+              <label className="label">Confirmar PIN</label>
+              <input className="input" type="password" inputMode="numeric" maxLength={4} value={confirm}
+                onChange={(e) => setConfirm(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" />
+            </div>
+          </div>
+          {err && <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">{err}</div>}
+          <div className="mt-4 flex justify-end gap-2">
+            <button onClick={() => { setMode("info"); resetKeys(); }} className="btn-secondary">Volver</button>
+            <button onClick={changePin} disabled={saving || !validPin} className="btn-primary">
+              {saving ? "Guardando…" : "Guardar PIN"}
+            </button>
+          </div>
+        </>
+      )}
     </Modal>
   );
 }
@@ -273,153 +402,116 @@ function AddTableModal({ waiter, availableTables, assignedTableIds, allTables, o
 }
 
 function WaiterModal({ onClose, onSaved }) {
-  const [username, setUsername] = useState("");
   const [name, setName] = useState("");
-  const [pin, setPin] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
+  const [created, setCreated] = useState(null); // waiter creado, esperando acceso
+
   const save = async () => {
-    setSaving(true); setErr(null);
+    setErr(null);
+    const n = name.trim();
+    if (n.length < 2) return setErr("Ingresá el nombre completo");
+    // Generar usuario a partir del nombre: "Juan Pérez" → juan.perez
+    const username = n.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, ".").replace(/(^\.|\.$)/g, "") || "mesero";
+    const tempPin = "0000";
+    setSaving(true);
     try {
-      await api.post("/auth/users", { username, name, pin, role: "waiter" });
-      onSaved(); onClose();
+      const { data } = await api.post("/auth/users", {
+        username,
+        name: n,
+        pin: tempPin,
+        role: "waiter",
+        active: false, // sin acceso todavía (cuenta activada)
+      });
+      onSaved(); // refresca lista pero no todavía cierra
+      setCreated({ id: data.id, username: data.username, name: data.name });
     } catch (e) {
       setErr(e.response?.data?.error || e.message);
-    } finally { setSaving(false); }
+      setSaving(false);
+    }
   };
+
   return (
-    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-      <div className="card w-full max-w-md p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">Nuevo mesero</h2>
-          <button onClick={onClose} className="btn-ghost"><X size={18}/></button>
-        </div>
-        <label className="label" htmlFor="waiter-user">Usuario</label>
-        <input id="waiter-user" className="input" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoFocus required autoComplete="off" maxLength={30} />
-        <label className="label mt-3" htmlFor="waiter-name">Nombre completo</label>
-        <input id="waiter-name" className="input" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="off" maxLength={60} />
-        <label className="label mt-3" htmlFor="waiter-pin">PIN (4 dígitos)</label>
-        <input id="waiter-pin" className="input" type="password" maxLength={4} inputMode="numeric" pattern="[0-9]*" required value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} autoComplete="new-password" />
-        {err && (
-          <div className="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
-            {err}
+    <Modal onClose={onClose}
+      title={<span className="flex items-center gap-2"><Utensils size={18}/> {created ? "Mesero creado" : "Nuevo mesero"}</span>}
+      size="md"
+    >
+      {!created ? (
+        <>
+          <p className="mb-3 text-sm text-ink-500 dark:text-obsidian-400">
+            Ingresás solo el nombre. El acceso al sistema lo definís en el siguiente paso.
+          </p>
+          <label className="label" htmlFor="wm-name">Nombre completo</label>
+          <input id="wm-name" className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus maxLength={60} placeholder="Ej. María López" />
+          {err && <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">{err}</div>}
+          <div className="mt-4 flex justify-end gap-2">
+            <button onClick={onClose} className="btn-secondary">Cancelar</button>
+            <button onClick={save} disabled={saving || name.trim().length < 2} className="btn-primary">
+              {saving ? "Creando…" : "Crear mesero"}
+            </button>
           </div>
-        )}
-        <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button onClick={save} disabled={saving || !username || !name || pin.length !== 4} className="btn-primary">
-            {saving ? "Guardando…" : "Crear mesero"}
-          </button>
-        </div>
-      </div>
-    </div>
+        </>
+      ) : (
+        <>
+          <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+            Mesero creado. Ya está en la lista de meseros.
+          </div>
+          <p className="mb-3 text-sm text-ink-600 dark:text-obsidian-300">
+            ¿Querés darle acceso al sistema ahora? Con acceso abre la app con el usuario <b className="font-mono">@{created.username}</b> y el PIN que le asignes.
+          </p>
+          <div className="flex gap-2">
+            <button onClick={onClose} className="btn-secondary flex-1">No, más tarde</button>
+            <button onClick={() => setCreated({ ...created, grantAccess: true })} className="btn-primary flex-1">
+              <KeyRound size={15}/> Sí, configurar acceso
+            </button>
+          </div>
+          {created.grantAccess && (
+            <WaiterAccessFields waiter={{ id: created.id, name: created.name, username: created.username }} onDone={onClose} onSaved={onSaved} />
+          )}
+        </>
+      )}
+    </Modal>
   );
 }
 
-function ChangePinModal({ user, onClose, onSaved }) {
+
+/**
+ * Sub-modal de PIN dentro del flujo "nuevo mesero" ya creado sin acceso.
+ * waiter: { id, username, name }
+ */
+function WaiterAccessFields({ waiter, onSaved, onDone }) {
   const [pin, setPin] = useState("");
-  const [pin2, setPin2] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
-  const [done, setDone] = useState(null);
+  const valid = /^\d{4}$/.test(pin) && pin === confirmPin;
+
   const save = async () => {
-    setSaving(true); setErr(null);
+    setErr(null);
+    setSaving(true);
     try {
-      if (pin !== pin2) throw new Error("Los PIN no coinciden");
-      const { data } = await api.put(`/auth/users/${user.id}/pin`, { pin: pin.trim() });
-      const uname = data?.user?.username || user.username;
-      setDone(uname);
-      onSaved?.();
+      await api.put(`/auth/users/${waiter.id}/pin`, { pin });
+      await api.put(`/auth/users/${waiter.id}/active`, { active: true });
+      toast.success(`Acceso habilitado para ${waiter.name}. Usuario: @${waiter.username}`);
+      onSaved(); onDone();
     } catch (e) {
       setErr(e.response?.data?.error || e.message);
     } finally { setSaving(false); }
   };
+
   return (
-    <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 p-4"
-      onClick={done ? onClose : undefined}
-    >
-      <div className="card w-full max-w-md p-5 shadow-pop" onClick={(e) => e.stopPropagation()}>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-ink-800 dark:text-obsidian-50">
-            {done ? "PIN actualizado" : "Cambiar PIN"}
-          </h2>
-          <button type="button" onClick={onClose} className="btn-ghost"><X size={18}/></button>
-        </div>
-        {done ? (
-          <>
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200">
-              <p className="font-semibold">Listo para usar en el celular</p>
-              <p className="mt-2">
-                Usuario:{" "}
-                <span className="font-mono font-bold">@{done}</span>
-              </p>
-              <p className="mt-1 text-xs opacity-90">
-                El mesero debe entrar con ese usuario (no el nombre completo) y el PIN nuevo de 4 dígitos.
-              </p>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <button type="button" onClick={onClose} className="btn-primary w-full sm:w-auto">
-                Entendido
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="mb-3 text-sm text-ink-500 dark:text-obsidian-400">
-              Usuario{" "}
-              <span className="font-mono font-medium text-ink-700 dark:text-obsidian-100">
-                @{user.username}
-              </span>
-              {" · "}
-              {user.name}
-            </p>
-            <p className="mb-3 text-xs text-ink-500 dark:text-obsidian-400">
-              En el login se usa <strong className="text-ink-700 dark:text-obsidian-200">@{user.username}</strong>, no el nombre.
-            </p>
-            <label className="label">Nuevo PIN (4 dígitos)</label>
-            <input
-              className="input"
-              type="password"
-              maxLength={4}
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
-              autoFocus
-              autoComplete="new-password"
-            />
-            <label className="label mt-3">Confirmar PIN</label>
-            <input
-              className="input"
-              type="password"
-              maxLength={4}
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={pin2}
-              onChange={(e) => setPin2(e.target.value.replace(/\D/g, "").slice(0, 4))}
-              autoComplete="new-password"
-            />
-            {err && (
-              <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
-                {err}
-              </div>
-            )}
-            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <button type="button" onClick={onClose} className="btn-secondary w-full sm:w-auto">
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={save}
-                disabled={saving || pin.length !== 4 || pin2.length !== 4}
-                className="btn-primary w-full sm:w-auto"
-              >
-                {saving ? "Guardando…" : "Actualizar PIN"}
-              </button>
-            </div>
-          </>
-        )}
+    <div className="mt-4 rounded-xl border border-wine-200 bg-wine-50/50 p-3 dark:border-wine-700 dark:bg-wine-900/10">
+      <label className="label">PIN de acceso (4 dígitos)</label>
+      <input className="input" type="password" inputMode="numeric" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" autoFocus />
+      <div className="mt-2">
+        <label className="label">Confirmar PIN</label>
+        <input className="input" type="password" inputMode="numeric" maxLength={4} value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="0000" />
+      </div>
+      {err && <div className="mt-2 text-sm text-rose-700 dark:text-rose-300">{err}</div>}
+      <div className="mt-3 flex justify-end">
+        <button onClick={save} disabled={!valid || saving} className="btn-primary">
+          {saving ? "Activando…" : "Guardar y activar acceso"}
+        </button>
       </div>
     </div>
   );
@@ -521,6 +613,7 @@ function WaiterHistoryModal({ waiter, onClose }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [viewOrder, setViewOrder] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -603,67 +696,14 @@ function WaiterHistoryModal({ waiter, onClose }) {
                   {detail.orders.length === 0 ? (
                     <div className="card p-8 text-center text-sm text-ink-500">Sin pedidos este día.</div>
                   ) : (
-                    <div className="space-y-3">
-                      {detail.orders.map((o) => (
-                        <div key={o.id} className="overflow-hidden rounded-xl border border-paper-300 dark:border-obsidian-700">
-                          <div className="flex flex-wrap items-center justify-between gap-2 bg-paper-100 px-3 py-2 text-xs font-medium text-ink-800 dark:bg-obsidian-800 dark:text-white">
-                            <span>
-                              {new Date(o.created_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
-                              {o.closed_at ? ` → ${new Date(o.closed_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}` : ""}
-                            </span>
-                            <span className={`badge text-[10px] ${
-                              o.payment_status === "paid"
-                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
-                                : o.payment_status === "debt"
-                                  ? "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
-                                  : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                            }`}>
-                              {o.payment_status === "paid" ? "Pagado" : o.payment_status === "debt" ? "Deuda" : "Pendiente"}
-                            </span>
-                          </div>
-                          <div className="space-y-1.5 px-3 py-2">
-                            <div className="flex items-center gap-2 text-sm font-semibold text-ink-800 dark:text-obsidian-50">
-                              <Utensils size={14} className="shrink-0 text-wine-600 dark:text-wine-300" />
-                              {o.type === "table"
-                                ? `Mesa ${o.table_number ?? "?"}${o.table_label ? ` · ${o.table_label}` : ""}`
-                                : o.type === "pickup" ? "Para llevar" : "Domicilio"}
-                              {o.customer_name && <span className="font-normal text-ink-500 dark:text-obsidian-400">· {o.customer_name}</span>}
-                            </div>
-                            {(o.items || []).length > 0 && (
-                              <div className="space-y-1.5">
-                                {o.items.map((item, i) => (
-                                  <div key={i} className="flex items-center gap-2">
-                                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-wine-100 text-xs font-bold tabular-nums text-wine-700 dark:bg-wine-900/40 dark:text-wine-300">
-                                      {item.quantity}
-                                    </span>
-                                    <span className="flex-1 text-sm text-ink-700 dark:text-obsidian-200">
-                                      {item.name_snapshot}
-                                      {item.notes ? <span className="text-xs text-amber-700 dark:text-amber-400"> ({item.notes})</span> : ""}
-                                    </span>
-                                    <span className="shrink-0 text-sm tabular-nums text-ink-500 dark:text-obsidian-400">
-                                      {money(Number(item.unit_price) * Number(item.quantity))}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            <div className="flex items-center justify-between border-t border-paper-200 pt-1.5 text-sm dark:border-obsidian-700">
-                              <span className="text-xs text-ink-500 dark:text-obsidian-400">
-                                {o.payment_method === "cash" ? "Efectivo" : o.payment_method === "card" ? "Tarjeta" : o.payment_method === "transfer" ? "Transferencia" : o.payment_method || "—"}
-                              </span>
-                              <div className="text-right">
-                                <span className={`font-bold tabular-nums ${
-                                  o.payment_status === "paid" ? "text-emerald-700 dark:text-emerald-300" : o.payment_status === "debt" ? "text-rose-700 dark:text-rose-300" : "text-ink-800 dark:text-obsidian-50"
-                                }`}>
-                                  {money(o.total)}
-                                </span>
-                                {Number(o.tip) > 0 && (
-                                  <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">+{money(o.tip)} propina</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                    <div className="space-y-2">
+                      {detail.orders.map((o, i) => (
+                        <OrderCard
+                          key={o.id}
+                          order={o}
+                          rotateIndex={i}
+                          onClick={() => setViewOrder(o)}
+                        />
                       ))}
                     </div>
                   )}
@@ -706,6 +746,9 @@ function WaiterHistoryModal({ waiter, onClose }) {
               ))}
             </div>
           )}
+          {viewOrder && (
+            <OrderDetailModal order={viewOrder} onClose={() => setViewOrder(null)} />
+          )}
         </div>
       </div>
     </div>
@@ -723,7 +766,7 @@ export default function Staff() {
   const [creating, setCreating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [historyWaiter, setHistoryWaiter] = useState(null);
-  const [pinUser, setPinUser] = useState(null);
+  // Modal unificado de acceso: { person, role } ("waiter" | "delivery")
   const [accessTarget, setAccessTarget] = useState(null);
 
   const load = async () => {
@@ -781,12 +824,20 @@ export default function Staff() {
                     <td>
                       {p.user_id ? (
                         <div className="flex flex-col">
-                          <span className="badge bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
-                            <KeyRound size={10} className="mr-1 inline" /> Con acceso
-                          </span>
-                          <span className="mt-0.5 text-[10px] text-ink-500 dark:text-obsidian-500">
-                            @{p.username || "—"}
-                          </span>
+                          {p.login_active === false ? (
+                            <span className="badge bg-paper-200 text-ink-600 dark:bg-obsidian-800 dark:text-obsidian-300">
+                              Sin acceso (activar)
+                            </span>
+                          ) : (
+                            <>
+                              <span className="badge bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                                <KeyRound size={10} className="mr-1 inline" /> Con acceso
+                              </span>
+                              <span className="mt-0.5 text-[10px] text-ink-500 dark:text-obsidian-500">
+                                @{p.username || "—"}
+                              </span>
+                            </>
+                          )}
                         </div>
                       ) : (
                         <span className="badge bg-paper-200 text-ink-600 dark:bg-obsidian-800 dark:text-obsidian-300">
@@ -795,26 +846,14 @@ export default function Staff() {
                       )}
                     </td>
                     <td className="text-right">
-                      {!p.user_id && (
-                        <button
-                          onClick={() => setAccessTarget(p)}
-                          className="btn-secondary text-xs mr-1"
-                          title={`Crear acceso para ${p.name}`}
-                        >
-                          <KeyRound size={12} /> Crear acceso
-                        </button>
-                      )}
-                      {p.user_id && (
-                        <button
-                          type="button"
-                          onClick={() => setPinUser({ id: p.user_id, username: p.username, name: p.name })}
-                          className="btn-ghost h-9 w-9 p-0"
-                          title={`Cambiar PIN de ${p.name}`}
-                          aria-label={`Cambiar PIN de ${p.name}`}
-                        >
-                          <KeyRound size={17} />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => setAccessTarget({ person: p, role: "delivery" })}
+                        className="btn-secondary h-9 px-2.5 text-xs"
+                        title={`Gestionar acceso de ${p.name}`}
+                      >
+                        <KeyRound size={14} /> Acceso
+                      </button>
                       <button onClick={() => setEditing({ type: "delivery", value: p })} className="btn-ghost h-9 w-9 p-0" title={`Editar ${p.name}`} aria-label={`Editar ${p.name}`}><Edit2 size={17}/></button>
                       <button onClick={() => setConfirmDelete({ type: "delivery", id: p.id, name: p.name })} className="btn-ghost h-9 w-9 p-0 text-rose-600 dark:text-rose-400" title={`Eliminar ${p.name}`} aria-label={`Eliminar ${p.name}`}><Trash2 size={17}/></button>
                     </td>
@@ -888,7 +927,9 @@ export default function Staff() {
                         )}
                       </td>
                       <td className="space-x-1 text-right">
-                        <button type="button" onClick={() => setPinUser(w)} className="btn-ghost h-9 w-9 p-0" title={`Cambiar PIN de ${w.name}`} aria-label={`Cambiar PIN de ${w.name}`}><KeyRound size={17}/></button>
+                        <button type="button" onClick={() => setAccessTarget({ person: w, role: "waiter" })} className="btn-secondary h-9 px-2.5 text-xs" title={`Gestionar acceso de ${w.name}`}>
+                          <KeyRound size={14}/> Acceso
+                        </button>
                         <button type="button" onClick={() => setHistoryWaiter(w)} className="btn-ghost h-9 w-9 p-0" title={`Ver historial de ${w.name}`} aria-label={`Ver historial de ${w.name}`}><Clock size={17}/></button>
                       </td>
                     </tr>
@@ -975,21 +1016,15 @@ export default function Staff() {
       {creating && tab === "waiters" && <WaiterModal onClose={() => setCreating(false)} onSaved={load} />}
       {creating && tab === "tables" && <TableModal onClose={() => setCreating(false)} onSaved={load} />}
       {accessTarget && (
-        <AccessModal
-          person={accessTarget}
+        <AccessManageModal
+          person={accessTarget.person}
+          role={accessTarget.role}
           onClose={() => setAccessTarget(null)}
           onSaved={load}
         />
       )}
       {editing?.type === "delivery" && <DeliveryModal person={editing.value} onClose={() => setEditing(null)} onSaved={load} />}
       {editing?.type === "table" && <TableModal table={editing.value} onClose={() => setEditing(null)} onSaved={load} />}
-      {pinUser && (
-        <ChangePinModal
-          user={pinUser}
-          onClose={() => setPinUser(null)}
-          onSaved={() => {}}
-        />
-      )}
 
       {confirmDelete?.type === "delivery" && (
         <ConfirmModal

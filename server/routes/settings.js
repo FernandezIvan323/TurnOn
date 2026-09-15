@@ -5,7 +5,7 @@ import { authRequired, requireRole } from "../middleware/auth.js";
 const router = Router();
 
 const DEFAULTS = {
-  business_name: "TurnOn",
+  business_name: "Asados jorge",
   address: null,
   phone: null,
   email: null,

@@ -208,9 +208,12 @@ export async function runMigrations() {
   `);
   await pool.query(`
     INSERT INTO settings (id, business_name, currency, locale, timezone)
-    VALUES (1, 'TurnOn', 'COP', 'es-CO', 'America/Mexico_City')
+    VALUES (1, 'Asados jorge', 'COP', 'es-CO', 'America/Mexico_City')
     ON CONFLICT (id) DO NOTHING
   `);
+  await pool.query(
+    `UPDATE settings SET business_name='Asados jorge' WHERE id=1 AND business_name='TurnOn'`,
+  );
 
   // Rol 'delivery' + vínculo repartidor <-> usuario (acceso por PIN desde el celular)
   await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`);

@@ -142,7 +142,7 @@ CREATE INDEX IF NOT EXISTS idx_cash_closings_user  ON cash_closings(closed_by);
 -- Configuración del negocio (una sola fila, id = 1)
 CREATE TABLE IF NOT EXISTS settings (
   id            INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-  business_name VARCHAR(120) NOT NULL DEFAULT 'TurnOn',
+  business_name VARCHAR(120) NOT NULL DEFAULT 'Asados jorge',
   address       VARCHAR(200),
   phone         VARCHAR(40),
   email         VARCHAR(120),
